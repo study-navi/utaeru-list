@@ -90,10 +90,20 @@ artist + "\u0001" + title
 | `customHex` | string \| null | カスタム色（`#RRGGBB`） |
 | `selected` | string[] | 曲キーの配列 |
 
+上記6フィールドは変更禁止の契約です。Phase 0/1 で以下の**追加フィールド**（optional）を導入しました。
+
+| フィールド | 型 | 説明 |
+|---|---|---|
+| `configVersion` | number | 設定JSONのスキーマバージョン。フィールド自体が無いファイルは v1（旧形式）として扱う。現行ビルダーは常に `2` を書き出す |
+| `songMeta` | object | 曲ごとの状態・タグ・追加日時の予約フィールド（Phase 2+ で使用予定）。Phase 0/1 に編集 UI はなく、常に空 `{}` を書き出すか、読み込んだ値をそのまま保持する |
+| `tagPresets` | array | タグプリセットの予約フィールド（Phase 2+ で使用予定）。Phase 0/1 に編集 UI はなく、常に空 `[]` を書き出すか、読み込んだ値をそのまま保持する |
+
 詳細: [`docs/builder-config.schema.json`](docs/builder-config.schema.json)
 
 インポートは上記 `<script>` タグの存在と JSON パースに依存しています。  
 タグの `id` / `type` や必須フィールドを変える場合は、**旧形式も読めるフォールバック**を必ず用意してください。
+
+`configVersion` / `songMeta` / `tagPresets` を読むときも同様に、**値が存在しない場合のフォールバックを必須**とします（`hiro.html` はこれらのフィールドを持たない v1 形式のまま据え置いており、後方互換の実例として利用してください）。
 
 ### viewer テンプレートのプレースホルダー
 
@@ -104,20 +114,23 @@ artist + "\u0001" + title
 - `__ACCENT_DARK__`, `__ACCENT_DARK_INK__`, `__ACCENT_DARK_WASH__`
 - `__SONGS_JSON__`, `__UPDATED_LABEL__`, `__BUILDER_CONFIG_JSON__`
 
-## 基準状態（機能追加前）
+## 基準状態
 
-2026-08-16 時点の状態を「機能追加前の基準状態」として記録しています。
+`baseline/BASELINE.json` は「直近の意図的な変更を反映した基準状態」を表すロールング基準です。意図的に HTML を変更した場合は、この checksum / 件数を更新し、変更理由を変更履歴（下記）に記載してください。旧基準は `previousBaseline` として履歴保持しています。
+
+現行基準（Phase 0/1 適用後）:
 
 | 項目 | 値 |
 |---|---|
-| Git コミット | `cba9d3d` |
+| Git コミット | `f13962c` |
 | マスター楽曲数 | 1,952 曲（886 アーティスト） |
 | カタログ更新日 | 2026/7/28 |
-| サンプル `hiro.html` | 14 曲 |
+| サンプル `hiro.html` | 14 曲（v1 形式のまま据え置き） |
+| 追加フィールド | `configVersion`, `songMeta`, `tagPresets`（すべて optional・既存6フィールドは不変） |
+
+直前の基準（機能追加前）: Git コミット `cba9d3d` — 詳細は [`baseline/BASELINE.json`](baseline/BASELINE.json) の `previousBaseline`。
 
 機械可読な定義: [`baseline/BASELINE.json`](baseline/BASELINE.json)
-
-意図的に HTML を変更した場合は、`baseline/BASELINE.json` の checksum / 件数を更新し、変更理由を CHANGELOG（下記）に記載してください。
 
 ## 互換性検証
 
@@ -139,6 +152,9 @@ node scripts/verify-baseline.mjs --skip-checksums
 - `SONGS` の `{ k, y, a, t }` スキーマ
 - `viewer-template-b64` の全プレースホルダー
 - `hiro.html` と viewer テンプレートの構造一致
+- `CONFIG_VERSION` の宣言、`configVersion` / `songMeta` / `tagPresets` の書き出し（Phase 0/1）
+- インポート処理が `configVersion` 欠如（v1 = 旧形式）を安全にデフォルト値へフォールバックすること
+- `hiro.html` が追加フィールドを持たない v1 形式のまま（旧HTML互換の実例）であること
 
 ## ローカルでの確認
 
@@ -153,6 +169,7 @@ node scripts/verify-baseline.mjs --skip-checksums
 |---|---|
 | 2026-08-16 | 初回アップロード（`index.html` ビルダー、`hiro.html` サンプル） |
 | 2026-08-16 | 基準状態の記録、README、互換性検証スクリプト、builder-config スキーマを追加（アプリ本体の仕様・見た目は変更なし） |
+| 2026-08-16 | Phase 0/1: `configVersion` / `songMeta` / `tagPresets` を builder-config の追加フィールド（optional）として実装。既存6フィールド・曲データ `{ k, y, a, t }`・曲キー区切り文字は無変更。`index.html` の書き出し/インポート処理のみ変更、`hiro.html` は無変更（v1 形式のまま、旧HTML互換の検証対象）。状態・タグ・新着のUIはPhase 2以降で実装予定。verify-baseline.mjs に互換性チェックを追加（コミット `f13962c`） |
 
 ## 機能追加時のガイドライン
 
