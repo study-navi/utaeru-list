@@ -122,7 +122,7 @@ artist + "\u0001" + title
 
 | 項目 | 値 |
 |---|---|
-| Git コミット | `f13962c` |
+| Git コミット | GitHub 上の `main` HEAD を参照（`baseline/BASELINE.json` の `gitCommit` は未固定） |
 | マスター楽曲数 | 1,952 曲（886 アーティスト） |
 | カタログ更新日 | 2026/7/28 |
 | サンプル `hiro.html` | 14 曲（v1 形式のまま据え置き） |
@@ -169,7 +169,7 @@ node scripts/verify-baseline.mjs --skip-checksums
 |---|---|
 | 2026-08-16 | 初回アップロード（`index.html` ビルダー、`hiro.html` サンプル） |
 | 2026-08-16 | 基準状態の記録、README、互換性検証スクリプト、builder-config スキーマを追加（アプリ本体の仕様・見た目は変更なし） |
-| 2026-08-16 | Phase 0/1: `configVersion` / `songMeta` / `tagPresets` を builder-config の追加フィールド（optional）として実装。既存6フィールド・曲データ `{ k, y, a, t }`・曲キー区切り文字は無変更。`index.html` の書き出し/インポート処理のみ変更、`hiro.html` は無変更（v1 形式のまま、旧HTML互換の検証対象）。状態・タグ・新着のUIはPhase 2以降で実装予定。verify-baseline.mjs に互換性チェックを追加（コミット `f13962c`） |
+| 2026-08-16 | Phase 0/1: `configVersion` / `songMeta` / `tagPresets` を builder-config の追加フィールド（optional）として実装。既存6フィールド・曲データ `{ k, y, a, t }`・曲キー区切り文字は無変更。`index.html` の書き出し/インポート処理のみ変更、`hiro.html` は無変更（v1 形式のまま、旧HTML互換の検証対象）。状態・タグ・新着のUIはPhase 2以降で実装予定。verify-baseline.mjs に互換性チェックを追加 |
 
 ## 機能追加時のガイドライン
 
