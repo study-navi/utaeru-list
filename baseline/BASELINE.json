@@ -1,0 +1,52 @@
+{
+  "label": "機能追加前の基準状態",
+  "establishedAt": "2026-08-16",
+  "gitCommit": "cba9d3d4ff062d7aa09443b4e4136298aa7d6a34",
+  "gitCommitShort": "cba9d3d",
+  "files": {
+    "index.html": {
+      "bytes": 230050,
+      "sha256": "a19482f8afaf2e05b9bf24e077182b61525cfa8afa2859b96fa4fcecb9498f18"
+    },
+    "hiro.html": {
+      "bytes": 16262,
+      "sha256": "e6bdbde74a5ff2c4f8e9356b6a04141a7af9aa321796dac95c324e881cd45215"
+    }
+  },
+  "catalog": {
+    "updatedLabel": "2026/7/28",
+    "masterSongCount": 1952,
+    "masterArtistCount": 886
+  },
+  "hiroSample": {
+    "streamerName": "ひろ",
+    "selectedSongCount": 14
+  },
+  "songFields": {
+    "master": ["id", "k", "y", "a", "t"],
+    "exported": ["k", "y", "a", "t"]
+  },
+  "songKeySeparator": "\u0001",
+  "builderConfig": {
+    "requiredFields": ["streamerName", "subtitle", "themeType", "presetIndex", "customHex", "selected"],
+    "importScriptId": "builder-config",
+    "importScriptType": "application/json"
+  },
+  "viewerTemplate": {
+    "elementId": "viewer-template-b64",
+    "placeholders": [
+      "__PAGE_TITLE__",
+      "__STREAMER_NAME__",
+      "__SUBTITLE__",
+      "__ACCENT_LIGHT__",
+      "__ACCENT_LIGHT_INK__",
+      "__ACCENT_LIGHT_WASH__",
+      "__ACCENT_DARK__",
+      "__ACCENT_DARK_INK__",
+      "__ACCENT_DARK_WASH__",
+      "__SONGS_JSON__",
+      "__UPDATED_LABEL__",
+      "__BUILDER_CONFIG_JSON__"
+    ]
+  }
+}

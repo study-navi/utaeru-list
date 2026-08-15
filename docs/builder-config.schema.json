@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/utaeru-list/builder-config.schema.json",
+  "title": "BuilderConfig",
+  "description": "歌える曲リスト ビルダーが書き出し HTML に埋め込む再編集用設定。index.html の import 処理と互換性を保つこと。",
+  "type": "object",
+  "required": ["streamerName", "subtitle", "themeType", "selected"],
+  "additionalProperties": true,
+  "properties": {
+    "streamerName": {
+      "type": "string",
+      "description": "配信者名・ページタイトル"
+    },
+    "subtitle": {
+      "type": "string",
+      "description": "サブタイトル（任意だがキー自体は常に存在）"
+    },
+    "themeType": {
+      "type": "string",
+      "enum": ["preset", "custom"],
+      "description": "テーマの指定方法"
+    },
+    "presetIndex": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "themeType が preset のときの PRESETS 配列インデックス。custom のときは null"
+    },
+    "customHex": {
+      "type": ["string", "null"],
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "description": "themeType が custom のときのカラーコード。preset のときは null"
+    },
+    "selected": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "曲キー: artist + \"\\u0001\" + title"
+      },
+      "description": "選択済み曲のキー一覧"
+    }
+  }
+}
