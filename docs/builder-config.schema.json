@@ -37,6 +37,53 @@
         "description": "曲キー: artist + \"\\u0001\" + title"
       },
       "description": "選択済み曲のキー一覧"
+    },
+    "configVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 1,
+      "description": "設定JSONのスキーマバージョン。フィールド自体が存在しないファイルは v1（旧形式）として扱う。v2 以降は本フィールドで明示し、songMeta / tagPresets を伴う。読み込み側は本フィールドの欠如をエラーにしてはならない。"
+    },
+    "songMeta": {
+      "type": "object",
+      "default": {},
+      "description": "曲ごとの状態・タグ・追加日時などのメタデータ（Phase 2+ で使用予定の予約フィールド）。キーは曲キー（artist + \"\\u0001\" + title）。Phase 0/1 時点のビルダーは常に空オブジェクトを書き出すが、読み込んだ値があれば保持して再書き出しする。",
+      "additionalProperties": {
+        "type": "object",
+        "description": "1曲分のメタデータ。全フィールド任意。",
+        "properties": {
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "tagPresets の id を参照するタグID一覧"
+          },
+          "status": {
+            "type": ["string", "null"],
+            "description": "配信者が設定する曲の状態（例: 練習中など）。値の語彙は Phase 2+ で定義"
+          },
+          "addedAt": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "「新着」表示に使う追加日時（ISO 8601）"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "tagPresets": {
+      "type": "array",
+      "default": [],
+      "description": "配信者が定義するタグのプリセット一覧（Phase 2+ で使用予定の予約フィールド）。Phase 0/1 時点のビルダーは常に空配列を書き出すが、読み込んだ値があれば保持して再書き出しする。",
+      "items": {
+        "type": "object",
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string", "description": "songMeta.tags から参照される識別子" },
+          "label": { "type": "string", "description": "表示名" },
+          "color": { "type": ["string", "null"], "pattern": "^#[0-9a-fA-F]{6}$", "description": "任意のタグカラー" }
+        },
+        "additionalProperties": true
+      }
     }
   }
 }
