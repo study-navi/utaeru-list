@@ -1,12 +1,28 @@
 {
-  "label": "機能追加前の基準状態",
+  "label": "Phase 0/1 適用後の基準状態（configVersion / songMeta / tagPresets を追加フィールドとして導入、旧HTML互換を維持）",
   "establishedAt": "2026-08-16",
-  "gitCommit": "cba9d3d4ff062d7aa09443b4e4136298aa7d6a34",
-  "gitCommitShort": "cba9d3d",
+  "gitCommit": null,
+  "gitCommitShort": null,
+  "previousBaseline": {
+    "label": "機能追加前の基準状態",
+    "establishedAt": "2026-08-16",
+    "gitCommit": "cba9d3d4ff062d7aa09443b4e4136298aa7d6a34",
+    "gitCommitShort": "cba9d3d",
+    "files": {
+      "index.html": {
+        "bytes": 230050,
+        "sha256": "a19482f8afaf2e05b9bf24e077182b61525cfa8afa2859b96fa4fcecb9498f18"
+      },
+      "hiro.html": {
+        "bytes": 16262,
+        "sha256": "e6bdbde74a5ff2c4f8e9356b6a04141a7af9aa321796dac95c324e881cd45215"
+      }
+    }
+  },
   "files": {
     "index.html": {
-      "bytes": 230050,
-      "sha256": "a19482f8afaf2e05b9bf24e077182b61525cfa8afa2859b96fa4fcecb9498f18"
+      "bytes": 231880,
+      "sha256": "8c4f9cef0fe2f574b566bfef47605cdf0337213f9f63703227e726198408e707"
     },
     "hiro.html": {
       "bytes": 16262,
@@ -20,17 +36,55 @@
   },
   "hiroSample": {
     "streamerName": "ひろ",
-    "selectedSongCount": 14
+    "selectedSongCount": 14,
+    "note": "Phase 0/1 では hiro.html 自体は再書き出しせず旧形式(v1, configVersion フィールドなし)のまま据え置き、旧HTML互換の実例として使用する。"
   },
   "songFields": {
-    "master": ["id", "k", "y", "a", "t"],
-    "exported": ["k", "y", "a", "t"]
+    "master": [
+      "id",
+      "k",
+      "y",
+      "a",
+      "t"
+    ],
+    "exported": [
+      "k",
+      "y",
+      "a",
+      "t"
+    ]
   },
   "songKeySeparator": "\u0001",
   "builderConfig": {
-    "requiredFields": ["streamerName", "subtitle", "themeType", "presetIndex", "customHex", "selected"],
+    "requiredFields": [
+      "streamerName",
+      "subtitle",
+      "themeType",
+      "presetIndex",
+      "customHex",
+      "selected"
+    ],
     "importScriptId": "builder-config",
-    "importScriptType": "application/json"
+    "importScriptType": "application/json",
+    "optionalFields": {
+      "configVersion": {
+        "type": "integer",
+        "introducedAt": "Phase 0/1",
+        "note": "フィールド自体が存在しないファイルは v1（旧形式）として扱う。現行ビルダーは常に 2 を書き出す。"
+      },
+      "songMeta": {
+        "type": "object",
+        "default": {},
+        "introducedAt": "Phase 0/1",
+        "note": "曲ごとの状態・タグ・追加日時の予約フィールド。Phase 0/1 では編集UIなし、常に空 or インポート値をそのまま保持。"
+      },
+      "tagPresets": {
+        "type": "array",
+        "default": [],
+        "introducedAt": "Phase 0/1",
+        "note": "タグプリセットの予約フィールド。Phase 0/1 では編集UIなし、常に空 or インポート値をそのまま保持。"
+      }
+    }
   },
   "viewerTemplate": {
     "elementId": "viewer-template-b64",
