@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ひろ - 歌える曲リスト</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --surface-2: #f2f1ee;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --grid: #e1e0d9;
+    --baseline: #c3c2b7;
+    --border: rgba(11,11,11,0.10);
+    --accent: #2a78d6;
+    --accent-ink: #ffffff;
+    --accent-wash: #eaf1fb;
+    --chip-bg: #f2f1ee;
+    --shadow: 0 1px 2px rgba(11,11,11,0.06), 0 4px 16px rgba(11,11,11,0.05);
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-2: #232322;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --grid: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255,255,255,0.10);
+    --accent: #3987e5;
+    --accent-ink: #ffffff;
+    --accent-wash: #16283d;
+    --chip-bg: #232322;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.25);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]):not([data-theme="dark"]) {
+      color-scheme: dark;
+      --page: #0d0d0d;
+      --surface: #1a1a19;
+      --surface-2: #232322;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #898781;
+      --grid: #2c2c2a;
+      --baseline: #383835;
+      --border: rgba(255,255,255,0.10);
+      --accent: #3987e5;
+      --accent-ink: #ffffff;
+      --accent-wash: #16283d;
+      --chip-bg: #232322;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.25);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 64px; }
+
+  header.top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+  }
+  .theme-toggle {
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  .theme-toggle:hover { background: var(--surface-2); }
+
+  .stats {
+    display: flex;
+    gap: 10px;
+    margin: 14px 0 18px;
+  }
+  .stat-tile {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    box-shadow: var(--shadow);
+  }
+  .stat-tile .num {
+    font-size: 22px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+  .stat-tile .label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .search-bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--page);
+    padding: 10px 0 10px;
+    margin-bottom: 4px;
+  }
+  .search-input-row {
+    position: relative;
+  }
+  input[type="search"] {
+    width: 100%;
+    font-size: 16px;
+    padding: 12px 40px 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    box-shadow: var(--shadow);
+    outline: none;
+  }
+  input[type="search"]:focus {
+    border-color: var(--accent);
+  }
+  input[type="search"]::placeholder { color: var(--text-muted); }
+  input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+  .clear-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: none;
+    font-size: 16px;
+    border-radius: 8px;
+  }
+  .clear-btn:hover { background: var(--surface-2); }
+
+  .gyo-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0 4px;
+  }
+  .chip {
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--chip-bg);
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+  }
+  .chip:hover { background: var(--surface-2); }
+  .chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 700;
+  }
+
+  .result-meta {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 14px 2px 8px;
+  }
+
+  .random-row { margin: 4px 0 2px; }
+  .random-btn {
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+  .random-btn:hover { background: var(--surface-2); }
+  .random-pick {
+    margin-top: 8px;
+    padding: 12px 14px;
+    background: var(--accent-wash);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 14px;
+    display: none;
+  }
+  .random-pick .rp-title { font-weight: 800; font-size: 15px; }
+  .random-pick .rp-artist { color: var(--text-secondary); font-size: 13px; margin-top: 2px; }
+
+  .artist-group {
+    margin-bottom: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .artist-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+  }
+  .artist-name {
+    font-size: 14.5px;
+    font-weight: 800;
+    color: var(--text-primary);
+  }
+  .artist-count {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    flex: 0 0 auto;
+  }
+  ul.song-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  ul.song-list li {
+    padding: 10px 14px;
+    font-size: 14.5px;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--grid);
+  }
+  ul.song-list li:last-child { border-bottom: none; }
+  mark {
+    background: var(--accent-wash);
+    color: var(--text-primary);
+    border-radius: 3px;
+    padding: 0 1px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 16px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .empty-state .emoji { font-size: 32px; margin-bottom: 8px; }
+
+  footer {
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid var(--grid);
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  footer a { color: var(--text-secondary); }
+
+  @media (max-width: 420px) {
+    h1 { font-size: 19px; }
+    .stat-tile .num { font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>ひろ</h1>
+      <p class="subtitle">ひろの配信で歌える曲を検索できます。曲名・アーティスト名で絞り込めます。</p>
+    </div>
+    <button class="theme-toggle" id="themeToggle" title="表示切り替え" aria-label="ライト/ダーク切り替え">🌙</button>
+  </header>
+
+  <div class="stats">
+    <div class="stat-tile">
+      <div class="num" id="statSongs">-</div>
+      <div class="label">収録曲数</div>
+    </div>
+    <div class="stat-tile">
+      <div class="num" id="statArtists">-</div>
+      <div class="label">アーティスト数</div>
+    </div>
+    <div class="stat-tile">
+      <div class="num" id="statUpdated">-</div>
+      <div class="label">カタログ更新日</div>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <div class="search-input-row">
+      <input type="search" id="searchInput" placeholder="曲名・アーティスト名で検索" autocomplete="off" />
+      <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
+    </div>
+    <div class="gyo-row" id="gyoRow"></div>
+  </div>
+
+  <div class="random-row">
+    <button class="random-btn" id="randomBtn">🎲 ランダムに1曲選ぶ</button>
+    <div class="random-pick" id="randomPick"></div>
+  </div>
+
+  <div class="result-meta" id="resultMeta"></div>
+
+  <div id="results"></div>
+
+  <footer>
+    データ提供元：Mirrativ（ミラティブ）内カラオケアプリ「エモカラ」の楽曲一覧を個人配布しているGoogle Driveより取得（2026/7/28時点のカタログ）。配信者が歌える曲として選択したものを掲載しています。配信状況や仕様変更により、実際に歌える曲は変動する場合があります。
+  </footer>
+
+</div>
+
+<script type="application/json" id="builder-config">{"streamerName":"ひろ","subtitle":"ひろの配信で歌える曲を検索できます。曲名・アーティスト名で絞り込めます。","themeType":"preset","presetIndex":0,"customHex":null,"selected":["相川七瀬\u0001夢見る少女じゃいられない","相川七瀬\u0001恋心","相川七瀬\u0001Sweet Emotion","aiko\u0001カブトムシ","aiko\u0001ボーイフレンド","aiko\u0001KissHug","aiko\u0001相思相愛","aiko\u0001横顔","aiko\u0001恋のスーパーボール","aiko\u0001キラキラ","aiko\u0001milk","aiko\u0001花火","aiko\u0001二時頃","aiko\u0001ストロー"]}</script>
+<script>
+const SONGS = [{"k":"あ","y":"あいかわななせ","a":"相川七瀬","t":"夢見る少女じゃいられない"},{"k":"あ","y":"あいかわななせ","a":"相川七瀬","t":"恋心"},{"k":"あ","y":"あいかわななせ","a":"相川七瀬","t":"Sweet Emotion"},{"k":"あ","y":"あいこ","a":"aiko","t":"カブトムシ"},{"k":"あ","y":"あいこ","a":"aiko","t":"ボーイフレンド"},{"k":"あ","y":"あいこ","a":"aiko","t":"KissHug"},{"k":"あ","y":"あいこ","a":"aiko","t":"相思相愛"},{"k":"あ","y":"あいこ","a":"aiko","t":"横顔"},{"k":"あ","y":"あいこ","a":"aiko","t":"恋のスーパーボール"},{"k":"あ","y":"あいこ","a":"aiko","t":"キラキラ"},{"k":"あ","y":"あいこ","a":"aiko","t":"milk"},{"k":"あ","y":"あいこ","a":"aiko","t":"花火"},{"k":"あ","y":"あいこ","a":"aiko","t":"二時頃"},{"k":"あ","y":"あいこ","a":"aiko","t":"ストロー"}];
+
+const GYO = [
+  { label: 'あ', chars: 'あいうえお' },
+  { label: 'か', chars: 'かきくけこがぎぐげご' },
+  { label: 'さ', chars: 'さしすせそざじずぜぞ' },
+  { label: 'た', chars: 'たちつてとだぢづでど' },
+  { label: 'な', chars: 'なにぬねの' },
+  { label: 'は', chars: 'はひふへほばびぶべぼぱぴぷぺぽ' },
+  { label: 'ま', chars: 'まみむめも' },
+  { label: 'や', chars: 'やゆよ' },
+  { label: 'ら', chars: 'らりるれろ' },
+  { label: 'わ', chars: 'わをん' },
+];
+
+function gyoOf(kanaHead) {
+  for (const g of GYO) {
+    if (g.chars.includes(kanaHead)) return g.label;
+  }
+  return null;
+}
+
+function toHiragana(str) {
+  return str.replace(/[ァ-ヶ]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+}
+function norm(str) {
+  return toHiragana(str).toLowerCase();
+}
+
+const searchInput = document.getElementById('searchInput');
+const clearBtn = document.getElementById('clearBtn');
+const gyoRow = document.getElementById('gyoRow');
+const resultsEl = document.getElementById('results');
+const resultMeta = document.getElementById('resultMeta');
+const randomBtn = document.getElementById('randomBtn');
+const randomPick = document.getElementById('randomPick');
+const themeToggle = document.getElementById('themeToggle');
+
+let activeGyo = null;
+
+const allChip = document.createElement('div');
+allChip.className = 'chip active';
+allChip.textContent = 'すべて';
+allChip.addEventListener('click', () => setGyo(null));
+gyoRow.appendChild(allChip);
+
+GYO.forEach(g => {
+  const chip = document.createElement('div');
+  chip.className = 'chip';
+  chip.textContent = g.label + '行';
+  chip.addEventListener('click', () => setGyo(g.label));
+  gyoRow.appendChild(chip);
+});
+
+function setGyo(label) {
+  activeGyo = label;
+  [...gyoRow.children].forEach(c => c.classList.remove('active'));
+  const idx = label ? GYO.findIndex(g => g.label === label) + 1 : 0;
+  gyoRow.children[idx].classList.add('active');
+  render();
+}
+
+function highlight(text, q) {
+  if (!q) return escapeHtml(text);
+  const nText = norm(text);
+  const nQ = norm(q);
+  const i = nText.indexOf(nQ);
+  if (i === -1) return escapeHtml(text);
+  return escapeHtml(text.slice(0, i)) + '<mark>' + escapeHtml(text.slice(i, i + q.length)) + '</mark>' + escapeHtml(text.slice(i + q.length));
+}
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function render() {
+  const q = searchInput.value.trim();
+  clearBtn.style.display = q ? 'block' : 'none';
+
+  let filtered = SONGS;
+  if (activeGyo) {
+    filtered = filtered.filter(s => gyoOf(s.k) === activeGyo);
+  }
+  if (q) {
+    const nq = norm(q);
+    filtered = filtered.filter(s => norm(s.t).includes(nq) || norm(s.a).includes(nq) || norm(s.y).includes(nq));
+  }
+
+  const artistCount = new Set(filtered.map(s => s.a)).size;
+  resultMeta.textContent = `${filtered.length}曲 / ${artistCount}組`;
+
+  if (SONGS.length === 0) {
+    resultsEl.innerHTML = '<div class="empty-state"><div class="emoji">🎤</div>まだ曲が登録されていません</div>';
+    return;
+  }
+
+  if (filtered.length === 0) {
+    resultsEl.innerHTML = '<div class="empty-state"><div class="emoji">🔍</div>該当する曲が見つかりませんでした</div>';
+    return;
+  }
+
+  const groups = [];
+  let cur = null;
+  for (const s of filtered) {
+    if (!cur || cur.artist !== s.a) {
+      cur = { artist: s.a, songs: [] };
+      groups.push(cur);
+    }
+    cur.songs.push(s.t);
+  }
+
+  const MAX_GROUPS = 400;
+  const shown = groups.slice(0, MAX_GROUPS);
+
+  resultsEl.innerHTML = shown.map(g => `
+    <div class="artist-group">
+      <div class="artist-head">
+        <div class="artist-name">${highlight(g.artist, q)}</div>
+        <div class="artist-count">${g.songs.length}曲</div>
+      </div>
+      <ul class="song-list">
+        ${g.songs.map(t => `<li>${highlight(t, q)}</li>`).join('')}
+      </ul>
+    </div>
+  `).join('');
+
+  if (groups.length > MAX_GROUPS) {
+    const note = document.createElement('div');
+    note.className = 'result-meta';
+    note.textContent = `他 ${groups.length - MAX_GROUPS} 組は絞り込みを続けると表示されます`;
+    resultsEl.appendChild(note);
+  }
+}
+
+searchInput.addEventListener('input', render);
+clearBtn.addEventListener('click', () => { searchInput.value = ''; render(); searchInput.focus(); });
+
+randomBtn.addEventListener('click', () => {
+  if (SONGS.length === 0) return;
+  const pick = SONGS[Math.floor(Math.random() * SONGS.length)];
+  randomPick.style.display = 'block';
+  randomPick.innerHTML = `<div class="rp-title">${escapeHtml(pick.t)}</div><div class="rp-artist">${escapeHtml(pick.a)}</div>`;
+});
+
+function applyThemeIcon() {
+  const t = document.documentElement.getAttribute('data-theme');
+  themeToggle.textContent = t === 'dark' ? '☀️' : (t === 'light' ? '🌙' : '🌓');
+}
+themeToggle.addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : (cur === 'light' ? null : 'dark');
+  if (next) document.documentElement.setAttribute('data-theme', next);
+  else document.documentElement.removeAttribute('data-theme');
+  applyThemeIcon();
+});
+applyThemeIcon();
+
+document.getElementById('statSongs').textContent = SONGS.length.toLocaleString('ja-JP');
+document.getElementById('statArtists').textContent = new Set(SONGS.map(s => s.a)).size.toLocaleString('ja-JP');
+document.getElementById('statUpdated').textContent = '2026/7/28';
+
+render();
+</script>
+</body>
+</html>
