@@ -218,6 +218,57 @@ check('hiro.html が viewer テンプレート構造と一致（データ除く�
   }
 });
 
+// --- Phase 0/1: configVersion / songMeta / tagPresets（追加フィールド・旧HTML互換） ---
+
+const optionalFields = Object.keys(baseline.builderConfig.optionalFields || {});
+
+check('index.html が CONFIG_VERSION を宣言している', () => {
+  if (!/const CONFIG_VERSION = \d+;/.test(indexHtml)) {
+    throw new Error('CONFIG_VERSION の宣言が見つかりません');
+  }
+});
+
+check('書き出し処理（builderConfig）が既存6フィールド + 追加フィールドを含む', () => {
+  const requiredFields = baseline.builderConfig.requiredFields;
+  const m = indexHtml.match(/const builderConfig = \{([\s\S]*?)\n  \};/);
+  if (!m) throw new Error('builderConfig オブジェクトの組み立て箇所が見つかりません');
+  const body = m[1];
+  for (const field of requiredFields) {
+    if (!body.includes(`${field}:`) && !body.includes(`${field},`)) {
+      throw new Error(`既存必須フィールド "${field}" が書き出し処理から失われています`);
+    }
+  }
+  for (const field of optionalFields) {
+    if (!body.includes(field)) {
+      throw new Error(`追加フィールド "${field}" が書き出し処理に含まれていません`);
+    }
+  }
+});
+
+check('インポート処理が configVersion 欠如（v1）を安全にデフォルト値へフォールバックする', () => {
+  if (!/Number\.isInteger\(config\.configVersion\)/.test(indexHtml)) {
+    throw new Error('configVersion 欠如時のフォールバック処理が見つかりません');
+  }
+  if (!/config\.songMeta[\s\S]{0,40}typeof config\.songMeta === 'object'/.test(indexHtml)) {
+    throw new Error('songMeta 欠如時のフォールバック処理が見つかりません');
+  }
+  if (!/Array\.isArray\(config\.tagPresets\)/.test(indexHtml)) {
+    throw new Error('tagPresets 欠如時のフォールバック処理が見つかりません');
+  }
+});
+
+check('hiro.html が旧形式（v1: configVersion フィールドなし）のまま後方互換の実例になっている', () => {
+  const config = parseBuilderConfig(hiroHtml);
+  if ('configVersion' in config) {
+    throw new Error('hiro.html に configVersion が含まれています。Phase 0/1 では旧形式のまま据え置く想定です（baseline.hiroSample.note 参照）');
+  }
+  for (const field of optionalFields) {
+    if (field in config) {
+      throw new Error(`hiro.html に追加フィールド "${field}" が含まれています。旧形式互換の実例として不適切です`);
+    }
+  }
+});
+
 console.log('');
 if (errors > 0) {
   console.error(`${errors} 件の検証エラー`);
