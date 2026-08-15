@@ -191,14 +191,15 @@
 
   ul.song-list { list-style: none; margin: 0; padding: 0; }
   ul.song-list li {
-    display: flex; align-items: center; gap: 10px;
     padding: 8px 12px 8px 34px;
     font-size: 14px;
     border-bottom: 1px solid var(--grid);
   }
   ul.song-list li:last-child { border-bottom: none; }
+  .song-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   ul.song-list li input[type="checkbox"] { width: 16px; height: 16px; flex: 0 0 auto; accent-color: var(--accent); }
-  ul.song-list li label { flex: 1; cursor: pointer; }
+  ul.song-list li label { cursor: pointer; }
+  .song-label { flex: 1 1 140px; min-width: 0; }
   mark { background: var(--accent-wash); border-radius: 3px; padding: 0 1px; }
 
   .empty-state { text-align: center; padding: 32px 16px; color: var(--text-muted); font-size: 13.5px; }
@@ -225,9 +226,86 @@
   }
   .export-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+  /* Phase 2: 曲ごとの状態・タグ・追加日 編集UI */
+  .song-badges { display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; font-size: 13px; }
+  .song-settings-btn {
+    flex: 0 0 auto;
+    font-size: 11.5px; font-weight: 600;
+    padding: 5px 11px; border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--chip-bg);
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .song-settings-btn:hover { background: var(--surface-2); }
+  .song-settings-btn.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+
+  .song-meta-panel {
+    margin: 10px 0 4px;
+    padding: 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .meta-block { margin-bottom: 10px; }
+  .meta-block:last-child { margin-bottom: 0; }
+  .meta-block-label { font-size: 11.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
+  .status-row, .tag-chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .status-btn {
+    font-size: 12.5px; padding: 7px 12px; border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--page);
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+  .status-btn:hover { background: var(--surface-2); }
+  .status-btn.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  .status-btn.status-none.active { background: var(--chip-bg); border-color: var(--border); color: var(--text-secondary); }
+
+  .song-tag-chip {
+    font-size: 12px; padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--page);
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+  .song-tag-chip:hover { background: var(--surface-2); }
+  .song-tag-chip.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  .tag-empty-hint { font-size: 12px; color: var(--text-muted); }
+
+  .addedat-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  input[type="date"] {
+    font-size: 14px; padding: 8px 10px; border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--page);
+    color: var(--text-primary);
+  }
+
+  .tag-admin-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .tag-admin-empty { font-size: 12.5px; color: var(--text-muted); }
+  .tag-admin-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; padding: 6px 6px 6px 12px; border-radius: 999px;
+    background: var(--chip-bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+  }
+  .tag-admin-remove {
+    border: none; background: transparent; color: var(--text-muted);
+    cursor: pointer; font-size: 13px;
+    width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tag-admin-remove:hover { background: rgba(11,11,11,0.08); color: var(--text-primary); }
+  .tag-admin-add-row { display: flex; gap: 8px; }
+  .tag-admin-add-row input[type="text"] { flex: 1; }
+
   @media (max-width: 420px) {
     h1 { font-size: 18px; }
     .export-count { font-size: 12.5px; }
+    .song-settings-btn { font-size: 11px; padding: 5px 9px; }
+    .status-btn, .song-tag-chip { font-size: 12px; padding: 6px 10px; }
   }
 </style>
 </head>
@@ -276,6 +354,16 @@
     </div>
     <div class="result-meta" id="resultMeta"></div>
     <div id="results"></div>
+  </div>
+
+  <div class="card">
+    <h2>⑤ タグの候補を編集（任意）</h2>
+    <p class="hint">曲に付けられるタグの候補です。追加・削除ができます。ここでの変更はすべての曲の設定に反映されます。</p>
+    <div class="tag-admin-list" id="tagAdminList"></div>
+    <div class="tag-admin-add-row">
+      <input type="text" id="tagAdminInput" placeholder="新しいタグ名を入力" maxlength="20" />
+      <button type="button" class="tool-btn" id="tagAdminAddBtn">＋ 追加</button>
+    </div>
   </div>
 
 </div>
@@ -416,7 +504,19 @@ let currentTheme = { type: 'preset', presetIndex: 0, customHex: '#2a78d6' };
 // 既存/将来のファイルに値が入っていた場合はインポート時にそのまま保持し（読み込み→書き出しで消さない）、
 // 旧形式（v1 = これらのフィールドが存在しないファイル）は空値として扱う。
 let songMeta = {};   // { [songKey]: { tags?: string[], status?: string|null, addedAt?: string|null } } 予約
-let tagPresets = []; // { id: string, label: string, color?: string|null }[] 予約
+
+// Phase 2: タグ候補の初期値（プリセット）。配信者は「⑤ タグの候補を編集」で追加・削除できる。
+// インポート時は既存のフォールバック処理により config.tagPresets（配列なら）で完全に上書きされる。
+const DEFAULT_TAG_PRESETS = [
+  { id: 'anime', label: 'アニメ' },
+  { id: 'vocaloid', label: 'ボカロ' },
+  { id: 'ballad', label: 'バラード' },
+  { id: 'upbeat', label: '盛り上がる' },
+  { id: 'quiet', label: '静か' },
+  { id: 'male', label: '男性曲' },
+  { id: 'female', label: '女性曲' },
+];
+let tagPresets = DEFAULT_TAG_PRESETS.map(t => ({ ...t })); // { id: string, label: string, color?: string|null }[]
 
 const swatchRow = document.getElementById('swatchRow');
 PRESETS.forEach((p, i) => {
@@ -469,6 +569,177 @@ function resolveTheme() {
 function keyOf(s) { return s.a + '\u0001' + s.t; }
 let selectedKeys = new Set();
 let lastFiltered = [];
+
+// ---- Phase 2: 曲ごとの状態・タグ・追加日（songMeta）編集 UI ----
+const STATUS_OPTIONS = [
+  { value: 'signature', emoji: '⭐', label: '得意曲' },
+  { value: 'welcome', emoji: '🎤', label: 'リクエストOK' },
+  { value: 'learning', emoji: '📖', label: '練習中' },
+];
+let expandedKeys = new Set(); // 「設定」を開いている曲キー
+
+function todayIso() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// songMeta の1曲分を「未設定項目は保存しない」形に整える。
+function cleanMeta(meta) {
+  const out = {};
+  if (meta && meta.status) out.status = meta.status;
+  if (meta && Array.isArray(meta.tags) && meta.tags.length) out.tags = [...meta.tags];
+  if (meta && meta.addedAt) out.addedAt = meta.addedAt;
+  return out;
+}
+
+// mutator で1曲分のメタ情報を書き換え、空になった項目は songMeta から削除してから再描画する。
+function updateSongMeta(key, mutator) {
+  const src = songMeta[key] || {};
+  const current = { status: src.status, tags: src.tags ? [...src.tags] : undefined, addedAt: src.addedAt };
+  mutator(current);
+  const cleaned = cleanMeta(current);
+  if (Object.keys(cleaned).length === 0) delete songMeta[key];
+  else songMeta[key] = cleaned;
+  render();
+}
+
+function badgesHtml(meta) {
+  if (!meta) return '';
+  const parts = [];
+  const statusOpt = STATUS_OPTIONS.find(o => o.value === meta.status);
+  if (statusOpt) parts.push(`<span class="song-badge" title="${escapeHtml(statusOpt.label)}">${statusOpt.emoji}</span>`);
+  if (meta.tags && meta.tags.length) parts.push(`<span class="song-badge" title="タグ${meta.tags.length}件">🏷${meta.tags.length}</span>`);
+  if (meta.addedAt) parts.push(`<span class="song-badge" title="追加日 ${escapeHtml(meta.addedAt)}">📅</span>`);
+  return parts.join('');
+}
+
+function songPanelHtml(s) {
+  const key = keyOf(s);
+  const meta = songMeta[key] || {};
+  const status = meta.status || '';
+  const tags = meta.tags || [];
+  const addedAt = meta.addedAt || '';
+
+  const statusButtons = STATUS_OPTIONS.map(opt => `
+    <button type="button" class="status-btn ${status === opt.value ? 'active' : ''}" data-key="${escapeHtml(key)}" data-value="${opt.value}">${opt.emoji} ${escapeHtml(opt.label)}</button>
+  `).join('') + `<button type="button" class="status-btn status-none ${status ? '' : 'active'}" data-key="${escapeHtml(key)}" data-value="">未設定</button>`;
+
+  const tagChips = tagPresets.length
+    ? tagPresets.map(t => `
+        <button type="button" class="song-tag-chip ${tags.includes(t.id) ? 'active' : ''}" data-key="${escapeHtml(key)}" data-tag-id="${escapeHtml(t.id)}">${escapeHtml(t.label)}</button>
+      `).join('')
+    : `<span class="tag-empty-hint">タグ候補がまだありません。「⑤ タグの候補を編集」から追加できます</span>`;
+
+  return `
+    <div class="song-meta-panel">
+      <div class="meta-block">
+        <div class="meta-block-label">状態（1つだけ選べます）</div>
+        <div class="status-row">${statusButtons}</div>
+      </div>
+      <div class="meta-block">
+        <div class="meta-block-label">タグ（複数選べます）</div>
+        <div class="tag-chip-row">${tagChips}</div>
+      </div>
+      <div class="meta-block">
+        <div class="meta-block-label">追加日</div>
+        <div class="addedat-row">
+          <input type="date" class="song-meta-date" data-key="${escapeHtml(key)}" value="${escapeHtml(addedAt)}" />
+          <button type="button" class="tool-btn addedat-today-btn" data-key="${escapeHtml(key)}">今日にする</button>
+          ${addedAt ? `<button type="button" class="tool-btn subtle addedat-clear-btn" data-key="${escapeHtml(key)}">クリア</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function songItemHtml(s, q) {
+  const key = keyOf(s);
+  const meta = songMeta[key];
+  const expanded = expandedKeys.has(key);
+  return `
+    <li class="song-item" data-key="${escapeHtml(key)}">
+      <div class="song-row">
+        <input type="checkbox" class="song-check" id="sc-${s.id}" data-key="${escapeHtml(key)}" ${selectedKeys.has(key) ? 'checked' : ''} />
+        <label for="sc-${s.id}" class="song-label">${highlight(s.t, q)}</label>
+        <span class="song-badges">${badgesHtml(meta)}</span>
+        <button type="button" class="song-settings-btn ${expanded ? 'active' : ''}" data-key="${escapeHtml(key)}" aria-expanded="${expanded ? 'true' : 'false'}">${expanded ? '閉じる' : '設定'}</button>
+      </div>
+      ${expanded ? songPanelHtml(s) : ''}
+    </li>`;
+}
+
+// ---- Phase 2: タグ候補管理（tagPresets） ----
+const tagAdminList = document.getElementById('tagAdminList');
+const tagAdminInput = document.getElementById('tagAdminInput');
+const tagAdminAddBtn = document.getElementById('tagAdminAddBtn');
+
+function renderTagAdmin() {
+  if (!tagAdminList) return;
+  if (tagPresets.length === 0) {
+    tagAdminList.innerHTML = '<div class="tag-admin-empty">タグ候補がありません。下から追加してください。</div>';
+    return;
+  }
+  tagAdminList.innerHTML = tagPresets.map(t => `
+    <span class="tag-admin-chip">
+      ${escapeHtml(t.label)}
+      <button type="button" class="tag-admin-remove" data-id="${escapeHtml(t.id)}" aria-label="「${escapeHtml(t.label)}」を削除">✕</button>
+    </span>
+  `).join('');
+}
+
+function makeTagId() {
+  return 'tag_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function addTagPreset(label) {
+  const trimmed = (label || '').trim();
+  if (!trimmed) return;
+  if (tagPresets.some(t => t.label === trimmed)) return;
+  tagPresets.push({ id: makeTagId(), label: trimmed });
+  renderTagAdmin();
+  render();
+}
+
+function removeTagPreset(id) {
+  tagPresets = tagPresets.filter(t => t.id !== id);
+  for (const key of Object.keys(songMeta)) {
+    const meta = songMeta[key];
+    if (meta.tags && meta.tags.includes(id)) {
+      const newTags = meta.tags.filter(t => t !== id);
+      const cleaned = cleanMeta({ status: meta.status, tags: newTags, addedAt: meta.addedAt });
+      if (Object.keys(cleaned).length === 0) delete songMeta[key];
+      else songMeta[key] = cleaned;
+    }
+  }
+  renderTagAdmin();
+  render();
+}
+
+if (tagAdminAddBtn) {
+  tagAdminAddBtn.addEventListener('click', () => {
+    addTagPreset(tagAdminInput.value);
+    tagAdminInput.value = '';
+    tagAdminInput.focus();
+  });
+}
+if (tagAdminInput) {
+  tagAdminInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTagPreset(tagAdminInput.value);
+      tagAdminInput.value = '';
+    }
+  });
+}
+if (tagAdminList) {
+  tagAdminList.addEventListener('click', (e) => {
+    const btn = e.target.closest('.tag-admin-remove');
+    if (!btn) return;
+    removeTagPreset(btn.dataset.id);
+  });
+}
 
 const GYO = [
   { label: 'あ', chars: 'あいうえお' },
@@ -567,12 +838,7 @@ function render() {
         <span class="artist-count">${checkedCount}/${g.songs.length}選択</span>
       </label>
       <ul class="song-list">
-        ${g.songs.map(s => `
-          <li>
-            <input type="checkbox" class="song-check" id="sc-${s.id}" data-key="${escapeHtml(keyOf(s))}" ${selectedKeys.has(keyOf(s)) ? 'checked' : ''} />
-            <label for="sc-${s.id}">${highlight(s.t, q)}</label>
-          </li>
-        `).join('')}
+        ${g.songs.map(s => songItemHtml(s, q)).join('')}
       </ul>
     </div>`;
   }).join('') + (groups.length > MAX_GROUPS ? `<div class="result-meta">他 ${groups.length - MAX_GROUPS} 組は絞り込みを続けると表示されます</div>` : '');
@@ -611,6 +877,51 @@ resultsEl.addEventListener('change', (e) => {
     e.target.indeterminate = false;
     group.querySelector('.artist-count').textContent = `${e.target.checked ? checks.length : 0}/${checks.length}選択`;
     updateSelectedCount();
+  } else if (e.target.matches('.song-meta-date')) {
+    const key = e.target.dataset.key;
+    const val = e.target.value;
+    updateSongMeta(key, m => { if (val) m.addedAt = val; else delete m.addedAt; });
+  }
+});
+
+// Phase 2: 状態・タグ・追加日の各種ボタン操作（クリック）
+resultsEl.addEventListener('click', (e) => {
+  const settingsBtn = e.target.closest('.song-settings-btn');
+  if (settingsBtn) {
+    const key = settingsBtn.dataset.key;
+    if (expandedKeys.has(key)) expandedKeys.delete(key); else expandedKeys.add(key);
+    render();
+    return;
+  }
+  const statusBtn = e.target.closest('.status-btn');
+  if (statusBtn) {
+    const key = statusBtn.dataset.key;
+    const value = statusBtn.dataset.value;
+    updateSongMeta(key, m => { if (value) m.status = value; else delete m.status; });
+    return;
+  }
+  const tagChip = e.target.closest('.song-tag-chip');
+  if (tagChip) {
+    const key = tagChip.dataset.key;
+    const tagId = tagChip.dataset.tagId;
+    updateSongMeta(key, m => {
+      const set = new Set(m.tags || []);
+      if (set.has(tagId)) set.delete(tagId); else set.add(tagId);
+      m.tags = [...set];
+    });
+    return;
+  }
+  const todayBtn = e.target.closest('.addedat-today-btn');
+  if (todayBtn) {
+    const key = todayBtn.dataset.key;
+    updateSongMeta(key, m => { m.addedAt = todayIso(); });
+    return;
+  }
+  const clearDateBtn = e.target.closest('.addedat-clear-btn');
+  if (clearDateBtn) {
+    const key = clearDateBtn.dataset.key;
+    updateSongMeta(key, m => { delete m.addedAt; });
+    return;
   }
 });
 
@@ -721,11 +1032,16 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
   songMeta = (config.songMeta && typeof config.songMeta === 'object') ? config.songMeta : {};
   tagPresets = Array.isArray(config.tagPresets) ? config.tagPresets : [];
 
+  // Phase 2: インポートするたびに「設定」の開閉状態はリセットし、タグ候補編集エリアも読み込んだ内容に合わせて再描画する。
+  expandedKeys.clear();
+  renderTagAdmin();
+
   document.getElementById('loadedName').textContent = `「${config.streamerName || file.name}」を読み込みました（${selectedKeys.size}曲 / 設定形式 v${importedConfigVersion}）`;
   render();
   updateSelectedCount();
 });
 
+renderTagAdmin();
 render();
 updateSelectedCount();
 </script>
