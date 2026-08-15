@@ -206,6 +206,25 @@
     margin: 14px 2px 8px;
   }
 
+  /* Phase 3: 状態・タグ・新着フィルタ（画面上部を占領しないよう横スクロール） */
+  .filter-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 2px 2px 6px;
+    margin: 8px -2px 0;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .filter-row::-webkit-scrollbar { height: 4px; }
+  .filter-row .chip { flex: 0 0 auto; white-space: nowrap; }
+  .filter-summary {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin: -4px 2px 8px;
+  }
+
   .random-row { margin: 4px 0 2px; }
   .random-btn {
     font-size: 13px;
@@ -218,6 +237,7 @@
     box-shadow: var(--shadow);
   }
   .random-btn:hover { background: var(--surface-2); }
+  .random-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .random-pick {
     margin-top: 8px;
     padding: 12px 14px;
@@ -277,6 +297,22 @@
     padding: 0 1px;
   }
 
+  /* Phase 3: 曲ごとの状態バッジ・タグ表示（コンパクトに） */
+  .song-main-row { display: flex; align-items: center; gap: 6px; }
+  .song-title { flex: 1; min-width: 0; }
+  .v-badges { display: inline-flex; gap: 2px; flex: 0 0 auto; font-size: 12px; line-height: 1; }
+  .v-tag-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .v-tag {
+    font-size: 10.5px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--chip-bg);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    line-height: 1.5;
+  }
+  .v-tag-more { color: var(--text-muted); }
+
   .empty-state {
     text-align: center;
     padding: 48px 16px;
@@ -335,12 +371,16 @@
     <div class="gyo-row" id="gyoRow"></div>
   </div>
 
+  <div class="filter-row" id="statusFilterRow"></div>
+  <div class="filter-row" id="tagFilterRow" style="display:none;"></div>
+
   <div class="random-row">
-    <button class="random-btn" id="randomBtn">🎲 ランダムに1曲選ぶ</button>
+    <button class="random-btn" id="randomBtn">🎲 表示中からランダム</button>
     <div class="random-pick" id="randomPick"></div>
   </div>
 
   <div class="result-meta" id="resultMeta"></div>
+  <div class="filter-summary" id="filterSummary" style="display:none;"></div>
 
   <div id="results"></div>
 
@@ -353,6 +393,31 @@
 <script type="application/json" id="builder-config">{"streamerName":"ひろ","subtitle":"ひろの配信で歌える曲を検索できます。曲名・アーティスト名で絞り込めます。","themeType":"preset","presetIndex":0,"customHex":null,"selected":["相川七瀬\u0001夢見る少女じゃいられない","相川七瀬\u0001恋心","相川七瀬\u0001Sweet Emotion","aiko\u0001カブトムシ","aiko\u0001ボーイフレンド","aiko\u0001KissHug","aiko\u0001相思相愛","aiko\u0001横顔","aiko\u0001恋のスーパーボール","aiko\u0001キラキラ","aiko\u0001milk","aiko\u0001花火","aiko\u0001二時頃","aiko\u0001ストロー"]}</script>
 <script>
 const SONGS = [{"k":"あ","y":"あいかわななせ","a":"相川七瀬","t":"夢見る少女じゃいられない"},{"k":"あ","y":"あいかわななせ","a":"相川七瀬","t":"恋心"},{"k":"あ","y":"あいかわななせ","a":"相川七瀬","t":"Sweet Emotion"},{"k":"あ","y":"あいこ","a":"aiko","t":"カブトムシ"},{"k":"あ","y":"あいこ","a":"aiko","t":"ボーイフレンド"},{"k":"あ","y":"あいこ","a":"aiko","t":"KissHug"},{"k":"あ","y":"あいこ","a":"aiko","t":"相思相愛"},{"k":"あ","y":"あいこ","a":"aiko","t":"横顔"},{"k":"あ","y":"あいこ","a":"aiko","t":"恋のスーパーボール"},{"k":"あ","y":"あいこ","a":"aiko","t":"キラキラ"},{"k":"あ","y":"あいこ","a":"aiko","t":"milk"},{"k":"あ","y":"あいこ","a":"aiko","t":"花火"},{"k":"あ","y":"あいこ","a":"aiko","t":"二時頃"},{"k":"あ","y":"あいこ","a":"aiko","t":"ストロー"}];
+
+// Phase 3: builder-config に埋め込まれた songMeta / tagPresets を公開ページ側でも読み取る。
+// 埋め込みが無い・壊れている場合は空値にフォールバックし、エラーにはしない（旧v1形式の互換性維持）。
+let VCONFIG = {};
+try {
+  const cfgEl = document.getElementById('builder-config');
+  if (cfgEl && cfgEl.textContent.trim()) VCONFIG = JSON.parse(cfgEl.textContent);
+} catch (e) { VCONFIG = {}; }
+const SONG_META = (VCONFIG.songMeta && typeof VCONFIG.songMeta === 'object') ? VCONFIG.songMeta : {};
+const TAG_PRESETS = Array.isArray(VCONFIG.tagPresets) ? VCONFIG.tagPresets : [];
+function keyOf(s) { return s.a + '' + s.t; }
+
+const STATUS_LABELS = {
+  signature: { emoji: '⭐', label: 'おはこ' },
+  welcome: { emoji: '🎤', label: 'リクエストOK' },
+  learning: { emoji: '📖', label: '練習中' },
+};
+const NEW_ARRIVAL_DAYS = 30;
+function isNewArrival(addedAt) {
+  if (!addedAt) return false;
+  const added = new Date(addedAt + 'T00:00:00');
+  if (isNaN(added.getTime())) return false;
+  const diffDays = (new Date() - added) / 86400000;
+  return diffDays >= 0 && diffDays <= NEW_ARRIVAL_DAYS;
+}
 
 const GYO = [
   { label: 'あ', chars: 'あいうえお' },
@@ -386,11 +451,18 @@ const clearBtn = document.getElementById('clearBtn');
 const gyoRow = document.getElementById('gyoRow');
 const resultsEl = document.getElementById('results');
 const resultMeta = document.getElementById('resultMeta');
+const filterSummaryEl = document.getElementById('filterSummary');
+const statusFilterRow = document.getElementById('statusFilterRow');
+const tagFilterRow = document.getElementById('tagFilterRow');
 const randomBtn = document.getElementById('randomBtn');
 const randomPick = document.getElementById('randomPick');
 const themeToggle = document.getElementById('themeToggle');
 
 let activeGyo = null;
+let activeStatus = null;   // null | 'signature' | 'welcome' | 'learning'
+let newOnly = false;       // Phase 3: 🆕新着 トグル（状態フィルタとは独立、AND条件）
+let activeTags = new Set(); // Phase 3: 複数選択可・選択されたタグのいずれかを含む曲（OR条件）
+let lastFiltered = [];     // Phase 3: 「表示中からランダム」で使用
 
 const allChip = document.createElement('div');
 allChip.className = 'chip active';
@@ -414,6 +486,108 @@ function setGyo(label) {
   render();
 }
 
+// ---- Phase 3: 状態・新着フィルタ（1行・横スクロール、すべて/状態3種は単一選択、🆕新着は独立トグル） ----
+const statusAllChip = document.createElement('div');
+statusAllChip.className = 'chip active';
+statusAllChip.textContent = 'すべて';
+statusAllChip.addEventListener('click', () => { activeStatus = null; refreshStatusChips(); render(); });
+statusFilterRow.appendChild(statusAllChip);
+
+const statusChips = {};
+Object.keys(STATUS_LABELS).forEach(value => {
+  const meta = STATUS_LABELS[value];
+  const chip = document.createElement('div');
+  chip.className = 'chip';
+  chip.textContent = `${meta.emoji} ${meta.label}`;
+  chip.addEventListener('click', () => { activeStatus = value; refreshStatusChips(); render(); });
+  statusFilterRow.appendChild(chip);
+  statusChips[value] = chip;
+});
+
+const hasAnyNewArrival = SONGS.some(s => isNewArrival((SONG_META[keyOf(s)] || {}).addedAt));
+let newChip = null;
+if (hasAnyNewArrival) {
+  newChip = document.createElement('div');
+  newChip.className = 'chip';
+  newChip.textContent = '🆕 新着';
+  newChip.addEventListener('click', () => { newOnly = !newOnly; refreshStatusChips(); render(); });
+  statusFilterRow.appendChild(newChip);
+}
+
+function refreshStatusChips() {
+  statusAllChip.classList.toggle('active', activeStatus === null);
+  Object.keys(statusChips).forEach(value => statusChips[value].classList.toggle('active', activeStatus === value));
+  if (newChip) newChip.classList.toggle('active', newOnly);
+}
+
+// ---- Phase 3: タグフィルタ（実際に使われているタグのみ・複数選択でOR条件） ----
+const usedTagIds = new Set();
+SONGS.forEach(s => {
+  const m = SONG_META[keyOf(s)];
+  if (m && Array.isArray(m.tags)) m.tags.forEach(id => usedTagIds.add(id));
+});
+const usedTags = TAG_PRESETS.filter(t => usedTagIds.has(t.id));
+
+if (usedTags.length > 0) {
+  tagFilterRow.style.display = 'flex';
+  usedTags.forEach(t => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.textContent = t.label;
+    chip.addEventListener('click', () => {
+      if (activeTags.has(t.id)) activeTags.delete(t.id); else activeTags.add(t.id);
+      chip.classList.toggle('active', activeTags.has(t.id));
+      render();
+    });
+    tagFilterRow.appendChild(chip);
+  });
+}
+
+function updateFilterSummary() {
+  const parts = [];
+  if (activeGyo) parts.push(`${activeGyo}行`);
+  if (activeStatus && STATUS_LABELS[activeStatus]) parts.push(`${STATUS_LABELS[activeStatus].emoji} ${STATUS_LABELS[activeStatus].label}`);
+  if (newOnly) parts.push('🆕 新着');
+  if (activeTags.size > 0) {
+    const labels = [...activeTags].map(id => {
+      const t = TAG_PRESETS.find(t => t.id === id);
+      return t ? t.label : null;
+    }).filter(Boolean);
+    if (labels.length) parts.push(labels.join(' / '));
+  }
+  if (parts.length === 0) {
+    filterSummaryEl.style.display = 'none';
+    filterSummaryEl.textContent = '';
+  } else {
+    filterSummaryEl.style.display = 'block';
+    filterSummaryEl.textContent = `絞り込み中: ${parts.join(' ・ ')}`;
+  }
+}
+
+function songRowHtml(s, q) {
+  const meta = SONG_META[keyOf(s)] || {};
+  const statusOpt = STATUS_LABELS[meta.status];
+  const badges = [];
+  if (statusOpt) badges.push(`<span class="v-badge" title="${escapeHtml(statusOpt.label)}">${statusOpt.emoji}</span>`);
+  if (isNewArrival(meta.addedAt)) badges.push(`<span class="v-badge" title="新着">🆕</span>`);
+  const tagObjs = Array.isArray(meta.tags)
+    ? meta.tags.map(id => TAG_PRESETS.find(t => t.id === id)).filter(Boolean)
+    : [];
+  const shownTags = tagObjs.slice(0, 2);
+  const restCount = tagObjs.length - shownTags.length;
+  const tagsHtml = tagObjs.length
+    ? `<div class="v-tag-row">${shownTags.map(t => `<span class="v-tag">${escapeHtml(t.label)}</span>`).join('')}${restCount > 0 ? `<span class="v-tag v-tag-more">+${restCount}</span>` : ''}</div>`
+    : '';
+  return `
+    <li>
+      <div class="song-main-row">
+        <span class="song-title">${highlight(s.t, q)}</span>
+        ${badges.length ? `<span class="v-badges">${badges.join('')}</span>` : ''}
+      </div>
+      ${tagsHtml}
+    </li>`;
+}
+
 function highlight(text, q) {
   if (!q) return escapeHtml(text);
   const nText = norm(text);
@@ -430,6 +604,7 @@ function render() {
   const q = searchInput.value.trim();
   clearBtn.style.display = q ? 'block' : 'none';
 
+  // Phase 3: 検索条件 AND 行フィルタ AND 状態フィルタ AND 新着フィルタ AND タグ条件（タグのみOR）
   let filtered = SONGS;
   if (activeGyo) {
     filtered = filtered.filter(s => gyoOf(s.k) === activeGyo);
@@ -438,9 +613,25 @@ function render() {
     const nq = norm(q);
     filtered = filtered.filter(s => norm(s.t).includes(nq) || norm(s.a).includes(nq) || norm(s.y).includes(nq));
   }
+  if (activeStatus) {
+    filtered = filtered.filter(s => (SONG_META[keyOf(s)] || {}).status === activeStatus);
+  }
+  if (newOnly) {
+    filtered = filtered.filter(s => isNewArrival((SONG_META[keyOf(s)] || {}).addedAt));
+  }
+  if (activeTags.size > 0) {
+    filtered = filtered.filter(s => {
+      const tags = (SONG_META[keyOf(s)] || {}).tags || [];
+      return tags.some(id => activeTags.has(id));
+    });
+  }
+
+  lastFiltered = filtered;
+  randomBtn.disabled = filtered.length === 0;
 
   const artistCount = new Set(filtered.map(s => s.a)).size;
   resultMeta.textContent = `${filtered.length}曲 / ${artistCount}組`;
+  updateFilterSummary();
 
   if (SONGS.length === 0) {
     resultsEl.innerHTML = '<div class="empty-state"><div class="emoji">🎤</div>まだ曲が登録されていません</div>';
@@ -459,7 +650,7 @@ function render() {
       cur = { artist: s.a, songs: [] };
       groups.push(cur);
     }
-    cur.songs.push(s.t);
+    cur.songs.push(s);
   }
 
   const MAX_GROUPS = 400;
@@ -472,7 +663,7 @@ function render() {
         <div class="artist-count">${g.songs.length}曲</div>
       </div>
       <ul class="song-list">
-        ${g.songs.map(t => `<li>${highlight(t, q)}</li>`).join('')}
+        ${g.songs.map(s => songRowHtml(s, q)).join('')}
       </ul>
     </div>
   `).join('');
@@ -489,8 +680,13 @@ searchInput.addEventListener('input', render);
 clearBtn.addEventListener('click', () => { searchInput.value = ''; render(); searchInput.focus(); });
 
 randomBtn.addEventListener('click', () => {
-  if (SONGS.length === 0) return;
-  const pick = SONGS[Math.floor(Math.random() * SONGS.length)];
+  const pool = lastFiltered;
+  if (!pool || pool.length === 0) {
+    randomPick.style.display = 'block';
+    randomPick.innerHTML = `<div class="rp-title">条件に一致する曲がありません</div>`;
+    return;
+  }
+  const pick = pool[Math.floor(Math.random() * pool.length)];
   randomPick.style.display = 'block';
   randomPick.innerHTML = `<div class="rp-title">${escapeHtml(pick.t)}</div><div class="rp-artist">${escapeHtml(pick.a)}</div>`;
 });
