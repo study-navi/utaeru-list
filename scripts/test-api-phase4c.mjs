@@ -55,6 +55,10 @@ async function run() {
   if (r.status === 401) ok('改ざんCookie → 401');
   else fail('改ざんCookie', `status ${r.status}`);
 
+  r = await request('GET', '/api/auth/me', { headers: { Authorization: 'Bearer invalid.token.here' } });
+  if (r.status === 401) ok('不正Bearer → 401');
+  else fail('不正Bearer', `status ${r.status}`);
+
   r = await request('POST', '/api/auth/google', { body: { idToken: 'invalid.token.here' } });
   if (r.status === 401) ok('不正Google ID Token → 401');
   else fail('不正Google ID Token', `status ${r.status}`);
@@ -95,14 +99,16 @@ async function run() {
     headers: {
       Origin: ORIGIN,
       'Access-Control-Request-Method': 'GET',
+      'Access-Control-Request-Headers': 'authorization, content-type',
     },
   });
   const aco = preflight.headers.get('access-control-allow-origin');
   const acc = preflight.headers.get('access-control-allow-credentials');
-  if (preflight.status === 204 && aco === ORIGIN && acc === 'true') {
-    ok('CORS preflight（特定Origin + credentials）');
+  const ach = preflight.headers.get('access-control-allow-headers') || '';
+  if (preflight.status === 204 && aco === ORIGIN && acc === 'true' && /authorization/i.test(ach)) {
+    ok('CORS preflight（Origin + credentials + Authorization）');
   } else {
-    fail('CORS preflight', `status ${preflight.status}, origin=${aco}, credentials=${acc}`);
+    fail('CORS preflight', `status ${preflight.status}, origin=${aco}, credentials=${acc}, headers=${ach}`);
   }
 
   r = await request('POST', '/api/auth/logout', { body: {} });

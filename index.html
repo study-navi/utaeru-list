@@ -417,7 +417,7 @@
 
   <div class="card" id="onlinePublishCard">
     <h2>⑥ オンライン公開</h2>
-    <p class="hint">Googleでログインすると、固定URLで曲リストをインターネット上に公開できます。「📄 ページを書き出す」によるHTMLファイル公開もこれまで通り使えます。</p>
+    <p class="hint">Googleでログインすると、固定URLで曲リストをインターネット上に公開できます。「📄 ページを書き出す」によるHTMLファイル公開もこれまで通り使えます。<br>※ Googleボタンにアカウント名が表示されていても、下に「<strong>○○ でログイン中</strong>」が出るまで Utaeru へのログインは完了していません。</p>
     <div id="authSignedOut">
       <div id="googleSignInBtn" class="google-signin-wrap"></div>
     </div>
@@ -1184,15 +1184,30 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
 // ---- Phase 4C-3/4C-4: Googleログイン・claim・オンライン公開 ----
 let authUser = null;
 let authLoading = false;
+const SESSION_TOKEN_KEY = 'utaeru_access_token';
+
+function getStoredAccessToken() {
+  try { return sessionStorage.getItem(SESSION_TOKEN_KEY); } catch (err) { return null; }
+}
+
+function setStoredAccessToken(token) {
+  try {
+    if (token) sessionStorage.setItem(SESSION_TOKEN_KEY, token);
+    else sessionStorage.removeItem(SESSION_TOKEN_KEY);
+  } catch (err) { /* ignore */ }
+}
 
 async function apiFetch(path, options = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+  const token = getStoredAccessToken();
+  if (token) headers.Authorization = 'Bearer ' + token;
   const res = await fetch(API_BASE + path, {
     ...options,
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
+    headers,
   });
   let data = null;
   const text = await res.text();
@@ -1323,6 +1338,9 @@ async function handleGoogleCredential(response) {
       showAuthMessage(apiErrorMessage(res.status, data), 'error');
       return;
     }
+    if (data && data.accessToken) {
+      setStoredAccessToken(data.accessToken);
+    }
     await refreshAuthMe();
     if (authUser) {
       showAuthMessage('ログインしました。', 'success');
@@ -1373,6 +1391,7 @@ async function logoutUser() {
   updateAuthUI();
   try {
     await apiFetch('/api/auth/logout', { method: 'POST', body: '{}' });
+    setStoredAccessToken(null);
     authUser = null;
     showAuthMessage('ログアウトしました。', 'info');
     updateAuthUI();

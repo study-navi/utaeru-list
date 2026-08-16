@@ -166,7 +166,9 @@ async function handleAuthGoogle(request, env) {
   }
 
   const sessionToken = await signSessionToken(googleSub, env.SESSION_SECRET);
-  const response = json({ email }, 200);
+  // accessToken: cross-site (GitHub Pages → workers.dev) では HttpOnly Cookie が
+  // 保存されない環境があるため、Authorization Bearer でセッションを復元する。
+  const response = json({ email, accessToken: sessionToken }, 200);
   setSessionCookie(response, sessionToken);
   return response;
 }
@@ -356,10 +358,22 @@ async function signSessionToken(sub, secret) {
 }
 
 async function getSession(request, secret) {
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const bearer = authHeader.slice(7).trim();
+    if (bearer) {
+      const session = await verifySessionToken(bearer, secret);
+      if (session) return session;
+    }
+  }
+
   const cookie = parseCookies(request.headers.get('Cookie'))[COOKIE_NAME];
   if (!cookie) return null;
+  return verifySessionToken(cookie, secret);
+}
 
-  const parts = cookie.split('.');
+async function verifySessionToken(token, secret) {
+  const parts = token.split('.');
   if (parts.length !== 3) return null;
 
   const [headerB64, payloadB64, sigB64] = parts;
@@ -517,7 +531,7 @@ function corsPreflight(request, cors) {
   if (requestedHeaders) {
     headers['Access-Control-Allow-Headers'] = requestedHeaders;
   } else {
-    headers['Access-Control-Allow-Headers'] = 'Content-Type, X-Utaeru-Dev-Token';
+    headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Utaeru-Dev-Token';
   }
 
   return new Response(null, { status: 204, headers });

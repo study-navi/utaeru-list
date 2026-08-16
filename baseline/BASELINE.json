@@ -1,5 +1,5 @@
 {
-  "label": "Phase 4C cookie fix + セッション確認UX（SameSite=None Worker対応、hiro.html は Phase 3 公開サンプルのまま）",
+  "label": "Phase 4C Bearer認証（cross-site Cookie非依存、hiro.html は Phase 3 公開サンプルのまま）",
   "establishedAt": "2026-08-16",
   "gitCommit": null,
   "gitCommitShort": null,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 276837,
-      "sha256": "482e3652a1ec12a4bc5908761fbd6346541f8c92034b23aa64445e0794124215"
+      "bytes": 277642,
+      "sha256": "eacf462cbb550ae154405016b989ad9313a3f4d765819c883bae3f07607feccc"
     },
     "hiro.html": {
       "bytes": 25630,
