@@ -1,15 +1,15 @@
 {
-  "label": "Phase 6 UI/UX全面整理・管理導線の再設計",
+  "label": "Phase 6.1 アコーディオンUI・縦長改善",
   "establishedAt": "2026-08-16",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "Phase 5 匿名編集キー + Google所有の二方式",
+    "label": "Phase 6 UI/UX全面整理・管理導線の再設計",
     "establishedAt": "2026-08-16",
     "files": {
       "index.html": {
-        "bytes": 295815,
-        "sha256": "e4473f1333cdca6dfaddafcf9334ba34a5d604d1661e36c941d6a6fdd014139b"
+        "bytes": 312507,
+        "sha256": "06fa2f201db1dc502a86c4dec34c3d38c046e83b9949fb48cb1614df8c70ffa9"
       },
       "hiro.html": {
         "bytes": 25630,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 312507,
-      "sha256": "06fa2f201db1dc502a86c4dec34c3d38c046e83b9949fb48cb1614df8c70ffa9"
+      "bytes": 326713,
+      "sha256": "122e099e8863d13b4ecc24d0b2bc3a71247412da6285c79ebbfe0cc9962e4f99"
     },
     "hiro.html": {
       "bytes": 25630,

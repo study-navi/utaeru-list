@@ -30,25 +30,22 @@ for (const vp of cases) {
 
   await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.waitForFunction(
-    () => document.querySelectorAll('.artist-group').length > 0,
+    () => document.querySelectorAll('details.artist-group').length > 0 || document.querySelectorAll('.song-check').length > 0,
     { timeout: 15000 },
   ).catch(() => null);
+
+  // 曲セクションを開いてからテスト
+  await page.click('#accSongs .acc-head');
+  await page.waitForTimeout(100);
 
   if (errors.length) fail(`${vp.label}: JS エラーなし`, errors.join('; '));
   else ok(`${vp.label}: JS エラーなし`);
 
   const initial = await page.evaluate(() => ({
     masterCount: MASTER_SONGS?.length ?? 0,
-    artistGroups: document.querySelectorAll('.artist-group').length,
+    artistGroups: document.querySelectorAll('details.artist-group').length,
     resultMeta: document.getElementById('resultMeta')?.textContent ?? '',
-    resultsTop: Math.round(document.getElementById('results')?.getBoundingClientRect().top ?? -1),
-    songCardTop: Math.round(document.querySelector('.card-songs')?.getBoundingClientRect().top ?? -1),
-    visibleOnLoad: (() => {
-      const el = document.querySelector('.card-songs');
-      if (!el) return false;
-      const r = el.getBoundingClientRect();
-      return r.top < window.innerHeight && r.bottom > 0;
-    })(),
+    songSectionTop: Math.round(document.getElementById('accSongs')?.getBoundingClientRect().top ?? -1),
   }));
 
   if (initial.masterCount !== 1952) fail(`${vp.label}: MASTER_SONGS 1952件`, String(initial.masterCount));
@@ -60,14 +57,14 @@ for (const vp of cases) {
   if (!initial.resultMeta.includes('曲')) fail(`${vp.label}: resultMeta`, initial.resultMeta);
   else ok(`${vp.label}: resultMeta = ${initial.resultMeta}`);
 
-  if (initial.songCardTop > 600) fail(`${vp.label}: 曲セクションが画面上部付近`, `top=${initial.songCardTop}`);
-  else ok(`${vp.label}: 曲セクション top=${initial.songCardTop}`);
+  if (initial.songSectionTop > 600) fail(`${vp.label}: 曲セクションが画面上部付近`, `top=${initial.songSectionTop}`);
+  else ok(`${vp.label}: 曲セクション top=${initial.songSectionTop}`);
 
   await page.fill('#searchInput', 'Story');
   await page.waitForTimeout(80);
   const searched = await page.evaluate(() => ({
     meta: document.getElementById('resultMeta')?.textContent ?? '',
-    groups: document.querySelectorAll('.artist-group').length,
+    groups: document.querySelectorAll('details.artist-group').length,
     hasCheckbox: !!document.querySelector('.song-check'),
   }));
   if (!searched.hasCheckbox) fail(`${vp.label}: 検索後チェックボックス`, searched.meta);
