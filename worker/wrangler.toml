@@ -4,6 +4,7 @@ compatibility_date = "2024-08-16"
 
 [vars]
 ALLOWED_ORIGIN = "https://study-navi.github.io"
+GOOGLE_CLIENT_ID = "580845367374-ep76c8sqpo5g57lsjc63n08p92s99prd.apps.googleusercontent.com"
 
 [[d1_databases]]
 binding = "DB"

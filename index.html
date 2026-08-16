@@ -1272,8 +1272,8 @@ function updateAuthUI() {
   const sid = streamerIdInput.value.trim();
   const sidCheck = validateStreamerId(sid);
   if (!authUser) {
-    claimStatus.textContent = 'オンライン公開にはGoogleログインが必要です。';
-    claimBtn.disabled = true;
+    claimStatus.textContent = '⑥でGoogleログイン後（メールアドレス＋「でログイン中」と表示）に取得できます。';
+    claimBtn.disabled = !sid || !sidCheck.ok || authLoading;
   } else if (!sid) {
     claimStatus.textContent = '①で公開ページIDを入力してください。';
     claimBtn.disabled = true;
