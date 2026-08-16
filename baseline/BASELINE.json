@@ -1,15 +1,15 @@
 {
-  "label": "Phase 8.5 公開前最終仕上げ（OGP・法務照合）",
+  "label": "Phase 9 曲選択・選択済み管理改善",
   "establishedAt": "2026-08-17",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "Phase 8 一般公開品質・初回体験",
+    "label": "Phase 8.5 公開前最終仕上げ（OGP・法務照合）",
     "establishedAt": "2026-08-17",
     "files": {
       "index.html": {
-        "bytes": 364240,
-        "sha256": "cd57f8d885fa993a65e4925c7f3e50acfff966b44416f05761f2f41b7cbb3083"
+        "bytes": 365679,
+        "sha256": "f1664b4e48eb6415b2820d43b3f9d5a60231176c33e1c1aa31bf1c132ce9cf1c"
       },
       "hiro.html": {
         "bytes": 25155,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 365679,
-      "sha256": "f1664b4e48eb6415b2820d43b3f9d5a60231176c33e1c1aa31bf1c132ce9cf1c"
+      "bytes": 371192,
+      "sha256": "47dbb70b4cf1f8dfdab6221cffb86940305b9f1f277b6c51614e3a8c27f8ebe4"
     },
     "hiro.html": {
       "bytes": 25155,

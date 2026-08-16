@@ -1176,10 +1176,11 @@
   .chip.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
 
   .bulk-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+  .bulk-row-secondary { margin-top: 0; opacity: 0.92; }
   .tool-btn {
-    font-size: 12.5px;
-    min-height: 36px;
-    padding: 7px 12px;
+    font-size: 13px;
+    min-height: 44px;
+    padding: 8px 14px;
     border-radius: 9px;
     border: 1px solid var(--border);
     background: var(--page);
@@ -1214,7 +1215,8 @@
   ul.song-list li:has(.song-check:checked) { background: var(--accent-wash); }
   ul.song-list li:last-child { border-bottom: none; }
   .song-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  ul.song-list li input[type="checkbox"] { width: 16px; height: 16px; flex: 0 0 auto; accent-color: var(--accent); }
+  .song-row.is-tappable { cursor: pointer; }
+  ul.song-list li input[type="checkbox"] { width: 18px; height: 18px; flex: 0 0 auto; accent-color: var(--accent); }
   ul.song-list li label { cursor: pointer; }
   .song-label { flex: 1 1 140px; min-width: 0; overflow-wrap: anywhere; word-break: break-word; line-height: 1.4; }
   mark { background: var(--accent-wash); border-radius: 3px; padding: 0 1px; }
@@ -1367,6 +1369,23 @@
   }
   .song-settings-btn:hover { background: var(--surface-2); }
   .song-settings-btn.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  .song-remove-btn {
+    flex: 0 0 auto;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 12px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .song-remove-btn:hover { background: var(--error-bg); border-color: rgba(139, 32, 32, 0.2); color: var(--error-text); }
+  .song-remove-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .empty-state-action { margin-top: 12px; }
 
   .song-meta-panel {
     margin: 10px 0 4px;
@@ -1757,16 +1776,18 @@
           <button type="button" class="view-tab" id="viewTabSelected" data-view="selected">選択中（<span id="viewTabSelectedCount">0</span>）</button>
         </div>
         <div class="search-input-row">
-          <input type="search" id="searchInput" placeholder="例：Story / AI" autocomplete="off" />
+          <input type="search" id="searchInput" placeholder="曲名・アーティスト名で検索" autocomplete="off" aria-describedby="searchInputHint" />
           <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
         </div>
-        <p class="hint field-input-hint">曲名・アーティスト名で絞り込めます。</p>
+        <p class="hint field-input-hint" id="searchInputHint">曲名・アーティスト名で絞り込めます。</p>
         <div class="gyo-row" id="gyoRow"></div>
-        <div class="bulk-row">
-          <button class="tool-btn" id="selectVisibleBtn">表示中をすべて選択</button>
-          <button class="tool-btn" id="clearVisibleBtn">表示中の選択を解除</button>
-          <button class="tool-btn subtle" id="selectAllBtn">全曲を選択</button>
-          <button class="tool-btn subtle" id="clearAllBtn">すべて解除</button>
+        <div class="bulk-row" id="bulkRowPrimary">
+          <button class="tool-btn" id="selectVisibleBtn" type="button">表示中をすべて選択</button>
+          <button class="tool-btn" id="clearVisibleBtn" type="button">表示中の選択を解除</button>
+        </div>
+        <div class="bulk-row bulk-row-secondary" id="bulkRowSecondary">
+          <button class="tool-btn subtle" id="selectAllBtn" type="button">全曲を選択</button>
+          <button class="tool-btn subtle" id="clearAllBtn" type="button">すべて解除</button>
         </div>
         <div class="result-meta" id="resultMeta"></div>
         <div id="results"></div>
@@ -2196,16 +2217,64 @@ function songPanelHtml(s) {
     </div>`;
 }
 
+function selectionRemoveBtnHtml(key) {
+  if (songListView !== 'selected') return '';
+  return `<button type="button" class="song-remove-btn" data-key="${escapeHtml(key)}" aria-label="選択から外す">外す</button>`;
+}
+
+function sortSongsForDisplay(songs) {
+  return [...songs].sort((a, b) => {
+    const byArtist = norm(a.a).localeCompare(norm(b.a), 'ja');
+    if (byArtist !== 0) return byArtist;
+    return norm(a.t).localeCompare(norm(b.t), 'ja');
+  });
+}
+
+function updateSongListChrome() {
+  const isSelectedView = songListView === 'selected';
+  if (gyoRow) gyoRow.style.display = isSelectedView ? 'none' : '';
+  const hint = document.getElementById('searchInputHint');
+  if (searchInput) {
+    searchInput.placeholder = isSelectedView ? '選択中の曲を検索' : '曲名・アーティスト名で検索';
+    searchInput.setAttribute('aria-label', isSelectedView ? '選択中の曲を検索' : '曲名・アーティスト名で検索');
+  }
+  if (hint) {
+    hint.textContent = isSelectedView
+      ? '選択済みの曲だけを表示しています。曲名・アーティスト名で絞り込めます。'
+      : '曲名・アーティスト名で絞り込めます。行フィルターと組み合わせもできます。';
+  }
+  const selectVisibleBtn = document.getElementById('selectVisibleBtn');
+  const clearVisibleBtn = document.getElementById('clearVisibleBtn');
+  const selectAllBtn = document.getElementById('selectAllBtn');
+  const clearAllBtn = document.getElementById('clearAllBtn');
+  const bulkSecondary = document.getElementById('bulkRowSecondary');
+  if (selectVisibleBtn) selectVisibleBtn.style.display = isSelectedView ? 'none' : '';
+  if (selectAllBtn) selectAllBtn.style.display = isSelectedView ? 'none' : '';
+  if (bulkSecondary) bulkSecondary.style.display = isSelectedView ? 'flex' : 'flex';
+  if (clearVisibleBtn) {
+    clearVisibleBtn.textContent = isSelectedView
+      ? (searchInput?.value.trim() ? '検索結果をすべて外す' : '表示中をすべて外す')
+      : '表示中の選択を解除';
+  }
+  if (clearAllBtn) {
+    clearAllBtn.textContent = isSelectedView && selectedKeys.size > 0
+      ? `選択をすべて解除（${selectedKeys.size.toLocaleString('ja-JP')}曲）`
+      : 'すべて解除';
+  }
+}
+
 function songItemHtml(s, q) {
   const key = keyOf(s);
   const meta = songMeta[key];
   const expanded = expandedKeys.has(key);
+  const tappable = songListView !== 'selected' ? ' is-tappable' : '';
   return `
     <li class="song-item" data-key="${escapeHtml(key)}">
-      <div class="song-row">
+      <div class="song-row${tappable}">
         <input type="checkbox" class="song-check" id="sc-${s.id}" data-key="${escapeHtml(key)}" ${selectedKeys.has(key) ? 'checked' : ''} />
         <label for="sc-${s.id}" class="song-label">${highlight(s.t, q)}</label>
         <span class="song-badges">${badgesHtml(meta)}</span>
+        ${selectionRemoveBtnHtml(key)}
         <button type="button" class="song-settings-btn ${expanded ? 'active' : ''}" data-key="${escapeHtml(key)}" aria-expanded="${expanded ? 'true' : 'false'}">${expanded ? '閉じる' : '設定'}</button>
       </div>
       ${expanded ? songPanelHtml(s) : ''}
@@ -2425,11 +2494,19 @@ function initAccordion() {
     tab.addEventListener('click', () => {
       const view = tab.dataset.view;
       if (!view || view === songListView) return;
+      if (view === 'selected' && activeGyo) {
+        activeGyo = null;
+        [...gyoRow.children].forEach(c => c.classList.remove('active'));
+        if (gyoRow.children[0]) gyoRow.children[0].classList.add('active');
+      }
       songListView = view;
       document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+      updateSongListChrome();
       render();
+      if (view === 'selected') searchInput.focus();
     });
   });
+  updateSongListChrome();
   setMainAccOpen('basic', { scroll: false, smooth: false });
 }
 
@@ -2450,13 +2527,15 @@ function flatSongItemHtml(s, q) {
   const key = keyOf(s);
   const meta = songMeta[key];
   const expanded = expandedKeys.has(key);
+  const tappable = songListView !== 'selected' ? ' is-tappable' : '';
   return `
     <li class="song-item" data-key="${escapeHtml(key)}">
-      <div class="song-row">
+      <div class="song-row${tappable}">
         <input type="checkbox" class="song-check" id="sc-${s.id}" data-key="${escapeHtml(key)}" ${selectedKeys.has(key) ? 'checked' : ''} />
         <span class="flat-artist">${highlight(s.a, q)}</span><span class="flat-sep"> — </span>
         <label for="sc-${s.id}" class="song-label">${highlight(s.t, q)}</label>
         <span class="song-badges">${badgesHtml(meta)}</span>
+        ${selectionRemoveBtnHtml(key)}
         <button type="button" class="song-settings-btn ${expanded ? 'active' : ''}" data-key="${escapeHtml(key)}" aria-expanded="${expanded ? 'true' : 'false'}">${expanded ? '閉じる' : '設定'}</button>
       </div>
       ${expanded ? songPanelHtml(s) : ''}
@@ -2551,9 +2630,10 @@ function render() {
 
   if (filtered.length === 0) {
     const emptyMsg = songListView === 'selected'
-      ? '選択中の曲がありません'
+      ? `選択中の曲がありません。${q ? '検索条件を変えるか、' : ''}<div class="empty-state-action"><button type="button" class="tool-btn" id="emptyGoAllBtn">すべての曲から選ぶ</button></div>`
       : '🔍 該当する曲が見つかりませんでした';
     resultsEl.innerHTML = `<div class="empty-state">${emptyMsg}</div>`;
+    updateSongListChrome();
     updateAccSummaries();
     updatePreviewPanel();
     return;
@@ -2561,12 +2641,14 @@ function render() {
 
   const isSearchMode = !!q;
   const useFlatList = isSearchMode || songListView === 'selected';
+  const displaySongs = songListView === 'selected' ? sortSongsForDisplay(filtered) : filtered;
 
   if (useFlatList) {
     const headLabel = isSearchMode
-      ? `検索結果 ${filtered.length}曲`
-      : `選択中 ${filtered.length}曲`;
-    resultsEl.innerHTML = renderFlatSongList(filtered, q, headLabel);
+      ? `検索結果 ${displaySongs.length.toLocaleString('ja-JP')}曲`
+      : `選択中 ${displaySongs.length.toLocaleString('ja-JP')}曲`;
+    resultsEl.innerHTML = renderFlatSongList(displaySongs, q, headLabel);
+    updateSongListChrome();
     updateAccSummaries();
     updatePreviewPanel();
     return;
@@ -2600,6 +2682,7 @@ function render() {
   }).join('') + (groups.length > MAX_GROUPS ? `<div class="result-meta">他 ${groups.length - MAX_GROUPS} 組は絞り込みを続けると表示されます</div>` : '');
 
   applyIndeterminate();
+  updateSongListChrome();
   updateAccSummaries();
   updatePreviewPanel();
 }
@@ -2650,6 +2733,39 @@ resultsEl.addEventListener('change', (e) => {
 
 // Phase 2: 状態・タグ・追加日の各種ボタン操作（クリック）
 resultsEl.addEventListener('click', (e) => {
+  if (e.target.closest('#emptyGoAllBtn')) {
+    songListView = 'all';
+    document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t.dataset.view === 'all'));
+    updateSongListChrome();
+    render();
+    searchInput.focus();
+    return;
+  }
+  const removeBtn = e.target.closest('.song-remove-btn');
+  if (removeBtn) {
+    const key = removeBtn.dataset.key;
+    if (key) {
+      selectedKeys.delete(key);
+      updateSelectedCount();
+      render();
+    }
+    return;
+  }
+  if (songListView !== 'selected') {
+    const row = e.target.closest('.song-row.is-tappable');
+    if (row && !e.target.closest('button, input, label, .song-panel, .song-settings-btn, .song-remove-btn')) {
+      const item = row.closest('.song-item');
+      const cb = item?.querySelector('.song-check');
+      const key = cb?.dataset.key;
+      if (cb && key) {
+        cb.checked = !cb.checked;
+        if (cb.checked) selectedKeys.add(key); else selectedKeys.delete(key);
+        updateSelectedCount();
+        render();
+        return;
+      }
+    }
+  }
   if (e.target.matches('.artist-check')) {
     e.stopPropagation();
     return;
@@ -2693,8 +2809,8 @@ resultsEl.addEventListener('click', (e) => {
   }
 });
 
-searchInput.addEventListener('input', render);
-clearBtn.addEventListener('click', () => { searchInput.value = ''; render(); searchInput.focus(); });
+searchInput.addEventListener('input', () => { updateSongListChrome(); render(); });
+clearBtn.addEventListener('click', () => { searchInput.value = ''; updateSongListChrome(); render(); searchInput.focus(); });
 
 document.getElementById('selectVisibleBtn').addEventListener('click', () => {
   lastFiltered.forEach(s => selectedKeys.add(keyOf(s)));
@@ -2709,6 +2825,8 @@ document.getElementById('selectAllBtn').addEventListener('click', () => {
   render(); updateSelectedCount();
 });
 document.getElementById('clearAllBtn').addEventListener('click', () => {
+  if (selectedKeys.size === 0) return;
+  if (selectedKeys.size >= 20 && !confirm(`${selectedKeys.size.toLocaleString('ja-JP')}曲すべての選択を解除しますか？`)) return;
   selectedKeys.clear();
   render(); updateSelectedCount();
 });
@@ -2716,6 +2834,7 @@ document.getElementById('clearAllBtn').addEventListener('click', () => {
 function updateSelectedCount() {
   document.getElementById('selectedCount').textContent = selectedKeys.size.toLocaleString('ja-JP');
   document.getElementById('exportBtn').disabled = selectedKeys.size === 0 || !streamerNameInput.value.trim();
+  updateSongListChrome();
   updatePublishButtonState();
   updatePreviewPanel();
   updateAccSummaries();
