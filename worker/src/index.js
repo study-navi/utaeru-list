@@ -145,19 +145,25 @@ async function handleAuthGoogle(request, env) {
 
   const googleSub = claims.sub;
   const email = claims.email || '';
-  const name = claims.name || null;
-  const picture = claims.picture || null;
+  const displayName = claims.name || null;
   const now = new Date().toISOString();
 
-  await env.DB.prepare(`
-    INSERT INTO users (google_sub, email, name, picture, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?)
-    ON CONFLICT(google_sub) DO UPDATE SET
-      email = excluded.email,
-      name = excluded.name,
-      picture = excluded.picture,
-      updated_at = excluded.updated_at
-  `).bind(googleSub, email, name, picture, now, now).run();
+  const existing = await env.DB.prepare(
+    'SELECT user_id FROM users WHERE google_sub = ?',
+  ).bind(googleSub).first();
+
+  if (existing) {
+    await env.DB.prepare(`
+      UPDATE users
+      SET email = ?, display_name = ?, last_login_at = ?
+      WHERE google_sub = ?
+    `).bind(email, displayName, now, googleSub).run();
+  } else {
+    await env.DB.prepare(`
+      INSERT INTO users (user_id, google_sub, email, display_name, created_at, last_login_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(crypto.randomUUID(), googleSub, email, displayName, now, now).run();
+  }
 
   const sessionToken = await signSessionToken(googleSub, env.SESSION_SECRET);
   const response = json({ email }, 200);
@@ -178,7 +184,7 @@ async function handleAuthMe(request, env) {
   }
 
   const user = await env.DB.prepare(
-    'SELECT email FROM users WHERE google_sub = ?',
+    'SELECT user_id, email FROM users WHERE google_sub = ?',
   ).bind(session.sub).first();
 
   if (!user) {
@@ -187,7 +193,7 @@ async function handleAuthMe(request, env) {
 
   const { results } = await env.DB.prepare(
     'SELECT streamer_id FROM streamer_owners WHERE user_id = ? ORDER BY streamer_id',
-  ).bind(session.sub).all();
+  ).bind(user.user_id).all();
 
   const ownedStreamerIds = (results || []).map((row) => row.streamer_id);
 
@@ -212,23 +218,28 @@ async function handleClaim(request, path, env) {
   }
 
   const user = await env.DB.prepare(
-    'SELECT google_sub FROM users WHERE google_sub = ?',
+    'SELECT user_id FROM users WHERE google_sub = ?',
   ).bind(session.sub).first();
 
   if (!user) {
     return json({ error: 'unauthorized' }, 401);
   }
 
-  try {
-    await env.DB.prepare(
-      'INSERT INTO streamer_owners (streamer_id, user_id, claimed_at) VALUES (?, ?, ?)',
-    ).bind(streamerId, session.sub, new Date().toISOString()).run();
-  } catch (err) {
-    if (isD1UniqueViolation(err)) {
-      return json({ error: 'already_claimed' }, 409);
+  const existing = await env.DB.prepare(
+    'SELECT user_id FROM streamer_owners WHERE streamer_id = ?',
+  ).bind(streamerId).first();
+
+  if (existing) {
+    if (existing.user_id === user.user_id) {
+      return json({ streamerId, ok: true, alreadyOwned: true }, 200);
     }
-    throw err;
+    return json({ error: 'already_claimed' }, 409);
   }
+
+  const now = new Date().toISOString();
+  await env.DB.prepare(
+    'INSERT INTO streamer_owners (streamer_id, user_id, created_at) VALUES (?, ?, ?)',
+  ).bind(streamerId, user.user_id, now).run();
 
   return json({ streamerId, ok: true }, 200);
 }
@@ -251,9 +262,17 @@ async function authorizeWrite(request, env, streamerId) {
     return { ok: false, error: 'unauthorized', status: 401 };
   }
 
+  const user = await env.DB.prepare(
+    'SELECT user_id FROM users WHERE google_sub = ?',
+  ).bind(session.sub).first();
+
+  if (!user) {
+    return { ok: false, error: 'unauthorized', status: 401 };
+  }
+
   const owner = await env.DB.prepare(
     'SELECT streamer_id FROM streamer_owners WHERE streamer_id = ? AND user_id = ?',
-  ).bind(streamerId, session.sub).first();
+  ).bind(streamerId, user.user_id).first();
 
   if (!owner) {
     return { ok: false, error: 'forbidden', status: 403 };

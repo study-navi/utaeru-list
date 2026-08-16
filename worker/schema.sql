@@ -1,28 +1,28 @@
--- Utaeru D1 schema (Phase 4C)
--- The streamers table already exists in production; do not recreate it here.
---
--- Expected existing table:
---   CREATE TABLE streamers (
---     streamer_id TEXT PRIMARY KEY,
---     public_data  TEXT NOT NULL,
---     created_at   TEXT NOT NULL DEFAULT (datetime('now')),
---     updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
---   );
+-- Utaeru D1 schema (Phase 4C production)
+-- These tables already exist in production utaeru-db. This file documents the live schema only.
+-- Do NOT run destructive migrations against production.
 
-CREATE TABLE IF NOT EXISTS users (
-  google_sub TEXT PRIMARY KEY,
-  email      TEXT NOT NULL,
-  name       TEXT,
-  picture    TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
+-- streamers (Phase 4B)
+-- CREATE TABLE streamers (
+--   streamer_id TEXT PRIMARY KEY,
+--   public_data  TEXT NOT NULL,
+--   created_at   TEXT NOT NULL,
+--   updated_at   TEXT NOT NULL
+-- );
 
-CREATE TABLE IF NOT EXISTS streamer_owners (
-  streamer_id TEXT PRIMARY KEY,
-  user_id     TEXT NOT NULL REFERENCES users (google_sub),
-  claimed_at  TEXT NOT NULL DEFAULT (datetime('now'))
-);
+-- users (Phase 4C-2)
+-- CREATE TABLE users (
+--   user_id        TEXT PRIMARY KEY,
+--   google_sub     TEXT NOT NULL UNIQUE,
+--   email          TEXT,
+--   display_name   TEXT,
+--   created_at     TEXT NOT NULL,
+--   last_login_at  TEXT NOT NULL
+-- );
 
-CREATE INDEX IF NOT EXISTS idx_streamer_owners_user_id
-  ON streamer_owners (user_id);
+-- streamer_owners (Phase 4C-2)
+-- CREATE TABLE streamer_owners (
+--   streamer_id TEXT PRIMARY KEY,
+--   user_id     TEXT NOT NULL REFERENCES users(user_id),
+--   created_at  TEXT NOT NULL
+-- );
