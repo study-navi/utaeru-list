@@ -101,7 +101,13 @@ ${css}
 
   <div id="results"></div>
 
-  <footer>
+  <nav class="site-footer-nav" aria-label="Utalis">
+    <span class="site-footer-brand">Utalis</span>
+    <a data-legal="terms.html" href="terms.html">利用規約</a>
+    <a data-legal="privacy.html" href="privacy.html">プライバシー</a>
+    <a data-legal="contact.html" href="contact.html">お問い合わせ</a>
+  </nav>
+  <footer class="catalog-footer">
     データ提供元：Mirrativ（ミラティブ）内カラオケアプリ「エモカラ」の楽曲一覧を個人配布しているGoogle Driveより取得（2026/7/28時点のカタログ）。配信者が歌える曲として選択したものを掲載しています。配信状況や仕様変更により、実際に歌える曲は変動する場合があります。
   </footer>
 </div>
@@ -316,7 +322,7 @@ async function bootstrapPublicViewer() {
     });
   } catch (e) {
     document.title = '読み込みエラー';
-    showPageState('⚠️', '公開データの取得に失敗しました。ネットワークを確認してください。');
+    showPageState('⚠️', 'うまく読み込めませんでした。<br>もう一度お試しください。<br><a href="' + SITE_BASE + '/">Utalisトップ</a>');
     return;
   }
 
@@ -332,7 +338,7 @@ async function bootstrapPublicViewer() {
   }
   if (!res.ok) {
     document.title = '読み込みエラー';
-    showPageState('⚠️', '公開データの取得に失敗しました（' + res.status + '）。');
+    showPageState('⚠️', 'うまく読み込めませんでした。<br>もう一度お試しください。<br><a href="' + SITE_BASE + '/">Utalisトップ</a>');
     return;
   }
 
@@ -341,7 +347,7 @@ async function bootstrapPublicViewer() {
     api = await res.json();
   } catch (e) {
     document.title = '読み込みエラー';
-    showPageState('⚠️', '公開データの形式が不正です。');
+    showPageState('⚠️', 'うまく読み込めませんでした。<br>もう一度お試しください。<br><a href="' + SITE_BASE + '/">Utalisトップ</a>');
     return;
   }
 
@@ -355,8 +361,16 @@ async function bootstrapPublicViewer() {
   initPublicViewer(publicData);
 }
 
+function applySiteFooterLinks() {
+  document.querySelectorAll('.site-footer-nav a[data-legal]').forEach((a) => {
+    const file = a.getAttribute('data-legal');
+    if (file) a.href = SITE_BASE + '/' + file;
+  });
+}
+
 ${viewerJs}
 
+applySiteFooterLinks();
 bootstrapPublicViewer();
 </script>
 </body>

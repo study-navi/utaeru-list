@@ -135,7 +135,7 @@ async function checkBuilder(label, width, height) {
       idPh: pick('#streamerIdInput')?.getAttribute('placeholder') || '',
       summary: pick('#accSummaryBasic')?.textContent?.trim() || '',
       summaryClip: clip(pick('#accSummaryBasic')),
-      hintClip: clip(pick('.page-intro')),
+      hintClip: clip(pick('.getting-started') || pick('.site-hero-lead')),
       urlPreviewClip: clip(pick('#streamerIdPreview')),
       accSummaryClamp: getComputedStyle(pick('#accSummaryBasic')).webkitLineClamp,
     };
@@ -153,8 +153,8 @@ async function checkBuilder(label, width, height) {
   if (checks.accSummaryClamp && checks.accSummaryClamp !== 'none' && checks.accSummaryClamp !== '0') {
     fail(`${label}: acc-summary line-clamp`, checks.accSummaryClamp);
   } else ok(`${label}: acc-summary line-clamp なし`);
-  if (checks.hintClip) fail(`${label}: page-intro 切れ`);
-  else ok(`${label}: page-intro 全文表示`);
+  if (checks.hintClip) fail(`${label}: getting-started 切れ`);
+  else ok(`${label}: getting-started 全文表示`);
 
   const menuBtn = width < 641 ? '#mobileMenuBtn' : '#accountMenuBtn';
   await page.click(menuBtn);

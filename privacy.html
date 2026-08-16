@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<meta name="description" content="Utalis（うたりす）プライバシーポリシー">
+<title>プライバシーポリシー — Utalis</title>
+<link rel="canonical" href="https://utalis.github.io/privacy.html">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/legal.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="site-header">
+    <p class="brand">Utalis <span class="brand-sub">うたりす</span></p>
+    <a href="index.html">← 曲リストを作る</a>
+  </header>
+
+  <h1>プライバシーポリシー</h1>
+  <p class="lead">最終更新: 2026年8月17日</p>
+
+  <p class="notice">本ページは、2026年8月時点の Utalis の実装（GitHub Pages + Cloudflare Workers + D1）に基づいて記載しています。公開前に必要に応じて法務専門家のレビューを受けてください。</p>
+
+  <h2>1. 概要</h2>
+  <p>Utalis（うたりす）は、歌える曲リストの作成・公開サービスです。本ポリシーは、本サービスで取り扱う情報について説明します。</p>
+
+  <h2>2. 収集・保存する情報</h2>
+  <p>本サービスでは、以下の情報を Cloudflare D1 データベース等に保存します。</p>
+  <ul>
+    <li><strong>公開ページデータ</strong>: 配信者名、サブタイトル、選択した曲情報、タグ・状態・新着設定、テーマ設定、公開ページ ID、作成日時・更新日時</li>
+    <li><strong>Google ログイン利用時</strong>: Google アカウント ID（sub）、メールアドレス、表示名、ログイン日時</li>
+    <li><strong>匿名作成・編集キー管理時</strong>: 編集キーのハッシュ値（平文の編集キーは保存しません）</li>
+    <li><strong>削除済みページ</strong>: 公開ページ ID と削除日時（ソフト削除。ID の再取得防止のため保持）</li>
+  </ul>
+
+  <h2>3. 保存しない情報</h2>
+  <p>以下は、運営統計や分析目的で D1 に恒久保存しません。</p>
+  <ul>
+    <li>リスナー（公開ページ閲覧者）の Google アカウント情報</li>
+    <li>リスナーの閲覧履歴・行動履歴の詳細</li>
+    <li>端末情報のプロファイリング</li>
+    <li>編集キーの平文</li>
+  </ul>
+  <p>なお、スパム防止のため、書き込み系 API では Cloudflare Workers のレート制限機能により、短時間のリクエスト元 IP が一時的に利用される場合があります。これは D1 への恒久保存ではありません。</p>
+
+  <h2>4. Google ログイン</h2>
+  <p>Google アカウントで管理する場合、Google OAuth により認証します。Utalis は Google からメールアドレス等を受け取り、セッション管理に利用します。Google 側の取り扱いについては、<a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google プライバシーポリシー</a>もご確認ください。</p>
+
+  <h2>5. 公開データ</h2>
+  <p>公開した曲リストは、固定 URL から誰でも閲覧できる状態になります。公開する内容（配信者名・曲名等）に個人情報や機密情報を含めないようご注意ください。</p>
+
+  <h2>6. 利用目的</h2>
+  <ul>
+    <li>歌える曲リストの作成・公開・更新・削除機能の提供</li>
+    <li>Google 管理・編集キー認証によるページ管理</li>
+    <li>不正利用・大量作成の防止（レート制限）</li>
+    <li>サービス運営に必要な最小限の統計（ページ数、曲数等の集計。個人を特定しない形式）</li>
+  </ul>
+
+  <h2>7. 第三者サービス</h2>
+  <ul>
+    <li><strong>GitHub Pages</strong>: ビルダー画面・公開ページ viewer の配信</li>
+    <li><strong>Cloudflare Workers / D1</strong>: API とデータ保存</li>
+    <li><strong>Google</strong>: OAuth 認証（Google 管理を選んだ場合）</li>
+  </ul>
+
+  <h2>8. 削除</h2>
+  <p>利用者は公開ページを削除できます。削除後も公開ページ ID の予約のため、識別子と削除日時等は一定期間保持されます。詳細は<a href="terms.html">利用規約</a>を参照してください。</p>
+
+  <h2>9. お問い合わせ</h2>
+  <p>本ポリシーに関するお問い合わせは、<a href="contact.html">お問い合わせ</a>ページをご覧ください。</p>
+
+  <footer class="site-footer">
+    <a href="index.html">Utalis</a>
+    <a href="terms.html">利用規約</a>
+    <a href="privacy.html">プライバシー</a>
+    <a href="contact.html">お問い合わせ</a>
+  </footer>
+</div>
+</body>
+</html>

@@ -310,6 +310,18 @@
     line-height: 1.65;
   }
   footer a { color: var(--text-secondary); }
+  .site-footer-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .site-footer-brand { font-weight: 800; color: var(--text-secondary); margin-right: 4px; }
+  .site-footer-nav a { text-decoration: none; }
+  .site-footer-nav a:hover { color: var(--accent); text-decoration: underline; }
+  .catalog-footer { border-top: none; padding-top: 0; margin-top: 0; font-size: 11.5px; }
 
   @media (max-width: 430px) {
     .wrap { padding: 14px 14px 48px; }
@@ -369,7 +381,13 @@
 
   <div id="results"></div>
 
-  <footer>
+  <nav class="site-footer-nav" aria-label="Utalis">
+    <span class="site-footer-brand">Utalis</span>
+    <a href="terms.html">利用規約</a>
+    <a href="privacy.html">プライバシー</a>
+    <a href="contact.html">お問い合わせ</a>
+  </nav>
+  <footer class="catalog-footer">
     データ提供元：Mirrativ（ミラティブ）内カラオケアプリ「エモカラ」の楽曲一覧を個人配布しているGoogle Driveより取得（2026/7/28時点のカタログ）。配信者が歌える曲として選択したものを掲載しています。配信状況や仕様変更により、実際に歌える曲は変動する場合があります。
   </footer>
 

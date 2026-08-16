@@ -1,15 +1,15 @@
 {
-  "label": "Phase 7 運営基盤（soft delete・管理統計）",
+  "label": "Phase 8 一般公開品質・初回体験",
   "establishedAt": "2026-08-17",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "サブタイトルplaceholder短文化・補足例追加",
+    "label": "Phase 7 運営基盤（soft delete・管理統計）",
     "establishedAt": "2026-08-17",
     "files": {
       "index.html": {
-        "bytes": 349049,
-        "sha256": "943a273c6e525fbabf9be369079f410eec13ff00f49b114085fafd047f1e75d6"
+        "bytes": 355306,
+        "sha256": "b30ce1731b11c746bc566b95db8280dbebe99cb537e68fef7e88855bc9eaf955"
       },
       "hiro.html": {
         "bytes": 24413,
@@ -19,12 +19,12 @@
   },
   "files": {
     "index.html": {
-      "bytes": 355306,
-      "sha256": "b30ce1731b11c746bc566b95db8280dbebe99cb537e68fef7e88855bc9eaf955"
+      "bytes": 364240,
+      "sha256": "cd57f8d885fa993a65e4925c7f3e50acfff966b44416f05761f2f41b7cbb3083"
     },
     "hiro.html": {
-      "bytes": 24413,
-      "sha256": "a7e49ef25659be6d7f62f028a275032cacbcbfc5bf7e46f4efb4a3e5091bf5df"
+      "bytes": 25155,
+      "sha256": "2f5800c3c6bc5c19f58a819fd2457f305ea8c61909174cda35dd6b0e4665d7d1"
     }
   },
   "catalog": {
