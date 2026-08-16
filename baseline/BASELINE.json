@@ -1,30 +1,30 @@
 {
-  "label": "リスナー公開ページ ライトUI固定",
+  "label": "文字切れ解消・サンプル表記汎用化",
   "establishedAt": "2026-08-16",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "Utalis ブランド移行・URL移行",
+    "label": "リスナー公開ページ ライトUI固定",
     "establishedAt": "2026-08-16",
     "files": {
       "index.html": {
-        "bytes": 349722,
-        "sha256": "6419f872a33c25fd91fc450a1d337e99487bb747e1039c6e7b1b187108d71123"
+        "bytes": 347704,
+        "sha256": "1c3ef291f9c975c8cbb4117f5d11187de0794cbd1cef77596a5629c2969f74aa"
       },
       "hiro.html": {
-        "bytes": 25630,
-        "sha256": "501db6b1beea39814e472e5db7375d9acaa9f0406736aeca035615c23dc3fc9e"
+        "bytes": 24254,
+        "sha256": "e053fda86856f2404aeb22fef73ef6c120374d4eb3fd63cc2f8c86342ac2d3bb"
       }
     }
   },
   "files": {
     "index.html": {
-      "bytes": 347704,
-      "sha256": "1c3ef291f9c975c8cbb4117f5d11187de0794cbd1cef77596a5629c2969f74aa"
+      "bytes": 348703,
+      "sha256": "d21bf7ab69bb9dd08080845586a85555aaa84a007d315d3206525d1e1616a2af"
     },
     "hiro.html": {
-      "bytes": 24254,
-      "sha256": "e053fda86856f2404aeb22fef73ef6c120374d4eb3fd63cc2f8c86342ac2d3bb"
+      "bytes": 24413,
+      "sha256": "a7e49ef25659be6d7f62f028a275032cacbcbfc5bf7e46f4efb4a3e5091bf5df"
     }
   },
   "catalog": {

@@ -316,6 +316,15 @@
     h1 { font-size: 19px; }
     .chip { font-size: 12.5px; min-height: 32px; padding: 5px 10px; }
     .song-title { font-size: 15px; }
+    .random-btn {
+      max-width: 100%;
+      white-space: normal;
+      line-height: 1.4;
+    }
+    .filter-row {
+      flex-wrap: wrap;
+      overflow-x: hidden;
+    }
   }
 </style>
 </head>
@@ -340,7 +349,7 @@
     <div class="search-shell">
       <label class="search-label" for="searchInput">曲名・アーティスト名で検索</label>
       <div class="search-input-row">
-        <input type="search" id="searchInput" placeholder="例：カブトムシ / aiko" autocomplete="off" />
+        <input type="search" id="searchInput" placeholder="例：Story / AI" autocomplete="off" />
         <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
       </div>
       <div class="gyo-row" id="gyoRow"></div>
