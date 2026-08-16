@@ -1,0 +1,16 @@
+{
+  "name": "worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker backend for [Utaeru](https://github.com/study-navi/utaeru-list) — public song-list publishing, Google sign-in, and streamer ID claims.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "wrangler": "^4.123.0"
+  }
+}

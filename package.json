@@ -1,0 +1,27 @@
+{
+  "name": "utaeru-list",
+  "version": "1.0.0",
+  "description": "配信者が「歌える曲リスト」を作成・公開するための静的 Web アプリです。   サーバーやビルドツールは不要で、HTML ファイルをそのまま配布・閲覧できます。",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/study-navi/utaeru-list.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/study-navi/utaeru-list/issues"
+  },
+  "homepage": "https://github.com/study-navi/utaeru-list#readme",
+  "dependencies": {
+    "playwright-core": "^1.62.1"
+  }
+}

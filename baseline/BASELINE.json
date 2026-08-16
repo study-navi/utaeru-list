@@ -1,5 +1,5 @@
 {
-  "label": "Phase 4C-3/4C-4 適用後（Googleログイン・claim・オンライン公開 API 接続。hiro.html は Phase 3 公開サンプルのまま）",
+  "label": "Phase 4C cookie fix + セッション確認UX（SameSite=None Worker対応、hiro.html は Phase 3 公開サンプルのまま）",
   "establishedAt": "2026-08-16",
   "gitCommit": null,
   "gitCommitShort": null,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 276477,
-      "sha256": "9192035d542605f01eb269a9fbea8f8454b033499943fafc56ef9a1f2d872199"
+      "bytes": 276755,
+      "sha256": "a6c704e5803a2dd64341d6ddc37f2ab6ec6b2bdd8a3439eb50148c8f8664f030"
     },
     "hiro.html": {
       "bytes": 25630,

@@ -1323,8 +1323,12 @@ async function handleGoogleCredential(response) {
       showAuthMessage(apiErrorMessage(res.status, data), 'error');
       return;
     }
-    showAuthMessage('ログインしました。', 'success');
     await refreshAuthMe();
+    if (authUser) {
+      showAuthMessage('ログインしました。', 'success');
+    } else {
+      showAuthMessage('Googleログインは完了しましたが、セッションを確認できませんでした。一度ページを再読み込みしてから、もう一度Googleログインをお試しください。', 'error');
+    }
   } catch (err) {
     showAuthMessage('ログインに失敗しました。ネットワークを確認してください。', 'error');
   } finally {

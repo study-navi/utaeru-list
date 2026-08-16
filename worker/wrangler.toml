@@ -1,0 +1,11 @@
+name = "utaeru-api"
+main = "src/index.js"
+compatibility_date = "2024-08-16"
+
+[vars]
+ALLOWED_ORIGIN = "https://study-navi.github.io"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "utaeru-db"
+database_id = "4f45db09-b1f8-4df4-9b16-01359fe7f9cd"

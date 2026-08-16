@@ -105,6 +105,14 @@ async function run() {
     fail('CORS preflight', `status ${preflight.status}, origin=${aco}, credentials=${acc}`);
   }
 
+  r = await request('POST', '/api/auth/logout', { body: {} });
+  const setCookie = r.headers.get('set-cookie') || '';
+  if (r.status === 200 && /SameSite=None/i.test(setCookie) && !/SameSite=Lax/i.test(setCookie)) {
+    ok('logout Set-Cookie が SameSite=None（cross-site セッション対応）');
+  } else {
+    fail('logout Set-Cookie SameSite', `status ${r.status}, set-cookie=${setCookie || '(none)'}`);
+  }
+
   const devToken = process.env.DEV_WRITE_TOKEN;
   if (devToken) {
     const testId = 'utaeru-test-' + Date.now().toString(36);
