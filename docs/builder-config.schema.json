@@ -84,6 +84,11 @@
         },
         "additionalProperties": true
       }
+    },
+    "streamerId": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]{3,32}$",
+      "description": "Phase 4A で追加した予約フィールド。将来の公開URL（/u/{streamerId} 形式）で使用する配信者の公開ページID。半角英小文字・数字・ハイフンのみ、3〜32文字。任意項目で、値が空の場合はキー自体を書き出さない（データ最小化）。フィールドが存在しないファイル（Phase 4A以前を含む全ての旧形式ファイル）は、streamerId未設定として正常に読み込めること。Phase 4Aの時点では実際のURL発行・サーバー通信は行わない。"
     }
   }
 }

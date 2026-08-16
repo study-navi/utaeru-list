@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/utaeru-list/public-data-format.schema.json",
+  "title": "PublicStreamerData",
+  "description": "Phase 4A 設計。将来 GET /api/public/{streamerId} が返す想定のJSON形式（案）。現時点ではこの形のAPIは存在せず、index.html 内の #viewer-template-b64 が builder-config / SONGS を埋め込みデータから読み取って同じ形の内部オブジェクトを組み立てている（loadEmbeddedPublicData() 参照）。将来バックエンドを実装する際は、この関数の中身を fetch() ベースの実装に差し替えるだけで、以降の描画ロジックを変更せずに済むようにすることを狙っている。",
+  "type": "object",
+  "required": ["version", "streamer", "songs", "songMeta", "tagPresets"],
+  "additionalProperties": true,
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "既存の builder-config.configVersion をそのまま踏襲。フィールド欠如時は1（旧v1形式）として扱う。"
+    },
+    "streamer": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "id": {
+          "type": ["string", "null"],
+          "pattern": "^[a-z0-9-]{3,32}$",
+          "description": "公開ページID（streamerId）。/u/{id} のURLに使用する想定。未設定ならnull。"
+        },
+        "name": { "type": "string", "description": "配信者名・ページタイトル（既存 streamerName と同一）" },
+        "subtitle": { "type": "string", "description": "サブタイトル（既存 subtitle と同一）" }
+      }
+    },
+    "theme": {
+      "type": "object",
+      "description": "既存の themeType / presetIndex / customHex をそのまま踏襲する想定（Phase 4Aでは未使用・現状通りビルダー側で解決してから埋め込む）。"
+    },
+    "songs": {
+      "type": "array",
+      "description": "既存の {k,y,a,t} 形式のまま。曲キーは artist + \"\\u0001\" + title を維持する。",
+      "items": {
+        "type": "object",
+        "required": ["k", "y", "a", "t"],
+        "properties": {
+          "k": { "type": "string" },
+          "y": { "type": "string" },
+          "a": { "type": "string" },
+          "t": { "type": "string" }
+        }
+      }
+    },
+    "songMeta": {
+      "type": "object",
+      "description": "既存 builder-config.songMeta と同一形式。キーは曲キー。"
+    },
+    "tagPresets": {
+      "type": "array",
+      "description": "既存 builder-config.tagPresets と同一形式。"
+    },
+    "updatedAt": {
+      "type": ["string", "null"],
+      "description": "最終更新日時（ISO 8601想定）。Phase 4Aでは未使用・常にnullまたは省略で構わない。"
+    }
+  },
+  "notes": [
+    "この形式は songs / songMeta / tagPresets / configVersion(version) の互換性を最優先し、既存のbuilder-config.schema.jsonとできるだけ1対1で対応させている。",
+    "streamer.id (streamerId) はPhase 4Aで追加したoptionalフィールド。存在しない・null・空文字のいずれでも、既存の旧v1/v2ファイルの読み込みには一切影響しない。",
+    "Phase 4Aの時点では、このJSON形式は実際のAPIレスポンスではなく、HTML内埋め込みデータ（SONGS/builder-config）からindex.html側で組み立てる内部表現として使われている（loadEmbeddedPublicData()）。"
+  ]
+}
