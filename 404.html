@@ -282,6 +282,41 @@
     opacity: 0.82;
     padding-top: 3px;
   }
+  .song-mark-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 5px;
+  }
+  .song-mark {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10.5px;
+    line-height: 1.35;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--grid);
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .song-mark-signature {
+    background: var(--accent-wash);
+    border-color: color-mix(in srgb, var(--accent) 28%, var(--grid));
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .song-mark-favorite {
+    background: #fdf0f3;
+    border-color: #f0c8d4;
+    color: #9a3d58;
+    font-weight: 600;
+  }
+  .song-mark-learning {
+    background: var(--surface-2);
+    border-color: var(--grid);
+    color: var(--text-muted);
+    font-weight: 600;
+  }
   .v-tag-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
   .v-tag {
     font-size: 10px;
@@ -670,11 +705,22 @@ const SONG_META = PUBLIC_DATA.songMeta;
 const TAG_PRESETS = PUBLIC_DATA.tagPresets;
 function keyOf(s) { return s.a + "\u0001" + s.t; }
 
-const STATUS_LABELS = {
-  signature: { emoji: '⭐', label: 'おはこ' },
-  welcome: { emoji: '🎤', label: 'リクエストOK' },
-  learning: { emoji: '📖', label: '練習中' },
+const MARK_LABELS = {
+  signature: { label: 'おはこ' },
+  favorite: { label: 'お気に入り ❤️' },
+  learning: { label: '練習中' },
 };
+const MARK_ORDER = ['signature', 'favorite', 'learning'];
+function songMarks(meta) {
+  if (!meta || !Array.isArray(meta.marks)) return [];
+  const set = new Set(meta.marks.filter(m => MARK_ORDER.includes(m)));
+  return MARK_ORDER.filter(m => set.has(m));
+}
+function marksRowHtml(meta) {
+  const marks = songMarks(meta);
+  if (!marks.length) return '';
+  return `<div class="song-mark-row">${marks.map(m => `<span class="song-mark song-mark-${m}">${escapeHtml(MARK_LABELS[m].label)}</span>`).join('')}</div>`;
+}
 const NEW_ARRIVAL_DAYS = 30;
 function isNewArrival(addedAt) {
   if (!addedAt) return false;
@@ -723,8 +769,8 @@ const randomBtn = document.getElementById('randomBtn');
 const randomPick = document.getElementById('randomPick');
 
 let activeGyo = null;
-let activeStatus = null;   // null | 'signature' | 'welcome' | 'learning'
-let newOnly = false;       // Phase 3: 🆕新着 トグル（状態フィルタとは独立、AND条件）
+let activeMark = null;   // null | 'signature' | 'favorite' | 'learning'
+let newOnly = false;       // Phase 3: 🆕新着 トグル（マークフィルタとは独立、AND条件）
 let activeTags = new Set(); // Phase 3: 複数選択可・選択されたタグのいずれかを含む曲（OR条件）
 let lastFiltered = [];     // Phase 3: 「表示中からランダム」で使用
 
@@ -750,20 +796,20 @@ function setGyo(label) {
   render();
 }
 
-// ---- Phase 3: 状態・新着フィルタ（1行・横スクロール、すべて/状態3種は単一選択、🆕新着は独立トグル） ----
+// ---- Phase 3: 曲マーク・新着フィルタ（1行・横スクロール、すべて/マーク3種は単一選択、🆕新着は独立トグル） ----
 const statusAllChip = document.createElement('div');
 statusAllChip.className = 'chip active';
 statusAllChip.textContent = 'すべて';
-statusAllChip.addEventListener('click', () => { activeStatus = null; refreshStatusChips(); render(); });
+statusAllChip.addEventListener('click', () => { activeMark = null; refreshStatusChips(); render(); });
 statusFilterRow.appendChild(statusAllChip);
 
 const statusChips = {};
-Object.keys(STATUS_LABELS).forEach(value => {
-  const meta = STATUS_LABELS[value];
+MARK_ORDER.forEach(value => {
+  const info = MARK_LABELS[value];
   const chip = document.createElement('div');
   chip.className = 'chip';
-  chip.textContent = `${meta.emoji} ${meta.label}`;
-  chip.addEventListener('click', () => { activeStatus = value; refreshStatusChips(); render(); });
+  chip.textContent = info.label;
+  chip.addEventListener('click', () => { activeMark = value; refreshStatusChips(); render(); });
   statusFilterRow.appendChild(chip);
   statusChips[value] = chip;
 });
@@ -779,8 +825,8 @@ if (hasAnyNewArrival) {
 }
 
 function refreshStatusChips() {
-  statusAllChip.classList.toggle('active', activeStatus === null);
-  Object.keys(statusChips).forEach(value => statusChips[value].classList.toggle('active', activeStatus === value));
+  statusAllChip.classList.toggle('active', activeMark === null);
+  MARK_ORDER.forEach(value => statusChips[value].classList.toggle('active', activeMark === value));
   if (newChip) newChip.classList.toggle('active', newOnly);
 }
 
@@ -810,7 +856,7 @@ if (usedTags.length > 0) {
 function updateFilterSummary() {
   const parts = [];
   if (activeGyo) parts.push(`${activeGyo}行`);
-  if (activeStatus && STATUS_LABELS[activeStatus]) parts.push(`${STATUS_LABELS[activeStatus].emoji} ${STATUS_LABELS[activeStatus].label}`);
+  if (activeMark && MARK_LABELS[activeMark]) parts.push(MARK_LABELS[activeMark].label);
   if (newOnly) parts.push('🆕 新着');
   if (activeTags.size > 0) {
     const labels = [...activeTags].map(id => {
@@ -830,9 +876,7 @@ function updateFilterSummary() {
 
 function songRowHtml(s, q) {
   const meta = SONG_META[keyOf(s)] || {};
-  const statusOpt = STATUS_LABELS[meta.status];
   const badges = [];
-  if (statusOpt) badges.push(`<span class="v-badge" title="${escapeHtml(statusOpt.label)}">${statusOpt.emoji}</span>`);
   if (isNewArrival(meta.addedAt)) badges.push(`<span class="v-badge" title="新着">🆕</span>`);
   const tagObjs = Array.isArray(meta.tags)
     ? meta.tags.map(id => TAG_PRESETS.find(t => t.id === id)).filter(Boolean)
@@ -848,6 +892,7 @@ function songRowHtml(s, q) {
         <span class="song-title">${highlight(s.t, q)}</span>
         ${badges.length ? `<span class="v-badges">${badges.join('')}</span>` : ''}
       </div>
+      ${marksRowHtml(meta)}
       ${tagsHtml}
     </li>`;
 }
@@ -868,7 +913,7 @@ function render() {
   const q = searchInput.value.trim();
   clearBtn.style.display = q ? 'block' : 'none';
 
-  // Phase 3: 検索条件 AND 行フィルタ AND 状態フィルタ AND 新着フィルタ AND タグ条件（タグのみOR）
+  // Phase 3: 検索条件 AND 行フィルタ AND 曲マークフィルタ AND 新着フィルタ AND タグ条件（タグのみOR）
   let filtered = SONGS;
   if (activeGyo) {
     filtered = filtered.filter(s => gyoOf(s.k) === activeGyo);
@@ -877,8 +922,8 @@ function render() {
     const nq = norm(q);
     filtered = filtered.filter(s => norm(s.t).includes(nq) || norm(s.a).includes(nq) || norm(s.y).includes(nq));
   }
-  if (activeStatus) {
-    filtered = filtered.filter(s => (SONG_META[keyOf(s)] || {}).status === activeStatus);
+  if (activeMark) {
+    filtered = filtered.filter(s => songMarks(SONG_META[keyOf(s)] || {}).includes(activeMark));
   }
   if (newOnly) {
     filtered = filtered.filter(s => isNewArrival((SONG_META[keyOf(s)] || {}).addedAt));

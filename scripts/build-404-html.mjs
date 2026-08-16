@@ -18,13 +18,13 @@ const css = cssMatch[1];
 const searchPhMatch = hiro.match(/id="searchInput" placeholder="([^"]*)"/);
 const searchPlaceholder = searchPhMatch ? searchPhMatch[1] : '例：Story / AI';
 
-const viewerStart = hiro.indexOf('const STATUS_LABELS = {');
+const viewerStart = hiro.indexOf('const MARK_LABELS = {');
 const viewerEnd = hiro.lastIndexOf('render();');
 if (viewerStart < 0 || viewerEnd < 0) throw new Error('viewer script block not found in hiro.html');
 let viewerJs = hiro.slice(viewerStart, viewerEnd + 'render();'.length);
 
 viewerJs = viewerJs
-  .replace(/^const STATUS_LABELS/m, 'function initPublicViewer(PUBLIC_DATA) {\nlet SONGS = PUBLIC_DATA.songs;\nconst SONG_META = PUBLIC_DATA.songMeta;\nconst TAG_PRESETS = PUBLIC_DATA.tagPresets;\nfunction keyOf(s) { return s.a + "\\u0001" + s.t; }\n\nconst STATUS_LABELS')
+  .replace(/^const MARK_LABELS/m, 'function initPublicViewer(PUBLIC_DATA) {\nlet SONGS = PUBLIC_DATA.songs;\nconst SONG_META = PUBLIC_DATA.songMeta;\nconst TAG_PRESETS = PUBLIC_DATA.tagPresets;\nfunction keyOf(s) { return s.a + "\\u0001" + s.t; }\n\nconst MARK_LABELS')
   .replace(
     /document\.getElementById\('statSongs'\)\.textContent = SONGS\.length\.toLocaleString\('ja-JP'\);\n.*?render\(\);/s,
     `document.getElementById('statSongs').textContent = SONGS.length.toLocaleString('ja-JP');

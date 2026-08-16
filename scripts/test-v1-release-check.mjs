@@ -292,6 +292,7 @@ async function runRegressionScripts() {
     'scripts/test-phase4d-public-viewer.mjs',
     'scripts/test-edit-tabs-ui.mjs',
     'scripts/test-design-tab-ui.mjs',
+    'scripts/test-song-marks.mjs',
     'scripts/test-phase8-public-quality.mjs',
     'scripts/test-phase9-song-selection.mjs',
     'scripts/test-song-search-filter.mjs',

@@ -57,9 +57,13 @@
             "items": { "type": "string" },
             "description": "tagPresets の id を参照するタグID一覧"
           },
-          "status": {
-            "type": ["string", "null"],
-            "description": "配信者が設定する曲の状態（例: 練習中など）。値の語彙は Phase 2+ で定義"
+          "marks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["signature", "favorite", "learning"]
+            },
+            "description": "曲マーク（おはこ / お気に入り / 練習中）。複数選択可。空なら保存しない。"
           },
           "addedAt": {
             "type": ["string", "null"],
