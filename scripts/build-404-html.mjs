@@ -37,7 +37,7 @@ const html = `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>歌える曲リスト</title>
+<title>Utalis</title>
 <style>
 ${css}
   .page-state {
@@ -111,7 +111,15 @@ ${css}
 <script>
 // Phase 4D: GitHub Pages 404.html SPA — /u/{streamerId} から D1 公開データを取得して表示
 const API_BASE = 'https://utaeru-api.manabit.workers.dev';
-const SITE_BASE = '/utaeru-list';
+function resolveSiteBase() {
+  const host = location.hostname;
+  if (host === 'utalis.github.io') return '';
+  if (host === 'study-navi.github.io') return '/utaeru-list';
+  const path = location.pathname || '';
+  if (path.indexOf('/utaeru-list') === 0) return '/utaeru-list';
+  return '';
+}
+const SITE_BASE = resolveSiteBase();
 const PUBLIC_PATH_PREFIX = '/u/';
 const CATALOG_UPDATED = '2026/7/28';
 const STREAMER_ID_RE = /^[a-z0-9-]{3,32}$/;
@@ -302,7 +310,7 @@ async function bootstrapPublicViewer() {
   const streamerId = parseStreamerIdFromPath();
   if (!streamerId || !STREAMER_ID_RE.test(streamerId)) {
     document.title = 'ページが見つかりません';
-    showPageState('🔍', 'ページが見つかりません。<br><a href="' + SITE_BASE + '/">歌える曲リスト ビルダー</a>');
+    showPageState('🔍', 'ページが見つかりません。<br><a href="' + SITE_BASE + '/">Utalis ビルダー</a>');
     return;
   }
 
@@ -342,7 +350,7 @@ async function bootstrapPublicViewer() {
 
   const publicData = normalizePublicData(api);
   const name = publicData.streamer.name || streamerId;
-  document.title = name + ' - 歌える曲リスト';
+  document.title = name + ' - Utalis';
   document.getElementById('streamerName').textContent = name;
   document.getElementById('subtitle').textContent = publicData.streamer.subtitle || '';
   applyAccentTheme(api.themeType, api.presetIndex, api.customHex);

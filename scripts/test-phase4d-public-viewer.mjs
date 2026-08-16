@@ -67,7 +67,7 @@ async function run() {
     'parseStreamerIdFromPath',
     '/api/public/',
     'initPublicViewer',
-    '/utaeru-list',
+    'resolveSiteBase',
     '/u/',
   ]) {
     if (html404.includes(needle)) ok(`404.html に ${needle} を含む`);

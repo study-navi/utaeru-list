@@ -19,7 +19,7 @@ const jwksCache = { keys: null, fetchedAt: 0 };
 export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin');
-    const cors = corsHeaders(origin, env.ALLOWED_ORIGIN);
+    const cors = corsHeaders(origin, env);
 
     if (request.method === 'OPTIONS') {
       return corsPreflight(request, cors);
@@ -799,10 +799,16 @@ function clearSessionCookie(response) {
   );
 }
 
-function corsHeaders(origin, allowedOrigin) {
-  if (origin && origin === allowedOrigin) {
+function getAllowedOrigins(env) {
+  const raw = env.ALLOWED_ORIGINS || env.ALLOWED_ORIGIN || '';
+  return raw.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+function corsHeaders(origin, env) {
+  const allowed = getAllowedOrigins(env);
+  if (origin && allowed.includes(origin)) {
     return {
-      'Access-Control-Allow-Origin': allowedOrigin,
+      'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Credentials': 'true',
     };
   }

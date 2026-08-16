@@ -4,7 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
-<title>Utaeru｜歌える曲リスト</title>
+<meta name="description" content="Utalis（うたりす）— 配信で歌える曲リストを作成し、固定URLで公開できる無料ツール。">
+<meta property="og:title" content="Utalis｜うたりす — 歌える曲リスト">
+<meta property="og:description" content="配信で歌える曲リストを作成し、固定URLで公開できます。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://utalis.github.io/">
+<link rel="canonical" href="https://utalis.github.io/">
+<title>Utalis｜うたりす — 歌える曲リスト</title>
 <style>
   :root {
     color-scheme: light;
@@ -1390,10 +1396,10 @@
 </head>
 <body>
 
-<header class="utaeru-bar" id="utaeruBar">
+<header class="utaeru-bar" id="utaeruBar" aria-label="Utalis">
   <div class="utaeru-bar-inner">
     <div class="utaeru-bar-left">
-      <span class="utaeru-brand">Utaeru</span>
+      <span class="utaeru-brand">Utalis</span>
       <div class="bar-meta">
         <span class="bar-status" id="barStatus">未公開</span>
         <span class="bar-id" id="barStreamerId"></span>
@@ -1419,7 +1425,7 @@
 
   <div class="account-block">
     <p class="account-block-title">管理方法</p>
-    <p class="account-lead">Utaeruの管理方法を選択</p>
+    <p class="account-lead">Utalisの管理方法を選択</p>
     <div class="ui-stack">
       <button type="button" class="ui-btn ui-btn-primary" id="modeGoogleBtn">Googleで管理する</button>
       <button type="button" class="ui-btn ui-btn-secondary" id="modeEditKeyBtn">編集キーを使う</button>
@@ -1669,9 +1675,8 @@ const CONFIG_VERSION = 2;
 const STREAMER_ID_MIN_LEN = 3;
 const STREAMER_ID_MAX_LEN = 32;
 const STREAMER_ID_PATTERN = /^[a-z0-9-]+$/;
-// 将来ドメインを接続する際は、この定数を実際のドメイン（例: 'https://utaeru.com'）に差し替える想定。
-// GitHub Pages 公開時は study-navi.github.io/utaeru-list を基点とする。
-const PUBLIC_URL_BASE = 'https://study-navi.github.io/utaeru-list';
+// ユーザー向けの正式公開URL（Utalis GitHub Pages）
+const PUBLIC_URL_BASE = 'https://utalis.github.io';
 const PUBLIC_URL_PATH_PREFIX = '/u/';
 
 // Phase 4C-3/4C-4: オンライン公開 API（Cloudflare Workers Free）
@@ -2687,7 +2692,7 @@ document.getElementById('exportBtn').addEventListener('click', () => {
 
   let html = b64ToUtf8(document.getElementById('viewer-template-b64').textContent.trim());
   const replacements = {
-    '__PAGE_TITLE__': escapeHtml(`${name} - 歌える曲リスト`),
+    '__PAGE_TITLE__': escapeHtml(`${name} - Utalis`),
     '__STREAMER_NAME__': escapeHtml(name),
     '__SUBTITLE__': escapeHtml(subtitle),
     '__ACCENT_LIGHT__': theme.light,
@@ -2708,7 +2713,7 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${sanitizeFileName(name)}_歌える曲リスト.html`;
+  a.download = `${sanitizeFileName(name)}_Utalis.html`;
   document.body.appendChild(a);
   a.click();
   a.remove();

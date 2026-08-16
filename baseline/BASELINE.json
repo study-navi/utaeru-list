@@ -1,15 +1,15 @@
 {
-  "label": "Phase 6.2 ライトUI固定・見出し直接操作",
+  "label": "Utalis ブランド移行・URL移行",
   "establishedAt": "2026-08-16",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "Phase 6.1 アコーディオンUI・縦長改善",
+    "label": "Phase 6.2 ライトUI固定・見出し直接操作",
     "establishedAt": "2026-08-16",
     "files": {
       "index.html": {
-        "bytes": 326713,
-        "sha256": "122e099e8863d13b4ecc24d0b2bc3a71247412da6285c79ebbfe0cc9962e4f99"
+        "bytes": 349367,
+        "sha256": "2244c7921ec7fbb0a25447db41c7d93de581d58f97caeca15582ef33756dbe9a"
       },
       "hiro.html": {
         "bytes": 25630,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 349367,
-      "sha256": "2244c7921ec7fbb0a25447db41c7d93de581d58f97caeca15582ef33756dbe9a"
+      "bytes": 349722,
+      "sha256": "6419f872a33c25fd91fc450a1d337e99487bb747e1039c6e7b1b187108d71123"
     },
     "hiro.html": {
       "bytes": 25630,

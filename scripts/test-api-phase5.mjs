@@ -15,6 +15,7 @@ const ROOT = path.resolve(__dirname, '..');
 
 const API = 'https://utaeru-api.manabit.workers.dev';
 const ORIGIN = 'https://study-navi.github.io';
+const UTALIS_ORIGIN = 'https://utalis.github.io';
 
 let passed = 0;
 let failed = 0;
@@ -125,6 +126,13 @@ async function run() {
     ok('GET /api/public/hiro 既存公開データ維持');
   } else {
     fail('GET /api/public/hiro', `status ${r.status}`);
+  }
+
+  for (const [label, origin] of [['study-navi', ORIGIN], ['utalis', UTALIS_ORIGIN]]) {
+    const corsRes = await fetch(`${API}/api/public/hiro`, { headers: { Origin: origin } });
+    const aco = corsRes.headers.get('access-control-allow-origin');
+    if (aco === origin) ok(`CORS GET /api/public/hiro Origin=${label}`);
+    else fail(`CORS GET /api/public/hiro Origin=${label}`, `allow-origin=${aco}`);
   }
 
   r = await request('GET', `/api/public/hiro?editKey=${createdEditKey}`);

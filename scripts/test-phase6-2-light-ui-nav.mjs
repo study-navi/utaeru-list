@@ -32,6 +32,18 @@ async function run(label, width, height, colorScheme = 'light') {
   if (errors.length) fail(`${label}: JS エラーなし`, errors.join('; '));
   else ok(`${label}: JS エラーなし`);
 
+  const branding = await page.evaluate(() => ({
+    title: document.title,
+    brand: document.querySelector('.utaeru-brand')?.textContent?.trim() || '',
+    canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href') || '',
+  }));
+  if (!branding.title.includes('Utalis')) fail(`${label}: ページタイトル Utalis`, branding.title);
+  else ok(`${label}: ページタイトル Utalis`);
+  if (branding.brand !== 'Utalis') fail(`${label}: ブランド表記`, branding.brand);
+  else ok(`${label}: ブランド表記 Utalis`);
+  if (branding.canonical !== 'https://utalis.github.io/') fail(`${label}: canonical`, branding.canonical);
+  else ok(`${label}: canonical https://utalis.github.io/`);
+
   const chrome = await page.evaluate(() => ({
     builderLight: document.documentElement.getAttribute('data-utaeru-builder'),
     colorScheme: getComputedStyle(document.documentElement).colorScheme,
@@ -59,6 +71,11 @@ async function run(label, width, height, colorScheme = 'light') {
   await page.fill('#streamerName', 'Phase62テスト');
   await page.fill('#subtitle', 'サブタイトル確認');
   await page.fill('#streamerIdInput', 'phase62test');
+  await page.dispatchEvent('#streamerIdInput', 'input');
+  const previewUrl = await page.locator('#streamerIdPreview .path').textContent();
+  if (previewUrl !== 'https://utalis.github.io/u/phase62test') {
+    fail(`${label}: 公開URLプレビュー`, previewUrl || '(empty)');
+  } else ok(`${label}: 公開URL https://utalis.github.io/u/…`);
   await page.click('#accSongs .acc-head');
   await page.waitForTimeout(120);
 
