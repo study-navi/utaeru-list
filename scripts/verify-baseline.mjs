@@ -202,18 +202,19 @@ check('hiro.html が viewer テンプレート構造と一致（データ除く�
       .replace(/<script type="application\/json" id="builder-config">[\s\S]*?<\/script>/, 'CONFIG')
       .replace(/document\.getElementById\('statUpdated'\)\.textContent = '[^']*';/, 'UPDATED;')
       .replace(/<title>[\s\S]*?<\/title>/, '<title>TITLE</title>')
-      .replace(/<h1>[\s\S]*?<\/h1>/, '<h1>NAME</h1>')
-      .replace(/<p class="subtitle">[\s\S]*?<\/p>/, '<p class="subtitle">SUB</p>')
+      .replace(/<h1[^>]*>[\s\S]*?<\/h1>/, '<h1>NAME</h1>')
+      .replace(/<p class="subtitle"[^>]*>[\s\S]*?<\/p>/, '<p class="subtitle">SUB</p>')
       .replace(/__PAGE_TITLE__/g, 'TITLE')
       .replace(/__STREAMER_NAME__/g, 'NAME')
       .replace(/__SUBTITLE__/g, 'SUB')
       .replace(/__UPDATED_LABEL__/g, 'DATE')
       .replace(/__BUILDER_CONFIG_JSON__/g, 'CONFIG')
       .replace(/（\d{4}\/\d{1,2}\/\d{1,2}時点のカタログ）/g, '（DATE時点のカタログ）')
+      .replace(/<!-- __ACCENT_DARK__ __ACCENT_DARK_INK__ __ACCENT_DARK_WASH__ -->/g, '')
       .replace(/--accent(?:-ink|-wash)?: [^;]+;/g, '--accent: COLOR;')
       .replace(/#[0-9a-fA-F]{6}/g, 'COLOR');
 
-  if (normalize(tpl) !== normalize(hiroHtml)) {
+  if (normalize(tpl).trim() !== normalize(hiroHtml).trim()) {
     throw new Error('hiro.html と viewer テンプレートの構造が一致しません。テンプレート側の更新が必要です');
   }
 });

@@ -1,15 +1,15 @@
 {
-  "label": "Utalis ブランド移行・URL移行",
+  "label": "リスナー公開ページ ライトUI固定",
   "establishedAt": "2026-08-16",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "Phase 6.2 ライトUI固定・見出し直接操作",
+    "label": "Utalis ブランド移行・URL移行",
     "establishedAt": "2026-08-16",
     "files": {
       "index.html": {
-        "bytes": 349367,
-        "sha256": "2244c7921ec7fbb0a25447db41c7d93de581d58f97caeca15582ef33756dbe9a"
+        "bytes": 349722,
+        "sha256": "6419f872a33c25fd91fc450a1d337e99487bb747e1039c6e7b1b187108d71123"
       },
       "hiro.html": {
         "bytes": 25630,
@@ -19,12 +19,12 @@
   },
   "files": {
     "index.html": {
-      "bytes": 349722,
-      "sha256": "6419f872a33c25fd91fc450a1d337e99487bb747e1039c6e7b1b187108d71123"
+      "bytes": 347704,
+      "sha256": "1c3ef291f9c975c8cbb4117f5d11187de0794cbd1cef77596a5629c2969f74aa"
     },
     "hiro.html": {
-      "bytes": 25630,
-      "sha256": "501db6b1beea39814e472e5db7375d9acaa9f0406736aeca035615c23dc3fc9e"
+      "bytes": 24254,
+      "sha256": "e053fda86856f2404aeb22fef73ef6c120374d4eb3fd63cc2f8c86342ac2d3bb"
     }
   },
   "catalog": {

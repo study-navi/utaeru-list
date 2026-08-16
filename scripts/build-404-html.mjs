@@ -33,10 +33,11 @@ render();
   );
 
 const html = `<!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-utalis-viewer="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
 <title>Utalis</title>
 <style>
 ${css}
@@ -60,34 +61,28 @@ ${css}
 
 <div id="viewerRoot" class="wrap" hidden>
   <header class="top">
-    <div>
+    <div class="top-main">
+      <p class="page-kind">歌える曲リスト</p>
       <h1 id="streamerName">-</h1>
       <p class="subtitle" id="subtitle">-</p>
+      <div class="header-stats">
+        <span><strong id="statSongs">-</strong> 曲</span>
+        <span><strong id="statArtists">-</strong> 組</span>
+        <span>更新 <strong id="statUpdated">-</strong></span>
+      </div>
     </div>
-    <button class="theme-toggle" id="themeToggle" title="表示切り替え" aria-label="ライト/ダーク切り替え">🌙</button>
+    <span class="utalis-mark" aria-hidden="true">Utalis</span>
   </header>
 
-  <div class="stats">
-    <div class="stat-tile">
-      <div class="num" id="statSongs">-</div>
-      <div class="label">収録曲数</div>
-    </div>
-    <div class="stat-tile">
-      <div class="num" id="statArtists">-</div>
-      <div class="label">アーティスト数</div>
-    </div>
-    <div class="stat-tile">
-      <div class="num" id="statUpdated">-</div>
-      <div class="label">最終更新</div>
-    </div>
-  </div>
-
   <div class="search-bar">
-    <div class="search-input-row">
-      <input type="search" id="searchInput" placeholder="曲名・アーティスト名で検索" autocomplete="off" />
-      <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
+    <div class="search-shell">
+      <label class="search-label" for="searchInput">曲名・アーティスト名で検索</label>
+      <div class="search-input-row">
+        <input type="search" id="searchInput" placeholder="例：カブトムシ / aiko" autocomplete="off" />
+        <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
+      </div>
+      <div class="gyo-row" id="gyoRow"></div>
     </div>
-    <div class="gyo-row" id="gyoRow"></div>
   </div>
 
   <div class="filter-row" id="statusFilterRow"></div>
@@ -285,12 +280,6 @@ function applyAccentTheme(themeType, presetIndex, customHex) {
   }
   style.textContent = \`
     :root { --accent: \${light}; --accent-ink: \${lightInk}; --accent-wash: \${lightWash}; }
-    :root[data-theme="dark"] { --accent: \${dark}; --accent-ink: \${darkInk}; --accent-wash: \${darkWash}; }
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]):not([data-theme="dark"]) {
-        --accent: \${dark}; --accent-ink: \${darkInk}; --accent-wash: \${darkWash};
-      }
-    }
   \`;
 }
 

@@ -1,66 +1,31 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-utalis-viewer="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ひろ - 歌える曲リスト</title>
+<meta name="color-scheme" content="light">
+<title>ひろ - Utalis</title>
 <style>
   :root {
-    color-scheme: light;
-    --page: #f9f9f7;
-    --surface: #fcfcfb;
-    --surface-2: #f2f1ee;
-    --text-primary: #0b0b0b;
-    --text-secondary: #52514e;
-    --text-muted: #898781;
-    --grid: #e1e0d9;
-    --baseline: #c3c2b7;
-    --border: rgba(11,11,11,0.10);
+    color-scheme: light only;
+    --page: #f6f6f4;
+    --surface: #ffffff;
+    --surface-2: #f0efec;
+    --text-primary: #171717;
+    --text-secondary: #43423e;
+    --text-muted: #5f5e59;
+    --grid: #e2e1dd;
+    --border: #e2e1dd;
     --accent: #2a78d6;
     --accent-ink: #ffffff;
     --accent-wash: #eaf1fb;
-    --chip-bg: #f2f1ee;
-    --shadow: 0 1px 2px rgba(11,11,11,0.06), 0 4px 16px rgba(11,11,11,0.05);
-  }
-  :root[data-theme="dark"] {
-    color-scheme: dark;
-    --page: #0d0d0d;
-    --surface: #1a1a19;
-    --surface-2: #232322;
-    --text-primary: #ffffff;
-    --text-secondary: #c3c2b7;
-    --text-muted: #898781;
-    --grid: #2c2c2a;
-    --baseline: #383835;
-    --border: rgba(255,255,255,0.10);
-    --accent: #3987e5;
-    --accent-ink: #ffffff;
-    --accent-wash: #16283d;
-    --chip-bg: #232322;
-    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.25);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]):not([data-theme="dark"]) {
-      color-scheme: dark;
-      --page: #0d0d0d;
-      --surface: #1a1a19;
-      --surface-2: #232322;
-      --text-primary: #ffffff;
-      --text-secondary: #c3c2b7;
-      --text-muted: #898781;
-      --grid: #2c2c2a;
-      --baseline: #383835;
-      --border: rgba(255,255,255,0.10);
-      --accent: #3987e5;
-      --accent-ink: #ffffff;
-      --accent-wash: #16283d;
-      --chip-bg: #232322;
-      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.25);
-    }
+    --chip-bg: #ffffff;
+    --chip-border: #e2e1dd;
   }
 
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
+  html { color-scheme: light only; }
   body {
     background: var(--page);
     color: var(--text-primary);
@@ -69,67 +34,61 @@
     min-height: 100vh;
   }
 
-  .wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 64px; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 16px 16px 56px; }
 
   header.top {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--grid);
+  }
+  .top-main { min-width: 0; flex: 1; }
+  .page-kind {
+    margin: 0 0 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
   }
   h1 {
-    font-size: 22px;
+    font-size: 21px;
     font-weight: 800;
-    margin: 0 0 4px;
-    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    word-break: break-word;
   }
   .subtitle {
-    font-size: 13.5px;
+    font-size: 13px;
     color: var(--text-secondary);
-    margin: 0;
-    line-height: 1.5;
+    margin: 0 0 8px;
+    line-height: 1.55;
+    word-break: break-word;
   }
-  .theme-toggle {
-    flex: 0 0 auto;
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text-secondary);
+  .header-stats {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 16px;
-  }
-  .theme-toggle:hover { background: var(--surface-2); }
-
-  .stats {
-    display: flex;
-    gap: 10px;
-    margin: 14px 0 18px;
-  }
-  .stat-tile {
-    flex: 1;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px 14px;
-    box-shadow: var(--shadow);
-  }
-  .stat-tile .num {
-    font-size: 22px;
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
-    color: var(--text-primary);
-    line-height: 1.2;
-  }
-  .stat-tile .label {
+    flex-wrap: wrap;
+    gap: 6px 12px;
     font-size: 12px;
     color: var(--text-muted);
-    margin-top: 2px;
+  }
+  .header-stats strong {
+    font-weight: 800;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+  .utalis-mark {
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    opacity: 0.55;
+    padding-top: 2px;
   }
 
   .search-bar {
@@ -137,35 +96,51 @@
     top: 0;
     z-index: 10;
     background: var(--page);
-    padding: 10px 0 10px;
-    margin-bottom: 4px;
+    padding: 8px 0 10px;
+    margin-bottom: 6px;
   }
-  .search-input-row {
-    position: relative;
+  .search-shell {
+    background: var(--surface);
+    border: 1px solid var(--grid);
+    border-radius: 14px;
+    padding: 10px;
+    box-shadow: 0 1px 3px rgba(23, 23, 23, 0.04);
   }
+  .search-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin: 0 0 6px;
+    letter-spacing: 0.02em;
+  }
+  .search-input-row { position: relative; }
   input[type="search"] {
     width: 100%;
     font-size: 16px;
-    padding: 12px 40px 12px 14px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    background: var(--surface);
+    min-height: 44px;
+    padding: 11px 40px 11px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--grid);
+    background: #ffffff;
     color: var(--text-primary);
-    box-shadow: var(--shadow);
     outline: none;
+    -webkit-appearance: none;
+    appearance: none;
   }
   input[type="search"]:focus {
     border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
   }
   input[type="search"]::placeholder { color: var(--text-muted); }
   input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
   .clear-btn {
     position: absolute;
-    right: 8px;
+    right: 6px;
     top: 50%;
     transform: translateY(-50%);
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border: none;
     background: transparent;
     color: var(--text-muted);
@@ -180,17 +155,20 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin: 10px 0 4px;
+    margin: 10px 0 2px;
   }
   .chip {
     font-size: 13px;
+    min-height: 34px;
     padding: 6px 12px;
     border-radius: 999px;
-    border: 1px solid var(--border);
+    border: 1px solid var(--chip-border);
     background: var(--chip-bg);
     color: var(--text-secondary);
     cursor: pointer;
     user-select: none;
+    display: inline-flex;
+    align-items: center;
   }
   .chip:hover { background: var(--surface-2); }
   .chip.active {
@@ -201,19 +179,18 @@
   }
 
   .result-meta {
-    font-size: 12.5px;
+    font-size: 12px;
     color: var(--text-muted);
-    margin: 14px 2px 8px;
+    margin: 12px 2px 6px;
   }
 
-  /* Phase 3: 状態・タグ・新着フィルタ（画面上部を占領しないよう横スクロール） */
   .filter-row {
     display: flex;
     flex-wrap: nowrap;
     gap: 6px;
     overflow-x: auto;
     padding: 2px 2px 6px;
-    margin: 8px -2px 0;
+    margin: 6px -2px 0;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
   }
@@ -222,61 +199,51 @@
   .filter-summary {
     font-size: 11.5px;
     color: var(--text-muted);
-    margin: -4px 2px 8px;
+    margin: -2px 2px 8px;
   }
 
-  .random-row { margin: 4px 0 2px; }
+  .random-row { margin: 6px 0 4px; }
   .random-btn {
     font-size: 13px;
+    min-height: 38px;
     padding: 8px 14px;
     border-radius: 10px;
-    border: 1px solid var(--border);
+    border: 1px solid var(--grid);
     background: var(--surface);
     color: var(--text-primary);
     cursor: pointer;
-    box-shadow: var(--shadow);
   }
   .random-btn:hover { background: var(--surface-2); }
-  .random-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .random-btn:disabled { opacity: 0.45; cursor: not-allowed; }
   .random-pick {
     margin-top: 8px;
     padding: 12px 14px;
     background: var(--accent-wash);
-    border: 1px solid var(--border);
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--grid));
     border-radius: 12px;
     font-size: 14px;
     display: none;
   }
-  .random-pick .rp-title { font-weight: 800; font-size: 15px; }
-  .random-pick .rp-artist { color: var(--text-secondary); font-size: 13px; margin-top: 2px; }
+  .random-pick .rp-title { font-weight: 800; font-size: 16px; color: var(--text-primary); line-height: 1.35; }
+  .random-pick .rp-artist { color: var(--text-muted); font-size: 12.5px; margin-top: 4px; }
 
-  .artist-group {
-    margin-bottom: 14px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: var(--shadow);
-  }
-  .artist-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 10px 14px;
-    background: var(--surface-2);
-    border-bottom: 1px solid var(--border);
-  }
+  .artist-block { margin-bottom: 18px; }
+  .artist-block:last-child { margin-bottom: 0; }
   .artist-name {
-    font-size: 14.5px;
-    font-weight: 800;
-    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    padding: 0 0 6px;
+    margin: 0 0 2px;
+    border-bottom: 1px solid var(--grid);
+    line-height: 1.4;
+    word-break: break-word;
   }
-  .artist-count {
-    font-size: 12px;
+  .artist-count-inline {
+    font-weight: 500;
     color: var(--text-muted);
-    font-variant-numeric: tabular-nums;
-    flex: 0 0 auto;
+    font-size: 12px;
+    margin-left: 6px;
   }
   ul.song-list {
     list-style: none;
@@ -284,9 +251,7 @@
     padding: 0;
   }
   ul.song-list li {
-    padding: 10px 14px;
-    font-size: 14.5px;
-    color: var(--text-primary);
+    padding: 10px 0;
     border-bottom: 1px solid var(--grid);
   }
   ul.song-list li:last-child { border-bottom: none; }
@@ -297,43 +262,60 @@
     padding: 0 1px;
   }
 
-  /* Phase 3: 曲ごとの状態バッジ・タグ表示（コンパクトに） */
-  .song-main-row { display: flex; align-items: center; gap: 6px; }
-  .song-title { flex: 1; min-width: 0; }
-  .v-badges { display: inline-flex; gap: 2px; flex: 0 0 auto; font-size: 12px; line-height: 1; }
+  .song-main-row { display: flex; align-items: flex-start; gap: 8px; }
+  .song-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--text-primary);
+    word-break: break-word;
+  }
+  .v-badges {
+    display: inline-flex;
+    gap: 2px;
+    flex: 0 0 auto;
+    font-size: 11px;
+    line-height: 1;
+    opacity: 0.82;
+    padding-top: 3px;
+  }
   .v-tag-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
   .v-tag {
-    font-size: 10.5px;
-    padding: 2px 8px;
+    font-size: 10px;
+    padding: 2px 7px;
     border-radius: 999px;
-    background: var(--chip-bg);
-    color: var(--text-secondary);
-    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-muted);
+    border: 1px solid var(--grid);
     line-height: 1.5;
   }
   .v-tag-more { color: var(--text-muted); }
 
   .empty-state {
     text-align: center;
-    padding: 48px 16px;
+    padding: 40px 16px;
     color: var(--text-muted);
     font-size: 14px;
   }
-  .empty-state .emoji { font-size: 32px; margin-bottom: 8px; }
+  .empty-state .emoji { font-size: 28px; margin-bottom: 8px; }
 
   footer {
-    margin-top: 28px;
-    padding-top: 16px;
+    margin-top: 24px;
+    padding-top: 14px;
     border-top: 1px solid var(--grid);
-    font-size: 12px;
+    font-size: 11.5px;
     color: var(--text-muted);
-    line-height: 1.7;
+    line-height: 1.65;
   }
   footer a { color: var(--text-secondary); }
 
-  @media (max-width: 420px) {
+  @media (max-width: 430px) {
+    .wrap { padding: 14px 14px 48px; }
     h1 { font-size: 19px; }
-    .stat-tile .num { font-size: 19px; }
+    .chip { font-size: 12.5px; min-height: 32px; padding: 5px 10px; }
+    .song-title { font-size: 15px; }
   }
 </style>
 </head>
@@ -341,34 +323,28 @@
 <div class="wrap">
 
   <header class="top">
-    <div>
-      <h1>ひろ</h1>
-      <p class="subtitle">ひろの配信で歌える曲を検索できます。曲名・アーティスト名で絞り込めます。</p>
+    <div class="top-main">
+      <p class="page-kind">歌える曲リスト</p>
+      <h1 id="streamerName">ひろ</h1>
+      <p class="subtitle" id="subtitle">ひろの配信で歌える曲を検索できます。曲名・アーティスト名で絞り込めます。</p>
+      <div class="header-stats">
+        <span><strong id="statSongs">-</strong> 曲</span>
+        <span><strong id="statArtists">-</strong> 組</span>
+        <span>更新 <strong id="statUpdated">-</strong></span>
+      </div>
     </div>
-    <button class="theme-toggle" id="themeToggle" title="表示切り替え" aria-label="ライト/ダーク切り替え">🌙</button>
+    <span class="utalis-mark" aria-hidden="true">Utalis</span>
   </header>
 
-  <div class="stats">
-    <div class="stat-tile">
-      <div class="num" id="statSongs">-</div>
-      <div class="label">収録曲数</div>
-    </div>
-    <div class="stat-tile">
-      <div class="num" id="statArtists">-</div>
-      <div class="label">アーティスト数</div>
-    </div>
-    <div class="stat-tile">
-      <div class="num" id="statUpdated">-</div>
-      <div class="label">カタログ更新日</div>
-    </div>
-  </div>
-
   <div class="search-bar">
-    <div class="search-input-row">
-      <input type="search" id="searchInput" placeholder="曲名・アーティスト名で検索" autocomplete="off" />
-      <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
+    <div class="search-shell">
+      <label class="search-label" for="searchInput">曲名・アーティスト名で検索</label>
+      <div class="search-input-row">
+        <input type="search" id="searchInput" placeholder="例：カブトムシ / aiko" autocomplete="off" />
+        <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
+      </div>
+      <div class="gyo-row" id="gyoRow"></div>
     </div>
-    <div class="gyo-row" id="gyoRow"></div>
   </div>
 
   <div class="filter-row" id="statusFilterRow"></div>
@@ -478,7 +454,6 @@ const statusFilterRow = document.getElementById('statusFilterRow');
 const tagFilterRow = document.getElementById('tagFilterRow');
 const randomBtn = document.getElementById('randomBtn');
 const randomPick = document.getElementById('randomPick');
-const themeToggle = document.getElementById('themeToggle');
 
 let activeGyo = null;
 let activeStatus = null;   // null | 'signature' | 'welcome' | 'learning'
@@ -679,11 +654,8 @@ function render() {
   const shown = groups.slice(0, MAX_GROUPS);
 
   resultsEl.innerHTML = shown.map(g => `
-    <div class="artist-group">
-      <div class="artist-head">
-        <div class="artist-name">${highlight(g.artist, q)}</div>
-        <div class="artist-count">${g.songs.length}曲</div>
-      </div>
+    <div class="artist-block">
+      <div class="artist-name">${highlight(g.artist, q)}<span class="artist-count-inline">${g.songs.length}曲</span></div>
       <ul class="song-list">
         ${g.songs.map(s => songRowHtml(s, q)).join('')}
       </ul>
@@ -712,19 +684,6 @@ randomBtn.addEventListener('click', () => {
   randomPick.style.display = 'block';
   randomPick.innerHTML = `<div class="rp-title">${escapeHtml(pick.t)}</div><div class="rp-artist">${escapeHtml(pick.a)}</div>`;
 });
-
-function applyThemeIcon() {
-  const t = document.documentElement.getAttribute('data-theme');
-  themeToggle.textContent = t === 'dark' ? '☀️' : (t === 'light' ? '🌙' : '🌓');
-}
-themeToggle.addEventListener('click', () => {
-  const cur = document.documentElement.getAttribute('data-theme');
-  const next = cur === 'dark' ? 'light' : (cur === 'light' ? null : 'dark');
-  if (next) document.documentElement.setAttribute('data-theme', next);
-  else document.documentElement.removeAttribute('data-theme');
-  applyThemeIcon();
-});
-applyThemeIcon();
 
 document.getElementById('statSongs').textContent = SONGS.length.toLocaleString('ja-JP');
 document.getElementById('statArtists').textContent = new Set(SONGS.map(s => s.a)).size.toLocaleString('ja-JP');

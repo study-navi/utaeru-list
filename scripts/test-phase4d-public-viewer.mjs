@@ -69,10 +69,21 @@ async function run() {
     'initPublicViewer',
     'resolveSiteBase',
     '/u/',
+    'data-utalis-viewer="light"',
+    'page-kind',
+    'search-shell',
+    'artist-block',
   ]) {
     if (html404.includes(needle)) ok(`404.html に ${needle} を含む`);
     else fail(`404.html に ${needle}`, 'not found');
   }
+  if (!html404.includes('themeToggle') && !html404.includes('theme-toggle')) {
+    ok('404.html にテーマ切替UIなし');
+  } else {
+    fail('404.html テーマ切替', 'theme toggle still present');
+  }
+  if (html404.includes('--page: #f6f6f4')) ok('404.html ライト配色 #f6f6f4');
+  else fail('404.html ライト配色', 'page color missing');
 
   if (fs.existsSync(path.join(ROOT, '.nojekyll'))) ok('.nojekyll が存在');
   else fail('.nojekyll', 'missing');

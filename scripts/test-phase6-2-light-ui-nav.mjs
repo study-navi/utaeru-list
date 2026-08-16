@@ -122,9 +122,11 @@ async function run(label, width, height, colorScheme = 'light') {
   const previewBefore = await page.evaluate(() => ({
     title: document.querySelector('#previewFrame .pv-title')?.textContent,
     subtitle: document.querySelector('#previewFrame .pv-subtitle')?.textContent,
-    songs: document.querySelector('#previewFrame .pv-stat-num')?.textContent,
-    hasPreviewToggle: !!document.querySelector('#previewFrame .pv-theme-toggle'),
+    songStat: document.querySelector('#previewFrame .pv-header-stats strong')?.textContent,
+    pageKind: document.querySelector('#previewFrame .pv-page-kind')?.textContent,
+    themeToggleCount: document.querySelectorAll('#previewFrame .pv-theme-toggle, #previewFrame .theme-toggle').length,
     hasSearch: !!document.querySelector('#previewFrame .pv-search input'),
+    hasSearchShell: !!document.querySelector('#previewFrame .pv-search-shell'),
     scrollW: document.getElementById('previewFrame')?.scrollWidth,
     clientW: document.getElementById('previewFrame')?.clientWidth,
   }));
@@ -132,10 +134,13 @@ async function run(label, width, height, colorScheme = 'light') {
   else ok(`${label}: プレビュー配信者名反映`);
   if (previewBefore.subtitle !== 'サブタイトル確認') fail(`${label}: プレビューサブタイトル`, previewBefore.subtitle);
   else ok(`${label}: プレビューサブタイトル反映`);
-  if (previewBefore.songs !== '1') fail(`${label}: プレビュー曲数`, previewBefore.songs);
+  if (previewBefore.songStat !== '1') fail(`${label}: プレビュー曲数`, previewBefore.songStat);
   else ok(`${label}: プレビュー曲数反映`);
-  if (!previewBefore.hasPreviewToggle || !previewBefore.hasSearch) fail(`${label}: プレビュー公開UI`, JSON.stringify(previewBefore));
-  else ok(`${label}: プレビュー公開UI要素（公開ページ再現）`);
+  if (previewBefore.pageKind !== '歌える曲リスト') fail(`${label}: プレビュー見出し`, previewBefore.pageKind);
+  else ok(`${label}: プレビュー見出し 歌える曲リスト`);
+  if (previewBefore.themeToggleCount !== 0 || !previewBefore.hasSearch || !previewBefore.hasSearchShell) {
+    fail(`${label}: プレビュー公開UI`, JSON.stringify(previewBefore));
+  } else ok(`${label}: プレビュー公開UI要素（ライト固定・テーマ切替なし）`);
   if (previewBefore.scrollW > previewBefore.clientW + 2) fail(`${label}: プレビュー横スクロール`, `${previewBefore.scrollW}/${previewBefore.clientW}`);
   else ok(`${label}: プレビュー横スクロールなし`);
 
@@ -155,7 +160,7 @@ async function run(label, width, height, colorScheme = 'light') {
   await page.waitForTimeout(80);
   await page.click('.song-check');
   await page.waitForTimeout(120);
-  const previewAfterRemove = await page.evaluate(() => document.querySelector('#previewFrame .pv-stat-num')?.textContent);
+  const previewAfterRemove = await page.evaluate(() => document.querySelector('#previewFrame .pv-header-stats strong')?.textContent);
   if (previewAfterRemove !== '0') fail(`${label}: 曲削除プレビュー反映`, previewAfterRemove);
   else ok(`${label}: 曲削除プレビュー反映`);
 
