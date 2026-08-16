@@ -260,6 +260,82 @@
     margin: 0 0 6px;
   }
 
+  .card-songs { scroll-margin-top: calc(64px + env(safe-area-inset-top, 0px)); }
+  .card-preview { background: var(--page); }
+  .preview-panel {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .preview-accent {
+    height: 4px;
+    background: var(--accent);
+  }
+  .preview-body { padding: 14px 14px 12px; }
+  .preview-title {
+    font-size: 17px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    line-height: 1.35;
+  }
+  .preview-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 10px;
+    line-height: 1.5;
+  }
+  .preview-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+  .preview-stats strong { color: var(--text-primary); font-weight: 700; }
+  .preview-url {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+    word-break: break-all;
+  }
+
+  details.card-more {
+    padding: 0;
+    overflow: hidden;
+  }
+  details.card-more > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 16px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    user-select: none;
+  }
+  details.card-more > summary::-webkit-details-marker { display: none; }
+  details.card-more > summary::after {
+    content: '▾';
+    float: right;
+    color: var(--text-muted);
+    transition: transform 0.15s;
+  }
+  details.card-more[open] > summary::after { transform: rotate(180deg); }
+  .card-more-body {
+    padding: 0 16px 16px;
+    border-top: 1px solid var(--grid);
+  }
+  .card-more-body .sub-block + .sub-block {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--grid);
+  }
+  .card-more-body h3 {
+    font-size: 14px;
+    font-weight: 800;
+    margin: 0 0 6px;
+  }
+
   h1 { font-size: 21px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em; display: none; }
 
   .card {
@@ -735,7 +811,7 @@
 
 <div class="wrap">
 
-  <p class="page-intro">配信で歌える曲リストを作成し、固定URLで公開できます。曲を選んで、見た目を整えて、上部の「公開する」からオンライン公開しましょう。</p>
+  <p class="page-intro">配信で歌える曲リストを作成し、固定URLで公開できます。まず曲を選び、見た目を整えて、上部の「公開する」からオンライン公開しましょう。</p>
   <p class="auth-message" id="authMessage" style="display:none;"></p>
 
   <div class="card">
@@ -752,27 +828,9 @@
     <p class="url-preview" id="streamerIdPreview" style="display:none;">公開予定URL：<span class="path"></span></p>
   </div>
 
-  <div class="card">
-    <p class="section-label">デザイン</p>
-    <h2>テーマカラー</h2>
-    <p class="hint">ページのアクセントカラーです。プリセットから選ぶか、右端の丸をタップして好きな色を指定できます。</p>
-    <div class="swatch-row" id="swatchRow"></div>
-  </div>
-
-  <div class="card">
-    <p class="section-label">復元</p>
-    <h2>以前のファイルから復元（任意）</h2>
-    <p class="hint">前に書き出したページのHTMLファイルを読み込むと、選択していた曲やテーマカラーを復元して編集を続けられます。</p>
-    <div class="file-row">
-      <label class="file-btn" for="importFile">ファイルを選択</label>
-      <input type="file" id="importFile" accept=".html,text/html" />
-      <span class="loaded-name" id="loadedName"></span>
-    </div>
-  </div>
-
-  <div class="card">
-    <p class="section-label">曲リスト</p>
-    <h2>歌える曲を選ぶ</h2>
+  <div class="card card-songs">
+    <p class="section-label">曲を選ぶ</p>
+    <h2>歌える曲を選ぶ・追加する</h2>
     <div class="search-input-row">
       <input type="search" id="searchInput" placeholder="曲名・アーティスト名で検索して絞り込み" autocomplete="off" />
       <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
@@ -789,15 +847,53 @@
   </div>
 
   <div class="card">
-    <p class="section-label">タグ（任意）</p>
-    <h2>タグの候補</h2>
-    <p class="hint">曲に付けられるタグの候補です。追加・削除ができます。ここでの変更はすべての曲の設定に反映されます。</p>
-    <div class="tag-admin-list" id="tagAdminList"></div>
-    <div class="tag-admin-add-row">
-      <input type="text" id="tagAdminInput" placeholder="新しいタグ名を入力" maxlength="20" />
-      <button type="button" class="tool-btn" id="tagAdminAddBtn">＋ 追加</button>
+    <p class="section-label">デザイン</p>
+    <h2>テーマカラー</h2>
+    <p class="hint">ページのアクセントカラーです。プリセットから選ぶか、右端の丸をタップして好きな色を指定できます。</p>
+    <div class="swatch-row" id="swatchRow"></div>
+  </div>
+
+  <div class="card card-preview">
+    <p class="section-label">プレビュー</p>
+    <h2>公開ページの見え方</h2>
+    <p class="hint">選択した曲数やタイトル、テーマカラーの反映イメージです。</p>
+    <div class="preview-panel" id="previewPanel">
+      <div class="preview-accent" id="previewAccent"></div>
+      <div class="preview-body">
+        <p class="preview-title" id="previewTitle">配信者名を入力してください</p>
+        <p class="preview-subtitle" id="previewSubtitle">サブタイトル（任意）</p>
+        <div class="preview-stats">
+          <span><strong id="previewSongCount">0</strong>曲 選択中</span>
+          <span id="previewThemeLabel">テーマ: プリセット1</span>
+        </div>
+        <p class="preview-url" id="previewUrl"></p>
+      </div>
     </div>
   </div>
+
+  <details class="card card-more">
+    <summary>その他・データ管理</summary>
+    <div class="card-more-body">
+      <div class="sub-block">
+        <h3>以前のファイルから復元</h3>
+        <p class="hint">前に書き出したページのHTMLファイルを読み込むと、選択していた曲やテーマカラーを復元して編集を続けられます。</p>
+        <div class="file-row">
+          <label class="file-btn" for="importFile">ファイルを選択</label>
+          <input type="file" id="importFile" accept=".html,text/html" />
+          <span class="loaded-name" id="loadedName"></span>
+        </div>
+      </div>
+      <div class="sub-block">
+        <h3>タグの候補（任意）</h3>
+        <p class="hint">曲に付けられるタグの候補です。追加・削除ができます。</p>
+        <div class="tag-admin-list" id="tagAdminList"></div>
+        <div class="tag-admin-add-row">
+          <input type="text" id="tagAdminInput" placeholder="新しいタグ名を入力" maxlength="20" />
+          <button type="button" class="tool-btn" id="tagAdminAddBtn">＋ 追加</button>
+        </div>
+      </div>
+    </div>
+  </details>
 
 </div>
 
@@ -983,6 +1079,11 @@ const DEFAULT_TAG_PRESETS = [
 let tagPresets = DEFAULT_TAG_PRESETS.map(t => ({ ...t })); // { id: string, label: string, color?: string|null }[]
 
 const swatchRow = document.getElementById('swatchRow');
+const streamerNameInput = document.getElementById('streamerName');
+const subtitleInput = document.getElementById('subtitle');
+const streamerIdInput = document.getElementById('streamerIdInput');
+const streamerIdError = document.getElementById('streamerIdError');
+const streamerIdPreview = document.getElementById('streamerIdPreview');
 PRESETS.forEach((p, i) => {
   const el = document.createElement('div');
   el.className = 'swatch';
@@ -1015,13 +1116,14 @@ function selectPreset(i) {
   currentTheme = { type: 'preset', presetIndex: i, customHex: currentTheme.customHex };
   refreshSwatchSelection();
   updatePublishButtonState();
+  updatePreviewPanel();
 }
 function selectCustom(hex) {
   currentTheme = { type: 'custom', presetIndex: currentTheme.presetIndex, customHex: hex };
   refreshSwatchSelection();
   updatePublishButtonState();
+  updatePreviewPanel();
 }
-selectPreset(0);
 
 function resolveTheme() {
   if (currentTheme.type === 'preset') {
@@ -1097,7 +1199,7 @@ function songPanelHtml(s) {
     ? tagPresets.map(t => `
         <button type="button" class="song-tag-chip ${tags.includes(t.id) ? 'active' : ''}" data-key="${escapeHtml(key)}" data-tag-id="${escapeHtml(t.id)}">${escapeHtml(t.label)}</button>
       `).join('')
-    : `<span class="tag-empty-hint">タグ候補がまだありません。「⑤ タグの候補を編集」から追加できます</span>`;
+    : `<span class="tag-empty-hint">タグ候補がまだありません。「その他・データ管理」から追加できます</span>`;
 
   return `
     <div class="song-meta-panel">
@@ -1231,11 +1333,6 @@ const clearBtn = document.getElementById('clearBtn');
 const gyoRow = document.getElementById('gyoRow');
 const resultsEl = document.getElementById('results');
 const resultMeta = document.getElementById('resultMeta');
-const streamerNameInput = document.getElementById('streamerName');
-const subtitleInput = document.getElementById('subtitle');
-const streamerIdInput = document.getElementById('streamerIdInput');
-const streamerIdError = document.getElementById('streamerIdError');
-const streamerIdPreview = document.getElementById('streamerIdPreview');
 
 // Phase 4A: 公開ページID入力欄の正規化・検証・プレビュー更新
 function updateStreamerIdPreview() {
@@ -1260,6 +1357,7 @@ function updateStreamerIdPreview() {
     streamerIdPreview.style.display = 'block';
   }
   updateAuthUI();
+  updatePreviewPanel();
   return result;
 }
 streamerIdInput.addEventListener('input', updateStreamerIdPreview);
@@ -1445,8 +1543,43 @@ function updateSelectedCount() {
   document.getElementById('selectedCount').textContent = selectedKeys.size.toLocaleString('ja-JP');
   document.getElementById('exportBtn').disabled = selectedKeys.size === 0 || !streamerNameInput.value.trim();
   updatePublishButtonState();
+  updatePreviewPanel();
+}
+function updatePreviewPanel() {
+  const titleEl = document.getElementById('previewTitle');
+  const subtitleEl = document.getElementById('previewSubtitle');
+  const countEl = document.getElementById('previewSongCount');
+  const themeEl = document.getElementById('previewThemeLabel');
+  const urlEl = document.getElementById('previewUrl');
+  const accentEl = document.getElementById('previewAccent');
+  if (!titleEl) return;
+
+  const name = streamerNameInput.value.trim();
+  const sub = subtitleInput.value.trim();
+  titleEl.textContent = name || '配信者名を入力してください';
+  subtitleEl.textContent = sub || 'サブタイトル（任意）';
+  countEl.textContent = selectedKeys.size.toLocaleString('ja-JP');
+
+  const theme = resolveTheme();
+  if (accentEl) accentEl.style.background = theme.light;
+
+  if (currentTheme.type === 'preset') {
+    const preset = PRESETS[currentTheme.presetIndex];
+    themeEl.textContent = 'テーマ: ' + (preset ? preset.name : 'プリセット');
+  } else {
+    themeEl.textContent = 'テーマ: カスタム';
+  }
+
+  const sid = streamerIdInput.value.trim();
+  const sidCheck = validateStreamerId(sid);
+  if (sidCheck.ok && !sidCheck.empty) {
+    urlEl.textContent = '公開URL: ' + getPublicPageUrl(sid);
+  } else {
+    urlEl.textContent = '';
+  }
 }
 streamerNameInput.addEventListener('input', updateSelectedCount);
+subtitleInput.addEventListener('input', updatePreviewPanel);
 
 // ---- export ----
 document.getElementById('exportBtn').addEventListener('click', () => {
@@ -2354,8 +2487,10 @@ document.getElementById('claimBtn').addEventListener('click', claimStreamerIdAct
 document.getElementById('publishBtn').addEventListener('click', publishOnline);
 
 renderTagAdmin();
+selectPreset(0);
 render();
 updateSelectedCount();
+updatePreviewPanel();
 updateStreamerIdPreview();
 refreshAuthMe();
 bootGoogleAuth(25);
