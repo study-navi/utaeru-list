@@ -12,6 +12,7 @@
 | `baseline/BASELINE.json` | 機能追加前の基準状態（件数・checksum・互換性契約） |
 | `docs/builder-config.schema.json` | 再編集用設定 JSON のスキーマ定義 |
 | `scripts/verify-baseline.mjs` | 基準状態・互換性の自動検証スクリプト |
+| `scripts/test-api-phase4c.mjs` | Cloudflare API（Phase 4C）回帰テスト |
 
 ## アーキテクチャ
 
@@ -163,6 +164,23 @@ node scripts/verify-baseline.mjs --skip-checksums
 - ビルダー: `index.html`
 - 公開ページ例: `hiro.html`
 
+**注意:** Googleログイン・オンライン公開は `https://study-navi.github.io/utaeru-list/index.html` のように **HTTPS 経由**（GitHub Pages 等）で開いてください。`file://` では Google ログインと Cookie 認証が動作しません。
+
+### オンライン公開の流れ（Phase 4C-3/4C-4）
+
+1. ①で配信者名・公開ページIDを入力
+2. ⑥で Google ログイン
+3. 「この公開ページIDを取得する」で claim（他人取得済みならエラー）
+4. 曲を選び、フッターの「🌐 公開する」
+5. 成功後、リスナー用 URL（例: `https://study-navi.github.io/utaeru-list/u/hiro`）が表示される
+
+API 回帰テスト:
+
+```bash
+node scripts/test-api-phase4c.mjs
+# DEV_WRITE_TOKEN を環境変数に設定している場合のみ書き込みテストも実行
+```
+
 ## 変更履歴
 
 | 日付 | 内容 |
@@ -170,6 +188,7 @@ node scripts/verify-baseline.mjs --skip-checksums
 | 2026-08-16 | 初回アップロード（`index.html` ビルダー、`hiro.html` サンプル） |
 | 2026-08-16 | 基準状態の記録、README、互換性検証スクリプト、builder-config スキーマを追加（アプリ本体の仕様・見た目は変更なし） |
 | 2026-08-16 | Phase 0/1: `configVersion` / `songMeta` / `tagPresets` を builder-config の追加フィールド（optional）として実装。既存6フィールド・曲データ `{ k, y, a, t }`・曲キー区切り文字は無変更。`index.html` の書き出し/インポート処理のみ変更、`hiro.html` は無変更（v1 形式のまま、旧HTML互換の検証対象）。状態・タグ・新着のUIはPhase 2以降で実装予定。verify-baseline.mjs に互換性チェックを追加 |
+| 2026-08-16 | Phase 4C-3/4C-4: ビルダーに Google ログイン・公開ページID取得（claim）・「公開する」API接続を追加。API: `https://utaeru-api.manabit.workers.dev`。公開ページ（viewer-template / `hiro.html`）は未変更 |
 
 ## 機能追加時のガイドライン
 

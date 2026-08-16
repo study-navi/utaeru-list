@@ -233,6 +233,27 @@
     cursor: pointer; white-space: nowrap;
   }
   .publish-btn:hover { background: var(--surface-2); }
+  .publish-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .publish-btn:not(:disabled) {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 800;
+  }
+  .publish-btn:not(:disabled):hover { filter: brightness(1.05); }
+
+  /* Phase 4C-3: Googleログイン・オンライン公開 */
+  .google-signin-wrap { min-height: 44px; margin: 4px 0 10px; }
+  .auth-user-line { font-size: 13.5px; color: var(--text-secondary); margin: 0 0 8px; }
+  .auth-message {
+    font-size: 13px; line-height: 1.6; margin: 10px 2px 0;
+    padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border);
+  }
+  .auth-message--info { background: var(--surface-2); color: var(--text-secondary); }
+  .auth-message--success { background: var(--accent-wash); color: var(--text-primary); }
+  .auth-message--error { background: #fdeeee; color: #8b2020; border-color: rgba(139,32,32,0.2); }
+  .claim-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+  .claim-status { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
 
   /* Phase 4A: 公開ページID（streamerId）入力 */
   .field-error {
@@ -324,9 +345,13 @@
     .song-settings-btn { font-size: 11px; padding: 5px 9px; }
     .status-btn, .song-tag-chip { font-size: 12px; padding: 6px 10px; }
     .publish-btn { font-size: 11.5px; padding: 9px 10px; }
+    .google-signin-wrap { display: flex; justify-content: center; }
+    .claim-row { flex-direction: column; align-items: stretch; }
+    .claim-row .tool-btn { width: 100%; min-height: 44px; }
     .export-btn { font-size: 12.5px; padding: 9px 12px; }
   }
 </style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -340,11 +365,11 @@
     <input type="text" id="streamerName" placeholder="例：ひろの歌える曲リスト" />
     <label class="field-label" for="subtitle">一言・サブタイトル（任意）</label>
     <input type="text" id="subtitle" placeholder="配信で歌える曲を検索できます。曲名・アーティスト名で絞り込めます。" />
-    <label class="field-label" for="streamerIdInput">公開ページID（任意・将来のURL用）</label>
+    <label class="field-label" for="streamerIdInput">公開ページID（オンライン公開時に必要）</label>
     <input type="text" id="streamerIdInput" placeholder="例：hiro" maxlength="32" autocomplete="off" spellcheck="false" />
-    <p class="hint">半角英小文字・数字・ハイフンのみ、3〜32文字。将来、配信者ごとの固定URL（例：/u/公開ページID）でこのページにアクセスできるようにする予定の準備項目です。今回はまだ実際のURLは発行されません。空欄のままでも書き出しに影響はありません。</p>
+    <p class="hint">半角英小文字・数字・ハイフンのみ、3〜32文字。オンライン公開では固定URL（例：/u/hiro）として使います。HTMLファイルの書き出しだけなら空欄でも構いません。</p>
     <p class="field-error" id="streamerIdError" style="display:none;"></p>
-    <p class="url-preview" id="streamerIdPreview" style="display:none;">公開予定URL：<span class="path"></span>（独自ドメイン接続後は先頭にドメインが付きます）</p>
+    <p class="url-preview" id="streamerIdPreview" style="display:none;">公開予定URL：<span class="path"></span></p>
   </div>
 
   <div class="card">
@@ -390,13 +415,31 @@
     </div>
   </div>
 
+  <div class="card" id="onlinePublishCard">
+    <h2>⑥ オンライン公開</h2>
+    <p class="hint">Googleでログインすると、固定URLで曲リストをインターネット上に公開できます。「📄 ページを書き出す」によるHTMLファイル公開もこれまで通り使えます。</p>
+    <div id="authSignedOut">
+      <div id="googleSignInBtn" class="google-signin-wrap"></div>
+    </div>
+    <div id="authSignedIn" style="display:none;">
+      <p class="auth-user-line"><span id="authUserEmail"></span> でログイン中</p>
+      <button type="button" class="tool-btn" id="logoutBtn">ログアウト</button>
+      <p class="hint" id="ownedIdsHint"></p>
+    </div>
+    <p class="auth-message" id="authMessage" style="display:none;"></p>
+    <div class="claim-row">
+      <button type="button" class="tool-btn" id="claimBtn" disabled>この公開ページIDを取得する</button>
+      <span class="claim-status" id="claimStatus">オンライン公開にはGoogleログインが必要です。</span>
+    </div>
+  </div>
+
 </div>
 
 <div class="export-bar">
   <div class="export-bar-inner">
     <div class="export-count"><span class="n" id="selectedCount">0</span>曲 選択中</div>
     <div class="export-bar-buttons">
-      <button class="publish-btn" type="button" id="publishBtn">🌐 公開する（準備中）</button>
+      <button class="publish-btn" type="button" id="publishBtn" disabled>🌐 公開する</button>
       <button class="export-btn" id="exportBtn" disabled>📄 ページを書き出す</button>
     </div>
   </div>
@@ -417,9 +460,13 @@ const STREAMER_ID_MIN_LEN = 3;
 const STREAMER_ID_MAX_LEN = 32;
 const STREAMER_ID_PATTERN = /^[a-z0-9-]+$/;
 // 将来ドメインを接続する際は、この定数を実際のドメイン（例: 'https://utaeru.com'）に差し替える想定。
-// 現時点ではドメイン未購入のため空文字とし、パスのみ（/u/xxx）をプレビュー表示する。
-const PUBLIC_URL_BASE = '';
+// GitHub Pages 公開時は study-navi.github.io/utaeru-list を基点とする。
+const PUBLIC_URL_BASE = 'https://study-navi.github.io/utaeru-list';
 const PUBLIC_URL_PATH_PREFIX = '/u/';
+
+// Phase 4C-3/4C-4: オンライン公開 API（Cloudflare Workers Free）
+const API_BASE = 'https://utaeru-api.manabit.workers.dev';
+const GOOGLE_CLIENT_ID = '580845367374-ep76c8sqpo5g57lsjc63n08p92s99prd.apps.googleusercontent.com';
 
 // 入力を「意味を変えない範囲」でのみ自動変換する（大文字→小文字、空白→ハイフン）。
 // それ以外の使用不可文字は自動変換・除去せず、明示的にエラー表示してユーザー自身に修正してもらう
@@ -847,6 +894,7 @@ function updateStreamerIdPreview() {
     streamerIdPreview.querySelector('.path').textContent = PUBLIC_URL_BASE + PUBLIC_URL_PATH_PREFIX + value;
     streamerIdPreview.style.display = 'block';
   }
+  updateAuthUI();
   return result;
 }
 streamerIdInput.addEventListener('input', updateStreamerIdPreview);
@@ -1031,6 +1079,7 @@ document.getElementById('clearAllBtn').addEventListener('click', () => {
 function updateSelectedCount() {
   document.getElementById('selectedCount').textContent = selectedKeys.size.toLocaleString('ja-JP');
   document.getElementById('exportBtn').disabled = selectedKeys.size === 0 || !streamerNameInput.value.trim();
+  updatePublishButtonState();
 }
 streamerNameInput.addEventListener('input', updateSelectedCount);
 
@@ -1132,15 +1181,304 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
   updateSelectedCount();
 });
 
-// Phase 4A: 「公開する」ボタンはUIのみ準備。実際のサーバー送信は行わない。
-document.getElementById('publishBtn').addEventListener('click', () => {
-  alert('🌐 公開機能は現在準備中です。\n\n将来、ここから直接 /u/○○○ のような公開URLへ反映できるようにする予定です。\n今のところは「📄 ページを書き出す」でHTMLファイルとして書き出し、これまで通りご自身で公開してください。');
-});
+// ---- Phase 4C-3/4C-4: Googleログイン・claim・オンライン公開 ----
+let authUser = null;
+let authLoading = false;
+
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API_BASE + path, {
+    ...options,
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  });
+  let data = null;
+  const text = await res.text();
+  if (text) {
+    try { data = JSON.parse(text); } catch (err) { data = { raw: text }; }
+  }
+  return { res, data };
+}
+
+function apiErrorMessage(status, data) {
+  if (data && data.error === 'already_claimed') return 'この公開ページIDはすでに使われています。別のIDを選んでください。';
+  if (data && data.error === 'forbidden') return 'この公開ページIDを変更する権限がありません。';
+  if (data && data.error === 'invalid_streamer_id') return '公開ページIDの形式が正しくありません（半角英小文字・数字・ハイフン、3〜32文字）。';
+  if (data && data.error === 'invalid_token') return 'Googleログインに失敗しました。もう一度お試しください。';
+  if (data && typeof data.message === 'string') return data.message;
+  const map = {
+    400: '入力内容に問題があります。',
+    401: 'ログインが必要です。Googleでログインしてください。',
+    403: 'この操作を行う権限がありません。',
+    409: 'この公開ページIDはすでに使われています。',
+    413: 'データが大きすぎます（2MB以下にしてください）。',
+    500: 'サーバーでエラーが発生しました。しばらくしてからもう一度お試しください。',
+  };
+  return map[status] || `エラーが発生しました（${status}）`;
+}
+
+function showAuthMessage(text, type) {
+  const el = document.getElementById('authMessage');
+  if (!text) { el.style.display = 'none'; el.textContent = ''; return; }
+  el.textContent = text;
+  el.className = 'auth-message auth-message--' + (type || 'info');
+  el.style.display = 'block';
+}
+
+function normalizeOwnedIds(data) {
+  if (Array.isArray(data.ownedStreamerIds)) return data.ownedStreamerIds;
+  if (Array.isArray(data.streamerIds)) return data.streamerIds;
+  if (Array.isArray(data.ownedIds)) return data.ownedIds;
+  return [];
+}
+
+function isStreamerIdOwned(id) {
+  return !!(authUser && authUser.ownedStreamerIds.includes(id));
+}
+
+function updatePublishButtonState() {
+  const publishBtn = document.getElementById('publishBtn');
+  const name = streamerNameInput.value.trim();
+  const sid = streamerIdInput.value.trim();
+  const sidCheck = validateStreamerId(sid);
+  const canPublish = !!authUser
+    && isStreamerIdOwned(sid)
+    && sidCheck.ok
+    && !!name
+    && selectedKeys.size > 0
+    && !authLoading;
+  publishBtn.disabled = !canPublish;
+}
+
+function updateAuthUI() {
+  const signedOut = document.getElementById('authSignedOut');
+  const signedIn = document.getElementById('authSignedIn');
+  const claimBtn = document.getElementById('claimBtn');
+  const claimStatus = document.getElementById('claimStatus');
+  if (authUser) {
+    signedOut.style.display = 'none';
+    signedIn.style.display = 'block';
+    document.getElementById('authUserEmail').textContent = authUser.email || authUser.name || 'ログイン中';
+    const owned = authUser.ownedStreamerIds;
+    document.getElementById('ownedIdsHint').textContent = owned.length
+      ? `取得済みの公開ページID: ${owned.join(', ')}`
+      : 'まだ公開ページIDを取得していません。①でIDを入力し、下のボタンから取得してください。';
+  } else {
+    signedOut.style.display = 'block';
+    signedIn.style.display = 'none';
+  }
+  const sid = streamerIdInput.value.trim();
+  const sidCheck = validateStreamerId(sid);
+  if (!authUser) {
+    claimStatus.textContent = 'オンライン公開にはGoogleログインが必要です。';
+    claimBtn.disabled = true;
+  } else if (!sid) {
+    claimStatus.textContent = '①で公開ページIDを入力してください。';
+    claimBtn.disabled = true;
+  } else if (!sidCheck.ok) {
+    claimStatus.textContent = sidCheck.message;
+    claimBtn.disabled = true;
+  } else if (isStreamerIdOwned(sid)) {
+    claimStatus.textContent = '✓ この公開ページIDはあなたが使用中です。';
+    claimBtn.disabled = true;
+  } else {
+    claimStatus.textContent = '未取得のIDです。取得ボタンを押してください。';
+    claimBtn.disabled = authLoading;
+  }
+  updatePublishButtonState();
+}
+
+async function refreshAuthMe() {
+  try {
+    const { res, data } = await apiFetch('/api/auth/me');
+    if (res.status === 401 || !res.ok) {
+      authUser = null;
+      updateAuthUI();
+      return;
+    }
+    authUser = {
+      email: data.email || (data.user && data.user.email) || '',
+      name: data.name || (data.user && data.user.name) || '',
+      ownedStreamerIds: normalizeOwnedIds(data),
+    };
+    updateAuthUI();
+  } catch (err) {
+    authUser = null;
+    updateAuthUI();
+  }
+}
+
+async function handleGoogleCredential(response) {
+  authLoading = true;
+  updateAuthUI();
+  showAuthMessage('ログイン中…', 'info');
+  try {
+    const { res, data } = await apiFetch('/api/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ idToken: response.credential }),
+    });
+    if (!res.ok) {
+      showAuthMessage(apiErrorMessage(res.status, data), 'error');
+      return;
+    }
+    showAuthMessage('ログインしました。', 'success');
+    await refreshAuthMe();
+  } catch (err) {
+    showAuthMessage('ログインに失敗しました。ネットワークを確認してください。', 'error');
+  } finally {
+    authLoading = false;
+    updateAuthUI();
+  }
+}
+
+function initGoogleSignIn() {
+  if (!window.google || !google.accounts || !google.accounts.id) return false;
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredential,
+    auto_select: false,
+    cancel_on_tap_outside: true,
+  });
+  const btnHost = document.getElementById('googleSignInBtn');
+  btnHost.innerHTML = '';
+  google.accounts.id.renderButton(btnHost, {
+    type: 'standard',
+    theme: 'outline',
+    size: 'large',
+    text: 'signin_with',
+    shape: 'rectangular',
+    locale: 'ja',
+    width: Math.min(320, btnHost.clientWidth || 320),
+  });
+  return true;
+}
+
+function bootGoogleSignIn(attemptsLeft) {
+  if (initGoogleSignIn()) return;
+  if (attemptsLeft <= 0) {
+    showAuthMessage('Googleログインの読み込みに失敗しました。ページを再読み込みしてください。', 'error');
+    return;
+  }
+  setTimeout(() => bootGoogleSignIn(attemptsLeft - 1), 200);
+}
+
+async function logoutUser() {
+  authLoading = true;
+  updateAuthUI();
+  try {
+    await apiFetch('/api/auth/logout', { method: 'POST', body: '{}' });
+    authUser = null;
+    showAuthMessage('ログアウトしました。', 'info');
+    updateAuthUI();
+  } catch (err) {
+    showAuthMessage('ログアウトに失敗しました。', 'error');
+  } finally {
+    authLoading = false;
+    updateAuthUI();
+  }
+}
+
+async function claimStreamerIdAction() {
+  const sid = streamerIdInput.value.trim();
+  const check = validateStreamerId(sid);
+  if (!check.ok) { showAuthMessage(check.message, 'error'); return; }
+  if (!authUser) { showAuthMessage('Googleでログインしてください。', 'error'); return; }
+  authLoading = true;
+  updateAuthUI();
+  showAuthMessage('公開ページIDを取得中…', 'info');
+  try {
+    const { res, data } = await apiFetch('/api/streamer/' + encodeURIComponent(sid) + '/claim', {
+      method: 'POST',
+      body: '{}',
+    });
+    if (!res.ok) {
+      showAuthMessage(apiErrorMessage(res.status, data), 'error');
+      return;
+    }
+    showAuthMessage('公開ページID「' + sid + '」を取得しました。', 'success');
+    await refreshAuthMe();
+  } catch (err) {
+    showAuthMessage('取得に失敗しました。ネットワークを確認してください。', 'error');
+  } finally {
+    authLoading = false;
+    updateAuthUI();
+  }
+}
+
+function buildPublicPayload(streamerId) {
+  const name = streamerNameInput.value.trim();
+  const subtitle = subtitleInput.value.trim() || '配信で歌える曲を検索できます。曲名・アーティスト名で絞り込めます。';
+  const selectedSongs = MASTER_SONGS.filter(s => selectedKeys.has(keyOf(s)));
+  const songs = selectedSongs.map(s => ({ k: s.k, y: s.y, a: s.a, t: s.t }));
+  const filteredMeta = {};
+  for (const key of selectedKeys) {
+    const cleaned = cleanMeta(songMeta[key] || {});
+    if (Object.keys(cleaned).length) filteredMeta[key] = cleaned;
+  }
+  return {
+    streamerName: name,
+    subtitle,
+    configVersion: CONFIG_VERSION,
+    themeType: currentTheme.type,
+    presetIndex: currentTheme.type === 'preset' ? currentTheme.presetIndex : null,
+    customHex: currentTheme.type === 'custom' ? currentTheme.customHex : null,
+    streamerId,
+    songs,
+    songMeta: filteredMeta,
+    tagPresets,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+async function publishOnline() {
+  const name = streamerNameInput.value.trim();
+  if (!name) { showAuthMessage('配信者名を入力してください。', 'error'); return; }
+  if (selectedKeys.size === 0) { showAuthMessage('曲を1曲以上選択してください。', 'error'); return; }
+  const sid = streamerIdInput.value.trim();
+  const sidCheck = validateStreamerId(sid);
+  if (!sidCheck.ok) { showAuthMessage(sidCheck.message, 'error'); return; }
+  if (!authUser) { showAuthMessage('Googleでログインしてください。', 'error'); return; }
+  if (!isStreamerIdOwned(sid)) {
+    showAuthMessage('先に「この公開ページIDを取得する」を押してください。', 'error');
+    return;
+  }
+  authLoading = true;
+  updateAuthUI();
+  showAuthMessage('公開中…', 'info');
+  try {
+    const payload = buildPublicPayload(sid);
+    const { res, data } = await apiFetch('/api/public/' + encodeURIComponent(sid), {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      showAuthMessage(apiErrorMessage(res.status, data), 'error');
+      return;
+    }
+    const publicUrl = PUBLIC_URL_BASE + PUBLIC_URL_PATH_PREFIX + sid;
+    showAuthMessage('公開しました。リスナー用URL: ' + publicUrl, 'success');
+  } catch (err) {
+    showAuthMessage('公開に失敗しました。ネットワークを確認してください。', 'error');
+  } finally {
+    authLoading = false;
+    updateAuthUI();
+  }
+}
+
+document.getElementById('logoutBtn').addEventListener('click', logoutUser);
+document.getElementById('claimBtn').addEventListener('click', claimStreamerIdAction);
+document.getElementById('publishBtn').addEventListener('click', publishOnline);
+
+// Phase 4A: 「公開する」ボタン — Phase 4C-4 で API 接続済み（上記 publishOnline）
 
 renderTagAdmin();
 render();
 updateSelectedCount();
 updateStreamerIdPreview();
+refreshAuthMe();
+bootGoogleSignIn(25);
 </script>
 </body>
 </html>

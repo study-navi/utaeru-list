@@ -1,17 +1,15 @@
 {
-  "label": "Phase 0/1 適用後の基準状態（configVersion / songMeta / tagPresets を追加フィールドとして導入、旧HTML互換を維持）",
+  "label": "Phase 4C-3/4C-4 適用後（Googleログイン・claim・オンライン公開 API 接続。hiro.html は Phase 3 公開サンプルのまま）",
   "establishedAt": "2026-08-16",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "機能追加前の基準状態",
+    "label": "Phase 0/1 適用後の基準状態（configVersion / songMeta / tagPresets を追加フィールドとして導入、旧HTML互換を維持）",
     "establishedAt": "2026-08-16",
-    "gitCommit": "cba9d3d4ff062d7aa09443b4e4136298aa7d6a34",
-    "gitCommitShort": "cba9d3d",
     "files": {
       "index.html": {
-        "bytes": 230050,
-        "sha256": "a19482f8afaf2e05b9bf24e077182b61525cfa8afa2859b96fa4fcecb9498f18"
+        "bytes": 231880,
+        "sha256": "8c4f9cef0fe2f574b566bfef47605cdf0337213f9f63703227e726198408e707"
       },
       "hiro.html": {
         "bytes": 16262,
@@ -21,12 +19,12 @@
   },
   "files": {
     "index.html": {
-      "bytes": 231880,
-      "sha256": "8c4f9cef0fe2f574b566bfef47605cdf0337213f9f63703227e726198408e707"
+      "bytes": 276477,
+      "sha256": "9192035d542605f01eb269a9fbea8f8454b033499943fafc56ef9a1f2d872199"
     },
     "hiro.html": {
-      "bytes": 16262,
-      "sha256": "e6bdbde74a5ff2c4f8e9356b6a04141a7af9aa321796dac95c324e881cd45215"
+      "bytes": 25630,
+      "sha256": "501db6b1beea39814e472e5db7375d9acaa9f0406736aeca035615c23dc3fc9e"
     }
   },
   "catalog": {
@@ -37,7 +35,7 @@
   "hiroSample": {
     "streamerName": "ひろ",
     "selectedSongCount": 14,
-    "note": "Phase 0/1 では hiro.html 自体は再書き出しせず旧形式(v1, configVersion フィールドなし)のまま据え置き、旧HTML互換の実例として使用する。"
+    "note": "Phase 0/1 では hiro.html 自体は再書き出しせず旧形式(v1, configVersion フィールドなし)のまま据え置き、旧HTML互換の実例として使用する。Phase 3 以降のリポジトリでは Phase 3 公開ページサンプル（フィルタUI付き）が含まれる場合がある。"
   },
   "songFields": {
     "master": [
