@@ -1308,6 +1308,7 @@ let authUser = null;
 let authLoading = false;
 let onlineMode = null; // null | 'anonymous' | 'google' | 'edit-key'
 let editKeyVerified = false;
+let editKeyVerifiedStreamerId = null;
 let issuedEditKeyPlaintext = null;
 const SESSION_TOKEN_KEY = 'utaeru_access_token';
 const EDIT_KEY_STORAGE_PREFIX = 'utaeru_edit_key:';
@@ -1451,7 +1452,8 @@ function updatePublishButtonState() {
   if (onlineMode === 'anonymous') {
     canPublish = baseOk;
   } else if (onlineMode === 'edit-key') {
-    canPublish = baseOk && editKeyVerified;
+    const sidMatchesVerified = editKeyVerifiedStreamerId === sid;
+    canPublish = baseOk && editKeyVerified && sidMatchesVerified;
   } else if (onlineMode === 'google') {
     canPublish = baseOk && !!authUser && isStreamerIdOwned(sid);
   }
@@ -1460,9 +1462,14 @@ function updatePublishButtonState() {
 }
 
 function setOnlineMode(mode) {
+  if (onlineMode !== mode) {
+    editKeyVerified = false;
+    editKeyVerifiedStreamerId = null;
+  }
   onlineMode = mode;
-  editKeyVerified = false;
-  clearIssuedEditKeyDisplay();
+  if (mode !== 'edit-key') {
+    clearIssuedEditKeyDisplay();
+  }
 
   const panels = {
     anonymous: document.getElementById('anonymousModePanel'),
@@ -1839,6 +1846,26 @@ async function publishWithGoogle(sid) {
   }
 }
 
+function applyPublicDataToBuilder(data, streamerId) {
+  streamerNameInput.value = data.streamerName || '';
+  subtitleInput.value = data.subtitle || '';
+  streamerIdInput.value = streamerId;
+  updateStreamerIdPreview();
+  if (data.themeType === 'preset' && Number.isInteger(data.presetIndex)) {
+    selectPreset(data.presetIndex);
+  } else if (data.customHex) {
+    customColorInput.value = data.customHex;
+    selectCustom(data.customHex);
+  }
+  selectedKeys = new Set((data.songs || []).map(s => keyOf(s)));
+  songMeta = (data.songMeta && typeof data.songMeta === 'object') ? data.songMeta : {};
+  if (Array.isArray(data.tagPresets)) tagPresets = data.tagPresets.map(t => ({ ...t }));
+  expandedKeys.clear();
+  renderTagAdmin();
+  render();
+  updateSelectedCount();
+}
+
 async function verifyEditKeyAction() {
   const sid = document.getElementById('editKeyStreamerIdInput').value.trim();
   const editKey = document.getElementById('editKeyInput').value.trim();
@@ -1856,6 +1883,7 @@ async function verifyEditKeyAction() {
     });
     if (!res.ok) {
       editKeyVerified = false;
+      editKeyVerifiedStreamerId = null;
       showAuthMessage(apiErrorMessage(res.status, data), 'error');
       updateAuthUI();
       return;
@@ -1863,11 +1891,19 @@ async function verifyEditKeyAction() {
     streamerIdInput.value = sid;
     updateStreamerIdPreview();
     setStoredEditKey(sid, editKey);
-    editKeyVerified = true;
     setOnlineMode('edit-key');
+    editKeyVerified = true;
+    editKeyVerifiedStreamerId = sid;
+    const pub = await apiFetch('/api/public/' + encodeURIComponent(sid));
+    if (pub.res.ok && pub.data) {
+      applyPublicDataToBuilder(pub.data, sid);
+    } else {
+      updateSelectedCount();
+    }
     showAuthMessage('編集キーを確認しました。内容を変更して「公開する」で更新できます。', 'success');
   } catch (err) {
     editKeyVerified = false;
+    editKeyVerifiedStreamerId = null;
     showAuthMessage('確認に失敗しました。ネットワークを確認してください。', 'error');
   } finally {
     authLoading = false;
@@ -1897,6 +1933,7 @@ async function linkGoogleAction() {
     }
     setStoredEditKey(sid, null);
     editKeyVerified = false;
+    editKeyVerifiedStreamerId = null;
     document.getElementById('editKeyInput').value = '';
     await refreshAuthMe();
     setOnlineMode('google');
