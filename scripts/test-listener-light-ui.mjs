@@ -57,8 +57,8 @@ async function checkViewport(page, label, width, height) {
   if (data.artistBlocks < 1) fail(`${label} ${width}px: artist-block`, String(data.artistBlocks));
   if (data.scrollW > data.clientW + 2) fail(`${label} ${width}px: 横スクロール`, `${data.scrollW}/${data.clientW}`);
   else ok(`${label} ${width}px: 横スクロールなし`);
-  if (data.pageBg !== '#f6f6f4') fail(`${label} ${width}px: ページ背景`, data.pageBg);
-  else ok(`${label} ${width}px: ページ背景 #f6f6f4`);
+  if (data.pageBg !== '#f5f8fc') fail(`${label} ${width}px: ページ背景`, data.pageBg);
+  else ok(`${label} ${width}px: ページ背景 #f5f8fc`);
 }
 
 async function runUrl(url) {

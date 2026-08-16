@@ -82,7 +82,7 @@ async function run() {
   } else {
     fail('404.html テーマ切替', 'theme toggle still present');
   }
-  if (html404.includes('--page: #f6f6f4')) ok('404.html ライト配色 #f6f6f4');
+  if (html404.includes('--page: #f5f8fc')) ok('404.html ライト配色 #f5f8fc');
   else fail('404.html ライト配色', 'page color missing');
 
   if (fs.existsSync(path.join(ROOT, '.nojekyll'))) ok('.nojekyll が存在');

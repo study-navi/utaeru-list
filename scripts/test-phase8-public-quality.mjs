@@ -30,11 +30,14 @@ for (const file of ['terms.html', 'privacy.html', 'contact.html', 'favicon.svg']
   else ok(`file exists: ${file}`);
 }
 
-if (!indexHtml.includes('site-hero')) fail('index: site-hero');
-else ok('index: site-hero');
+if (!indexHtml.includes('class="brand-intro"')) fail('index: brand-intro');
+else ok('index: brand-intro');
 
-if (!indexHtml.includes('id="heroStartBtn"')) fail('index: heroStartBtn');
-else ok('index: heroStartBtn');
+if (!indexHtml.includes('class="brand-tagline"')) fail('index: brand-tagline');
+else ok('index: brand-tagline');
+
+if (indexHtml.includes('id="heroStartBtn"') || indexHtml.includes('site-hero')) fail('index: hero CTA removed');
+else ok('index: hero CTA removed');
 
 if (!indexHtml.includes('id="publishSuccessModal"')) fail('index: publishSuccessModal');
 else ok('index: publishSuccessModal');
@@ -134,22 +137,20 @@ async function browserChecks() {
   if (errors.length) fail('browser: no JS errors', errors.join('; '));
   else ok('browser: no JS errors');
 
-  const hero = await page.locator('.site-hero-title').textContent();
-  if (!hero?.includes('歌える曲リスト')) fail('browser: hero title', hero || '');
-  else ok('browser: hero title');
+  const tagline = await page.locator('.brand-tagline').textContent();
+  if (!tagline?.includes('歌える曲、まとめとこ')) fail('browser: brand tagline', tagline || '');
+  else ok('browser: brand tagline');
 
   const overflow = await page.evaluate(() => ({
     doc: document.documentElement.scrollWidth > document.documentElement.clientWidth,
-    hero: document.querySelector('.site-hero')?.scrollWidth > document.documentElement.clientWidth,
+    intro: document.querySelector('.brand-intro')?.scrollWidth > document.documentElement.clientWidth,
   }));
-  if (overflow.doc || overflow.hero) fail('browser: no horizontal scroll at 375px', JSON.stringify(overflow));
+  if (overflow.doc || overflow.intro) fail('browser: no horizontal scroll at 375px', JSON.stringify(overflow));
   else ok('browser: no horizontal scroll at 375px');
 
-  await page.click('#heroStartBtn');
-  await page.waitForTimeout(200);
   const basicOpen = await page.locator('#accBasic.open').count();
-  if (basicOpen !== 1) fail('browser: hero opens basic accordion');
-  else ok('browser: hero opens basic accordion');
+  if (basicOpen !== 1) fail('browser: basic accordion open by default');
+  else ok('browser: basic accordion open by default');
 
   const shareFn = await page.evaluate(() => typeof sharePublicUrl === 'function');
   if (!shareFn) fail('browser: sharePublicUrl defined');

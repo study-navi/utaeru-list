@@ -58,7 +58,7 @@ async function run(label, width, height, colorScheme = 'light') {
   else ok(`${label}: data-utaeru-builder=light`);
   if (!chrome.colorScheme.includes('light')) fail(`${label}: color-scheme light`, chrome.colorScheme);
   else ok(`${label}: color-scheme=${chrome.colorScheme}`);
-  if (colorScheme === 'dark' && chrome.pageBg !== 'rgb(246, 246, 244)') {
+  if (colorScheme === 'dark' && chrome.pageBg !== 'rgb(245, 248, 252)') {
     fail(`${label}: OSダークでもライト背景`, chrome.pageBg);
   } else if (colorScheme === 'dark') ok(`${label}: OSダークでもライト背景`);
   if (chrome.prev !== 0 || chrome.next !== 0) fail(`${label}: 戻る/次へ0件`, `prev=${chrome.prev} next=${chrome.next}`);
