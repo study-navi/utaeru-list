@@ -1,5 +1,5 @@
 {
-  "label": "Phase 4C Bearer認証（cross-site Cookie非依存、hiro.html は Phase 3 公開サンプルのまま）",
+  "label": "Phase 4C GIS error_callback + Bearerセッション復元修正",
   "establishedAt": "2026-08-16",
   "gitCommit": null,
   "gitCommitShort": null,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 277642,
-      "sha256": "eacf462cbb550ae154405016b989ad9313a3f4d765819c883bae3f07607feccc"
+      "bytes": 280355,
+      "sha256": "5ae755577ee8b06b5a2561616723ae4b7ec8dea78037030a6c0b8cb2524b9b6a"
     },
     "hiro.html": {
       "bytes": 25630,

@@ -1217,6 +1217,37 @@ async function apiFetch(path, options = {}) {
   return { res, data };
 }
 
+async function postAuthGoogle(idToken) {
+  const res = await fetch(API_BASE + '/api/auth/google', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken }),
+  });
+  let data = null;
+  const text = await res.text();
+  if (text) {
+    try { data = JSON.parse(text); } catch (err) { data = { raw: text }; }
+  }
+  return { res, data };
+}
+
+async function fetchAuthMe(explicitToken) {
+  const headers = { 'Content-Type': 'application/json' };
+  const token = explicitToken || getStoredAccessToken();
+  if (token) headers.Authorization = 'Bearer ' + token;
+  const res = await fetch(API_BASE + '/api/auth/me', {
+    credentials: 'include',
+    headers,
+  });
+  let data = null;
+  const text = await res.text();
+  if (text) {
+    try { data = JSON.parse(text); } catch (err) { data = { raw: text }; }
+  }
+  return { res, data };
+}
+
 function apiErrorMessage(status, data) {
   if (data && data.error === 'already_claimed') return 'この公開ページIDはすでに使われています。別のIDを選んでください。';
   if (data && data.error === 'forbidden') return 'この公開ページIDを変更する権限がありません。';
@@ -1305,10 +1336,11 @@ function updateAuthUI() {
   updatePublishButtonState();
 }
 
-async function refreshAuthMe() {
+async function refreshAuthMe(explicitToken) {
   try {
-    const { res, data } = await apiFetch('/api/auth/me');
+    const { res, data } = await fetchAuthMe(explicitToken);
     if (res.status === 401 || !res.ok) {
+      if (getStoredAccessToken()) setStoredAccessToken(null);
       authUser = null;
       updateAuthUI();
       return;
@@ -1325,23 +1357,48 @@ async function refreshAuthMe() {
   }
 }
 
+function googleSignInErrorMessage(err) {
+  const type = err && (err.type || err.message || '');
+  if (/fedcm|third.?party|not.?allowed|disabled|network/i.test(String(type))) {
+    return 'Googleログインを開始できませんでした。ChromeのCookie設定で「サードパーティCookie」またはサイトデータを許可してから、Googleボタンをもう一度押してください。';
+  }
+  if (/popup|closed|blocked/i.test(String(type))) {
+    return 'Googleログイン画面を開けませんでした。ポップアップブロックを解除してからもう一度お試しください。';
+  }
+  return type
+    ? 'Googleログインを開始できませんでした。（' + type + '）'
+    : 'Googleログインを開始できませんでした。Googleボタンをもう一度押してください。';
+}
+
+function onGoogleSignInError(err) {
+  authLoading = false;
+  updateAuthUI();
+  showAuthMessage(googleSignInErrorMessage(err), 'error');
+}
+
 async function handleGoogleCredential(response) {
+  const idToken = response && response.credential;
+  if (!idToken) {
+    showAuthMessage('Googleからログイン情報を取得できませんでした。Googleボタンをもう一度押してください。', 'error');
+    return;
+  }
+  setStoredAccessToken(null);
   authLoading = true;
   updateAuthUI();
   showAuthMessage('ログイン中…', 'info');
   try {
-    const { res, data } = await apiFetch('/api/auth/google', {
-      method: 'POST',
-      body: JSON.stringify({ idToken: response.credential }),
-    });
+    const { res, data } = await postAuthGoogle(idToken);
     if (!res.ok) {
       showAuthMessage(apiErrorMessage(res.status, data), 'error');
       return;
     }
-    if (data && data.accessToken) {
-      setStoredAccessToken(data.accessToken);
+    const accessToken = data && data.accessToken;
+    if (!accessToken) {
+      showAuthMessage('ログイン応答にセッション情報がありません。しばらくしてからもう一度お試しください。', 'error');
+      return;
     }
-    await refreshAuthMe();
+    setStoredAccessToken(accessToken);
+    await refreshAuthMe(accessToken);
     if (authUser) {
       showAuthMessage('ログインしました。', 'success');
     } else {
@@ -1360,8 +1417,10 @@ function initGoogleSignIn() {
   google.accounts.id.initialize({
     client_id: GOOGLE_CLIENT_ID,
     callback: handleGoogleCredential,
+    error_callback: onGoogleSignInError,
     auto_select: false,
     cancel_on_tap_outside: true,
+    itp_support: true,
   });
   const btnHost = document.getElementById('googleSignInBtn');
   btnHost.innerHTML = '';
@@ -1373,7 +1432,15 @@ function initGoogleSignIn() {
     shape: 'rectangular',
     locale: 'ja',
     width: Math.min(320, btnHost.clientWidth || 320),
+    click_listener: () => {
+      showAuthMessage('Googleアカウントを確認中…', 'info');
+    },
   });
+  try {
+    google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) return;
+    });
+  } catch (err) { /* One Tap unavailable */ }
   return true;
 }
 
