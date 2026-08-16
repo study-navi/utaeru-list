@@ -1,26 +1,26 @@
 {
-  "label": "Phase 4C OAuth2 Token Client + Bearerセッション",
+  "label": "Phase 5 匿名編集キー + Google所有の二方式",
   "establishedAt": "2026-08-16",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "Phase 0/1 適用後の基準状態（configVersion / songMeta / tagPresets を追加フィールドとして導入、旧HTML互換を維持）",
+    "label": "Phase 4C OAuth2 Token Client + Bearerセッション",
     "establishedAt": "2026-08-16",
     "files": {
       "index.html": {
-        "bytes": 231880,
-        "sha256": "8c4f9cef0fe2f574b566bfef47605cdf0337213f9f63703227e726198408e707"
+        "bytes": 280087,
+        "sha256": "efcb2a686021be6bca126d3f3df1f2ef66e31d630fcd784db7304659b417910e"
       },
       "hiro.html": {
-        "bytes": 16262,
-        "sha256": "e6bdbde74a5ff2c4f8e9356b6a04141a7af9aa321796dac95c324e881cd45215"
+        "bytes": 25630,
+        "sha256": "501db6b1beea39814e472e5db7375d9acaa9f0406736aeca035615c23dc3fc9e"
       }
     }
   },
   "files": {
     "index.html": {
-      "bytes": 280087,
-      "sha256": "efcb2a686021be6bca126d3f3df1f2ef66e31d630fcd784db7304659b417910e"
+      "bytes": 294455,
+      "sha256": "88d9c6fb87c07f2ad6cb34b8a4d7dbd87f848249abd43fc92f8b731c7998987c"
     },
     "hiro.html": {
       "bytes": 25630,

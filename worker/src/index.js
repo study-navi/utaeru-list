@@ -1,12 +1,14 @@
 /**
- * Utaeru API — Cloudflare Worker (Phase 4C)
- * Single-file handler for public data, Google auth, and streamer claims.
+ * Utaeru API — Cloudflare Worker (Phase 5)
+ * Public data, Google auth, anonymous edit keys, and streamer claims.
  */
 
 const COOKIE_NAME = 'utaeru_session';
 const SESSION_MAX_AGE_SEC = 2592000; // 30 days
 const MAX_BODY_BYTES = 2 * 1024 * 1024;
 const STREAMER_ID_RE = /^[a-z0-9-]{3,32}$/;
+const EDIT_KEY_RE = /^ut_[0-9a-f]{64}$/;
+const EDIT_KEY_HEADER = 'X-Utaeru-Edit-Key';
 const GOOGLE_JWKS_URL = 'https://www.googleapis.com/oauth2/v3/certs';
 const GOOGLE_ISSUERS = new Set(['https://accounts.google.com', 'accounts.google.com']);
 const JWKS_CACHE_TTL_MS = 60 * 60 * 1000;
@@ -41,6 +43,12 @@ export default {
         response = await handleAuthMe(request, env);
       } else if (path.startsWith('/api/streamer/') && path.endsWith('/claim') && request.method === 'POST') {
         response = await handleClaim(request, path, env);
+      } else if (path.startsWith('/api/streamer/') && path.endsWith('/create-anonymous') && request.method === 'POST') {
+        response = await handleCreateAnonymous(request, path, env);
+      } else if (path.startsWith('/api/streamer/') && path.endsWith('/verify-edit-key') && request.method === 'POST') {
+        response = await handleVerifyEditKey(request, path, env);
+      } else if (path.startsWith('/api/streamer/') && path.endsWith('/link-google') && request.method === 'POST') {
+        response = await handleLinkGoogle(request, path, env);
       } else {
         response = json({ error: 'not_found' }, 404);
       }
@@ -244,10 +252,177 @@ async function handleClaim(request, path, env) {
     return json({ error: 'already_claimed' }, 409);
   }
 
+  const anonOwner = await env.DB.prepare(
+    'SELECT streamer_id FROM streamer_edit_keys WHERE streamer_id = ? AND revoked_at IS NULL',
+  ).bind(streamerId).first();
+
+  if (anonOwner) {
+    return json({ error: 'already_claimed' }, 409);
+  }
+
   const now = new Date().toISOString();
-  await env.DB.prepare(
-    'INSERT INTO streamer_owners (streamer_id, user_id, created_at) VALUES (?, ?, ?)',
-  ).bind(streamerId, user.user_id, now).run();
+  try {
+    await env.DB.prepare(
+      'INSERT INTO streamer_owners (streamer_id, user_id, created_at) VALUES (?, ?, ?)',
+    ).bind(streamerId, user.user_id, now).run();
+  } catch (err) {
+    if (isD1UniqueViolation(err)) {
+      return json({ error: 'already_claimed' }, 409);
+    }
+    throw err;
+  }
+
+  return json({ streamerId, ok: true }, 200);
+}
+
+async function handleCreateAnonymous(request, path, env) {
+  const streamerId = extractStreamerPathId(path, '/create-anonymous');
+  if (!isValidStreamerId(streamerId)) {
+    return json({ error: 'invalid_streamer_id' }, 400);
+  }
+
+  const rawBody = await readBodyWithLimit(request, MAX_BODY_BYTES);
+  if (rawBody.error) {
+    return json({ error: rawBody.error }, rawBody.status);
+  }
+
+  let body;
+  try {
+    body = JSON.parse(rawBody.text);
+  } catch {
+    return json({ error: 'invalid_body' }, 400);
+  }
+
+  const validation = validatePublicPayload(body);
+  if (!validation.ok) {
+    return json({ error: 'invalid_body', message: validation.message }, 400);
+  }
+
+  if (body.streamerId && body.streamerId !== streamerId) {
+    return json({ error: 'invalid_body', message: 'streamerId mismatch' }, 400);
+  }
+
+  const conflict = await getOwnershipConflict(env, streamerId);
+  if (conflict) {
+    return json({ error: 'already_claimed' }, 409);
+  }
+
+  const editKey = generateEditKey();
+  const keyHash = await hashEditKey(editKey, env.SESSION_SECRET);
+  const publicData = JSON.stringify({ ...body, streamerId });
+  const now = new Date().toISOString();
+
+  try {
+    await env.DB.batch([
+      env.DB.prepare(`
+        INSERT INTO streamers (streamer_id, public_data, created_at, updated_at)
+        VALUES (?, ?, ?, ?)
+      `).bind(streamerId, publicData, now, now),
+      env.DB.prepare(`
+        INSERT INTO streamer_edit_keys (streamer_id, key_hash, created_at, revoked_at)
+        VALUES (?, ?, ?, NULL)
+      `).bind(streamerId, keyHash, now),
+    ]);
+  } catch (err) {
+    if (isD1UniqueViolation(err)) {
+      return json({ error: 'already_claimed' }, 409);
+    }
+    throw err;
+  }
+
+  return json({ streamerId, ok: true, editKey }, 201);
+}
+
+async function handleVerifyEditKey(request, path, env) {
+  const streamerId = extractStreamerPathId(path, '/verify-edit-key');
+  if (!isValidStreamerId(streamerId)) {
+    return json({ error: 'invalid_streamer_id' }, 400);
+  }
+
+  const rawBody = await readBodyWithLimit(request, 16 * 1024);
+  if (rawBody.error) {
+    return json({ error: rawBody.error }, rawBody.status);
+  }
+
+  let body;
+  try {
+    body = JSON.parse(rawBody.text);
+  } catch {
+    return json({ error: 'invalid_edit_key' }, 401);
+  }
+
+  const editKey = body && body.editKey;
+  if (!(await verifyEditKey(env, streamerId, editKey))) {
+    return json({ error: 'invalid_edit_key' }, 401);
+  }
+
+  return json({ ok: true, streamerId }, 200);
+}
+
+async function handleLinkGoogle(request, path, env) {
+  const streamerId = extractStreamerPathId(path, '/link-google');
+  if (!isValidStreamerId(streamerId)) {
+    return json({ error: 'invalid_streamer_id' }, 400);
+  }
+
+  const session = await getSession(request, env.SESSION_SECRET);
+  if (!session) {
+    return json({ error: 'unauthorized' }, 401);
+  }
+
+  const user = await env.DB.prepare(
+    'SELECT user_id FROM users WHERE google_sub = ?',
+  ).bind(session.sub).first();
+
+  if (!user) {
+    return json({ error: 'unauthorized' }, 401);
+  }
+
+  const rawBody = await readBodyWithLimit(request, 16 * 1024);
+  if (rawBody.error) {
+    return json({ error: rawBody.error }, rawBody.status);
+  }
+
+  let body;
+  try {
+    body = JSON.parse(rawBody.text);
+  } catch {
+    return json({ error: 'invalid_edit_key' }, 401);
+  }
+
+  const editKey = body && body.editKey;
+  if (!(await verifyEditKey(env, streamerId, editKey))) {
+    return json({ error: 'invalid_edit_key' }, 401);
+  }
+
+  const googleOwner = await env.DB.prepare(
+    'SELECT user_id FROM streamer_owners WHERE streamer_id = ?',
+  ).bind(streamerId).first();
+
+  if (googleOwner) {
+    if (googleOwner.user_id === user.user_id) {
+      await revokeEditKey(env, streamerId);
+      return json({ streamerId, ok: true, alreadyLinked: true }, 200);
+    }
+    return json({ error: 'already_claimed' }, 409);
+  }
+
+  const now = new Date().toISOString();
+  try {
+    await env.DB.batch([
+      env.DB.prepare(
+        'INSERT INTO streamer_owners (streamer_id, user_id, created_at) VALUES (?, ?, ?)',
+      ).bind(streamerId, user.user_id, now),
+      env.DB.prepare(
+        'UPDATE streamer_edit_keys SET revoked_at = ? WHERE streamer_id = ? AND revoked_at IS NULL',
+      ).bind(now, streamerId),
+    ]);
+  } catch (err) {
+    if (isD1UniqueViolation(err)) {
+      return json({ error: 'already_claimed' }, 409);
+    }
+    throw err;
+  }
 
   return json({ streamerId, ok: true }, 200);
 }
@@ -263,6 +438,14 @@ async function authorizeWrite(request, env, streamerId) {
       return { ok: false, error: 'unauthorized', status: 401 };
     }
     return { ok: true };
+  }
+
+  const editKey = request.headers.get(EDIT_KEY_HEADER);
+  if (editKey) {
+    if (await verifyEditKey(env, streamerId, editKey)) {
+      return { ok: true };
+    }
+    return { ok: false, error: 'invalid_edit_key', status: 401 };
   }
 
   const session = await getSession(request, env.SESSION_SECRET);
@@ -305,6 +488,66 @@ function extractStreamerId(path, prefix) {
     return id;
   }
   return id;
+}
+
+function extractStreamerPathId(path, suffix) {
+  const prefix = '/api/streamer/';
+  if (!path.startsWith(prefix) || !path.endsWith(suffix)) return '';
+  return path.slice(prefix.length, -suffix.length);
+}
+
+async function getOwnershipConflict(env, streamerId) {
+  const googleOwner = await env.DB.prepare(
+    'SELECT streamer_id FROM streamer_owners WHERE streamer_id = ?',
+  ).bind(streamerId).first();
+  if (googleOwner) return 'google';
+
+  const anonOwner = await env.DB.prepare(
+    'SELECT streamer_id FROM streamer_edit_keys WHERE streamer_id = ? AND revoked_at IS NULL',
+  ).bind(streamerId).first();
+  if (anonOwner) return 'anonymous';
+
+  return null;
+}
+
+function generateEditKey() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  let hex = '';
+  for (const b of bytes) hex += b.toString(16).padStart(2, '0');
+  return `ut_${hex}`;
+}
+
+async function hashEditKey(editKey, pepper) {
+  const data = new TextEncoder().encode(`${editKey}${pepper}`);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return bytesToHex(new Uint8Array(digest));
+}
+
+async function verifyEditKey(env, streamerId, editKey) {
+  if (typeof editKey !== 'string' || !EDIT_KEY_RE.test(editKey)) return false;
+
+  const row = await env.DB.prepare(
+    'SELECT key_hash FROM streamer_edit_keys WHERE streamer_id = ? AND revoked_at IS NULL',
+  ).bind(streamerId).first();
+
+  if (!row) return false;
+
+  const expected = await hashEditKey(editKey, env.SESSION_SECRET);
+  return timingSafeEqual(expected, row.key_hash);
+}
+
+async function revokeEditKey(env, streamerId) {
+  const now = new Date().toISOString();
+  await env.DB.prepare(
+    'UPDATE streamer_edit_keys SET revoked_at = ? WHERE streamer_id = ? AND revoked_at IS NULL',
+  ).bind(now, streamerId).run();
+}
+
+function bytesToHex(bytes) {
+  let hex = '';
+  for (const b of bytes) hex += b.toString(16).padStart(2, '0');
+  return hex;
 }
 
 function validatePublicPayload(body) {
@@ -581,7 +824,7 @@ function corsPreflight(request, cors) {
   if (requestedHeaders) {
     headers['Access-Control-Allow-Headers'] = requestedHeaders;
   } else {
-    headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Utaeru-Dev-Token';
+    headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Utaeru-Dev-Token, X-Utaeru-Edit-Key';
   }
 
   return new Response(null, { status: 204, headers });

@@ -26,3 +26,12 @@
 --   user_id     TEXT NOT NULL REFERENCES users(user_id),
 --   created_at  TEXT NOT NULL
 -- );
+
+-- streamer_edit_keys (Phase 5)
+-- Anonymous ownership: SHA-256 hash of edit key (+ server pepper). Plaintext never stored.
+-- CREATE TABLE streamer_edit_keys (
+--   streamer_id TEXT PRIMARY KEY,
+--   key_hash    TEXT NOT NULL,
+--   created_at  TEXT NOT NULL,
+--   revoked_at  TEXT
+-- );

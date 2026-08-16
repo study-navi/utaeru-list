@@ -268,6 +268,60 @@
   .claim-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
   .claim-status { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
 
+  /* Phase 5: オンライン公開の入口（ログイン不要 / Google / 編集キー） */
+  .online-entry { margin-top: 8px; }
+  .online-entry-group { margin-bottom: 14px; }
+  .online-entry-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin: 0 0 8px;
+  }
+  .online-entry-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .online-entry-buttons .tool-btn { min-height: 44px; }
+  .online-entry-buttons .tool-btn.active {
+    background: var(--accent-wash);
+    border-color: var(--accent);
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+  .online-mode-panel { margin-top: 12px; }
+  .edit-key-form { display: grid; gap: 10px; max-width: 420px; }
+  .edit-key-form input[type="password"],
+  .edit-key-form input[type="text"] {
+    width: 100%;
+    font-size: 15px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+  }
+  .edit-key-warning {
+    font-size: 13px;
+    font-weight: 700;
+    color: #8b2020;
+    margin: 0 0 8px;
+    line-height: 1.5;
+  }
+  .edit-key-display {
+    display: block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12.5px;
+    word-break: break-all;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    margin-bottom: 8px;
+  }
+  .edit-key-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .link-google-row { margin-top: 12px; }
+
   /* Phase 4A: 公開ページID（streamerId）入力 */
   .field-error {
     font-size: 11.5px; color: #d64545; margin: 5px 2px 0; line-height: 1.5;
@@ -430,21 +484,75 @@
 
   <div class="card" id="onlinePublishCard">
     <h2>⑥ オンライン公開</h2>
-    <p class="hint">Googleでログインすると、固定URLで曲リストをインターネット上に公開できます。「📄 ページを書き出す」によるHTMLファイル公開もこれまで通り使えます。</p>
-    <div id="authSignedOut">
-      <p class="auth-not-logged-in" id="authLoggedOutHint">Utaeru には未ログインです。下のボタンからログインしてください。</p>
-      <button type="button" class="tool-btn google-login-btn" id="googleLoginBtn">Googleでログイン（Utaeru）</button>
+    <p class="hint">固定URL（例：/u/あなたのID）で曲リストを公開できます。「📄 ページを書き出す」によるHTMLファイル公開もこれまで通り使えます。</p>
+
+    <div class="online-entry">
+      <div class="online-entry-group">
+        <p class="online-entry-label">はじめての方</p>
+        <div class="online-entry-buttons">
+          <button type="button" class="tool-btn" id="modeAnonymousBtn">すぐ作る（ログイン不要）</button>
+          <button type="button" class="tool-btn google-login-btn" id="modeGoogleBtn">Googleで始める</button>
+        </div>
+      </div>
+      <div class="online-entry-group">
+        <p class="online-entry-label">以前作った方</p>
+        <div class="online-entry-buttons">
+          <button type="button" class="tool-btn" id="resumeGoogleBtn">Googleでログイン</button>
+          <button type="button" class="tool-btn" id="modeEditKeyBtn">編集キーを使って編集</button>
+        </div>
+      </div>
     </div>
-    <div id="authSignedIn" style="display:none;">
-      <p class="auth-user-line"><span id="authUserEmail"></span> でログイン中</p>
-      <button type="button" class="tool-btn" id="logoutBtn">ログアウト</button>
-      <p class="hint" id="ownedIdsHint"></p>
+
+    <div id="anonymousModePanel" class="online-mode-panel" style="display:none;">
+      <p class="hint">Googleログインなしで公開できます。初回公開時に編集キーが1回だけ表示されます。必ずコピーして安全な場所に保管してください。</p>
     </div>
+
+    <div id="editKeyModePanel" class="online-mode-panel" style="display:none;">
+      <p class="hint">公開ページIDと編集キーを入力してください。照合できた場合のみ更新できます。</p>
+      <div class="edit-key-form">
+        <div>
+          <label class="field-label" for="editKeyStreamerIdInput">公開ページID</label>
+          <input type="text" id="editKeyStreamerIdInput" placeholder="例：my-id" maxlength="32" autocomplete="off" spellcheck="false" />
+        </div>
+        <div>
+          <label class="field-label" for="editKeyInput">編集キー</label>
+          <input type="password" id="editKeyInput" placeholder="ut_..." autocomplete="off" spellcheck="false" />
+        </div>
+        <button type="button" class="tool-btn" id="editKeyVerifyBtn">編集を開始</button>
+      </div>
+    </div>
+
+    <div id="googleModePanel" class="online-mode-panel" style="display:none;">
+      <div id="authSignedOut">
+        <p class="auth-not-logged-in" id="authLoggedOutHint">Googleアカウントでログインすると、公開ページIDを取得して公開できます。</p>
+        <button type="button" class="tool-btn google-login-btn" id="googleLoginBtn">Googleでログイン</button>
+      </div>
+      <div id="authSignedIn" style="display:none;">
+        <p class="auth-user-line"><span id="authUserEmail"></span> でログイン中</p>
+        <button type="button" class="tool-btn" id="logoutBtn">ログアウト</button>
+        <p class="hint" id="ownedIdsHint"></p>
+      </div>
+      <div class="claim-row">
+        <button type="button" class="tool-btn" id="claimBtn" disabled>この公開ページIDを取得する</button>
+        <span class="claim-status" id="claimStatus">①で公開ページIDを入力し、Googleでログインしてください。</span>
+      </div>
+    </div>
+
+    <div id="editKeyIssuedPanel" class="online-mode-panel" style="display:none;">
+      <p class="edit-key-warning">⚠ この編集キーは再表示できません</p>
+      <p class="hint">次回から更新するには、この編集キーが必要です。メモ帳など安全な場所に保管してください（ブラウザへの保存だけに頼らないでください）。</p>
+      <code class="edit-key-display" id="issuedEditKeyDisplay"></code>
+      <div class="edit-key-actions">
+        <button type="button" class="tool-btn" id="copyEditKeyBtn">編集キーをコピー</button>
+      </div>
+    </div>
+
+    <div id="linkGooglePanel" class="online-mode-panel link-google-row" style="display:none;">
+      <p class="hint">このページをGoogleアカウントに連携すると、編集キーなしで更新できるようになります（連携後は旧編集キーは無効になります）。</p>
+      <button type="button" class="tool-btn" id="linkGoogleBtn">このページをGoogleアカウントに連携</button>
+    </div>
+
     <p class="auth-message" id="authMessage" style="display:none;"></p>
-    <div class="claim-row">
-      <button type="button" class="tool-btn" id="claimBtn" disabled>この公開ページIDを取得する</button>
-      <span class="claim-status" id="claimStatus">オンライン公開にはGoogleログインが必要です。</span>
-    </div>
   </div>
 
 </div>
@@ -1195,10 +1303,41 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
   updateSelectedCount();
 });
 
-// ---- Phase 4C-3/4C-4: Googleログイン・claim・オンライン公開 ----
+// ---- Phase 4C-3/4C-4 + Phase 5: Googleログイン・匿名編集キー・オンライン公開 ----
 let authUser = null;
 let authLoading = false;
+let onlineMode = null; // null | 'anonymous' | 'google' | 'edit-key'
+let editKeyVerified = false;
+let issuedEditKeyPlaintext = null;
 const SESSION_TOKEN_KEY = 'utaeru_access_token';
+const EDIT_KEY_STORAGE_PREFIX = 'utaeru_edit_key:';
+
+function getStoredEditKey(streamerId) {
+  try { return sessionStorage.getItem(EDIT_KEY_STORAGE_PREFIX + streamerId); } catch (err) { return null; }
+}
+
+function setStoredEditKey(streamerId, key) {
+  try {
+    if (key) sessionStorage.setItem(EDIT_KEY_STORAGE_PREFIX + streamerId, key);
+    else sessionStorage.removeItem(EDIT_KEY_STORAGE_PREFIX + streamerId);
+  } catch (err) { /* ignore */ }
+}
+
+function getActiveEditKey() {
+  const sid = streamerIdInput.value.trim();
+  if (!sid) return null;
+  const fromInput = document.getElementById('editKeyInput').value.trim();
+  if (fromInput) return fromInput;
+  return getStoredEditKey(sid);
+}
+
+function clearIssuedEditKeyDisplay() {
+  issuedEditKeyPlaintext = null;
+  const panel = document.getElementById('editKeyIssuedPanel');
+  const display = document.getElementById('issuedEditKeyDisplay');
+  if (display) display.textContent = '';
+  if (panel) panel.style.display = 'none';
+}
 
 function getStoredAccessToken() {
   try { return sessionStorage.getItem(SESSION_TOKEN_KEY); } catch (err) { return null; }
@@ -1218,6 +1357,8 @@ async function apiFetch(path, options = {}) {
   };
   const token = getStoredAccessToken();
   if (token) headers.Authorization = 'Bearer ' + token;
+  const editKey = options.editKey;
+  if (editKey) headers['X-Utaeru-Edit-Key'] = editKey;
   const res = await fetch(API_BASE + path, {
     ...options,
     credentials: 'include',
@@ -1265,12 +1406,13 @@ async function fetchAuthMe(explicitToken) {
 function apiErrorMessage(status, data) {
   if (data && data.error === 'already_claimed') return 'この公開ページIDはすでに使われています。別のIDを選んでください。';
   if (data && data.error === 'forbidden') return 'この公開ページIDを変更する権限がありません。';
+  if (data && data.error === 'invalid_edit_key') return '編集キーが正しくないか、無効になっています。';
   if (data && data.error === 'invalid_streamer_id') return '公開ページIDの形式が正しくありません（半角英小文字・数字・ハイフン、3〜32文字）。';
   if (data && data.error === 'invalid_token') return 'Googleログインに失敗しました。もう一度お試しください。';
   if (data && typeof data.message === 'string') return data.message;
   const map = {
     400: '入力内容に問題があります。',
-    401: 'ログインが必要です。Googleでログインしてください。',
+    401: '認証に失敗しました。ログインまたは編集キーを確認してください。',
     403: 'この操作を行う権限がありません。',
     409: 'この公開ページIDはすでに使われています。',
     413: 'データが大きすぎます（2MB以下にしてください）。',
@@ -1303,13 +1445,60 @@ function updatePublishButtonState() {
   const name = streamerNameInput.value.trim();
   const sid = streamerIdInput.value.trim();
   const sidCheck = validateStreamerId(sid);
-  const canPublish = !!authUser
-    && isStreamerIdOwned(sid)
-    && sidCheck.ok
-    && !!name
-    && selectedKeys.size > 0
-    && !authLoading;
+  const baseOk = sidCheck.ok && !!name && selectedKeys.size > 0 && !authLoading;
+  let canPublish = false;
+
+  if (onlineMode === 'anonymous') {
+    canPublish = baseOk;
+  } else if (onlineMode === 'edit-key') {
+    canPublish = baseOk && editKeyVerified;
+  } else if (onlineMode === 'google') {
+    canPublish = baseOk && !!authUser && isStreamerIdOwned(sid);
+  }
+
   publishBtn.disabled = !canPublish;
+}
+
+function setOnlineMode(mode) {
+  onlineMode = mode;
+  editKeyVerified = false;
+  clearIssuedEditKeyDisplay();
+
+  const panels = {
+    anonymous: document.getElementById('anonymousModePanel'),
+    editKey: document.getElementById('editKeyModePanel'),
+    google: document.getElementById('googleModePanel'),
+  };
+  panels.anonymous.style.display = mode === 'anonymous' ? 'block' : 'none';
+  panels.editKey.style.display = mode === 'edit-key' ? 'block' : 'none';
+  panels.google.style.display = mode === 'google' ? 'block' : 'none';
+
+  ['modeAnonymousBtn', 'modeGoogleBtn', 'resumeGoogleBtn', 'modeEditKeyBtn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.classList.remove('active');
+  });
+  const activeMap = {
+    anonymous: 'modeAnonymousBtn',
+    google: ['modeGoogleBtn', 'resumeGoogleBtn'],
+    'edit-key': 'modeEditKeyBtn',
+  };
+  const activeIds = activeMap[mode];
+  if (activeIds) {
+    (Array.isArray(activeIds) ? activeIds : [activeIds]).forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.classList.add('active');
+    });
+  }
+
+  updateLinkGooglePanel();
+  updateAuthUI();
+}
+
+function updateLinkGooglePanel() {
+  const panel = document.getElementById('linkGooglePanel');
+  const show = onlineMode === 'edit-key' && editKeyVerified && !!authUser && !!getActiveEditKey();
+  panel.style.display = show ? 'block' : 'none';
 }
 
 function updateAuthUI() {
@@ -1319,6 +1508,16 @@ function updateAuthUI() {
   const claimStatus = document.getElementById('claimStatus');
   const googleLoginBtn = document.getElementById('googleLoginBtn');
   if (googleLoginBtn) googleLoginBtn.disabled = authLoading;
+
+  if (onlineMode !== 'google') {
+    if (signedOut) signedOut.style.display = 'none';
+    if (signedIn) signedIn.style.display = 'none';
+    if (claimBtn) claimBtn.disabled = true;
+    updatePublishButtonState();
+    updateLinkGooglePanel();
+    return;
+  }
+
   if (authUser) {
     signedOut.style.display = 'none';
     signedIn.style.display = 'block';
@@ -1334,7 +1533,7 @@ function updateAuthUI() {
   const sid = streamerIdInput.value.trim();
   const sidCheck = validateStreamerId(sid);
   if (!authUser) {
-    claimStatus.textContent = '⑥でGoogleログイン後（メールアドレス＋「でログイン中」と表示）に取得できます。';
+    claimStatus.textContent = 'Googleでログイン後、公開ページIDを取得できます。';
     claimBtn.disabled = !sid || !sidCheck.ok || authLoading;
   } else if (!sid) {
     claimStatus.textContent = '①で公開ページIDを入力してください。';
@@ -1350,6 +1549,7 @@ function updateAuthUI() {
     claimBtn.disabled = authLoading;
   }
   updatePublishButtonState();
+  updateLinkGooglePanel();
 }
 
 async function refreshAuthMe(explicitToken) {
@@ -1534,6 +1734,83 @@ async function publishOnline() {
   const sid = streamerIdInput.value.trim();
   const sidCheck = validateStreamerId(sid);
   if (!sidCheck.ok) { showAuthMessage(sidCheck.message, 'error'); return; }
+
+  if (onlineMode === 'anonymous') {
+    await publishAnonymousCreate(sid);
+  } else if (onlineMode === 'edit-key') {
+    await publishWithEditKey(sid);
+  } else if (onlineMode === 'google') {
+    await publishWithGoogle(sid);
+  } else {
+    showAuthMessage('⑥で公開方法（すぐ作る / Google / 編集キー）を選んでください。', 'error');
+  }
+}
+
+async function publishAnonymousCreate(sid) {
+  authLoading = true;
+  updateAuthUI();
+  showAuthMessage('公開中…', 'info');
+  try {
+    const payload = buildPublicPayload(sid);
+    const { res, data } = await apiFetch('/api/streamer/' + encodeURIComponent(sid) + '/create-anonymous', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      showAuthMessage(apiErrorMessage(res.status, data), 'error');
+      return;
+    }
+    const editKey = data && data.editKey;
+    if (!editKey) {
+      showAuthMessage('公開は完了しましたが、編集キーを取得できませんでした。', 'error');
+      return;
+    }
+    issuedEditKeyPlaintext = editKey;
+    setStoredEditKey(sid, editKey);
+    document.getElementById('issuedEditKeyDisplay').textContent = editKey;
+    document.getElementById('editKeyIssuedPanel').style.display = 'block';
+    const publicUrl = PUBLIC_URL_BASE + PUBLIC_URL_PATH_PREFIX + sid;
+    showAuthMessage('公開しました。リスナー用URL: ' + publicUrl, 'success');
+  } catch (err) {
+    showAuthMessage('公開に失敗しました。ネットワークを確認してください。', 'error');
+  } finally {
+    authLoading = false;
+    updateAuthUI();
+  }
+}
+
+async function publishWithEditKey(sid) {
+  const editKey = getActiveEditKey();
+  if (!editKey) {
+    showAuthMessage('編集キーを入力するか、「編集を開始」で認証してください。', 'error');
+    return;
+  }
+  authLoading = true;
+  updateAuthUI();
+  showAuthMessage('更新中…', 'info');
+  try {
+    const payload = buildPublicPayload(sid);
+    const { res, data } = await apiFetch('/api/public/' + encodeURIComponent(sid), {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+      editKey,
+    });
+    if (!res.ok) {
+      showAuthMessage(apiErrorMessage(res.status, data), 'error');
+      return;
+    }
+    setStoredEditKey(sid, editKey);
+    const publicUrl = PUBLIC_URL_BASE + PUBLIC_URL_PATH_PREFIX + sid;
+    showAuthMessage('更新しました。リスナー用URL: ' + publicUrl, 'success');
+  } catch (err) {
+    showAuthMessage('更新に失敗しました。ネットワークを確認してください。', 'error');
+  } finally {
+    authLoading = false;
+    updateAuthUI();
+  }
+}
+
+async function publishWithGoogle(sid) {
   if (!authUser) { showAuthMessage('Googleでログインしてください。', 'error'); return; }
   if (!isStreamerIdOwned(sid)) {
     showAuthMessage('先に「この公開ページIDを取得する」を押してください。', 'error');
@@ -1562,11 +1839,97 @@ async function publishOnline() {
   }
 }
 
+async function verifyEditKeyAction() {
+  const sid = document.getElementById('editKeyStreamerIdInput').value.trim();
+  const editKey = document.getElementById('editKeyInput').value.trim();
+  const sidCheck = validateStreamerId(sid);
+  if (!sidCheck.ok) { showAuthMessage(sidCheck.message, 'error'); return; }
+  if (!editKey) { showAuthMessage('編集キーを入力してください。', 'error'); return; }
+
+  authLoading = true;
+  updateAuthUI();
+  showAuthMessage('編集キーを確認中…', 'info');
+  try {
+    const { res, data } = await apiFetch('/api/streamer/' + encodeURIComponent(sid) + '/verify-edit-key', {
+      method: 'POST',
+      body: JSON.stringify({ editKey }),
+    });
+    if (!res.ok) {
+      editKeyVerified = false;
+      showAuthMessage(apiErrorMessage(res.status, data), 'error');
+      updateAuthUI();
+      return;
+    }
+    streamerIdInput.value = sid;
+    updateStreamerIdPreview();
+    setStoredEditKey(sid, editKey);
+    editKeyVerified = true;
+    setOnlineMode('edit-key');
+    showAuthMessage('編集キーを確認しました。内容を変更して「公開する」で更新できます。', 'success');
+  } catch (err) {
+    editKeyVerified = false;
+    showAuthMessage('確認に失敗しました。ネットワークを確認してください。', 'error');
+  } finally {
+    authLoading = false;
+    updateAuthUI();
+  }
+}
+
+async function linkGoogleAction() {
+  const sid = streamerIdInput.value.trim();
+  const sidCheck = validateStreamerId(sid);
+  if (!sidCheck.ok) { showAuthMessage(sidCheck.message, 'error'); return; }
+  if (!authUser) { showAuthMessage('Googleでログインしてください。', 'error'); return; }
+  const editKey = getActiveEditKey();
+  if (!editKey) { showAuthMessage('編集キーが必要です。', 'error'); return; }
+
+  authLoading = true;
+  updateAuthUI();
+  showAuthMessage('Googleアカウントに連携中…', 'info');
+  try {
+    const { res, data } = await apiFetch('/api/streamer/' + encodeURIComponent(sid) + '/link-google', {
+      method: 'POST',
+      body: JSON.stringify({ editKey }),
+    });
+    if (!res.ok) {
+      showAuthMessage(apiErrorMessage(res.status, data), 'error');
+      return;
+    }
+    setStoredEditKey(sid, null);
+    editKeyVerified = false;
+    document.getElementById('editKeyInput').value = '';
+    await refreshAuthMe();
+    setOnlineMode('google');
+    showAuthMessage('Googleアカウントに連携しました。今後はGoogleログインで更新できます（旧編集キーは無効です）。', 'success');
+  } catch (err) {
+    showAuthMessage('連携に失敗しました。ネットワークを確認してください。', 'error');
+  } finally {
+    authLoading = false;
+    updateAuthUI();
+  }
+}
+
+async function copyIssuedEditKey() {
+  if (!issuedEditKeyPlaintext) return;
+  try {
+    await navigator.clipboard.writeText(issuedEditKeyPlaintext);
+    showAuthMessage('編集キーをクリップボードにコピーしました。安全な場所に保管してください。', 'info');
+  } catch (err) {
+    showAuthMessage('コピーに失敗しました。表示されている編集キーを手動でコピーしてください。', 'error');
+  }
+}
+
+document.getElementById('modeAnonymousBtn').addEventListener('click', () => setOnlineMode('anonymous'));
+document.getElementById('modeGoogleBtn').addEventListener('click', () => setOnlineMode('google'));
+document.getElementById('resumeGoogleBtn').addEventListener('click', () => setOnlineMode('google'));
+document.getElementById('modeEditKeyBtn').addEventListener('click', () => setOnlineMode('edit-key'));
+document.getElementById('editKeyVerifyBtn').addEventListener('click', verifyEditKeyAction);
+document.getElementById('linkGoogleBtn').addEventListener('click', linkGoogleAction);
+document.getElementById('copyEditKeyBtn').addEventListener('click', copyIssuedEditKey);
+
 document.getElementById('logoutBtn').addEventListener('click', logoutUser);
 document.getElementById('claimBtn').addEventListener('click', claimStreamerIdAction);
 document.getElementById('publishBtn').addEventListener('click', publishOnline);
-
-// Phase 4A: 「公開する」ボタン — Phase 4C-4 で API 接続済み（上記 publishOnline）
 
 renderTagAdmin();
 render();
