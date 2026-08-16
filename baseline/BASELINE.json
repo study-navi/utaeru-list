@@ -1,5 +1,5 @@
 {
-  "label": "Phase 4C GIS error_callback + Bearerセッション復元修正",
+  "label": "Phase 4C OAuth2 Token Client + Bearerセッション",
   "establishedAt": "2026-08-16",
   "gitCommit": null,
   "gitCommitShort": null,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 280355,
-      "sha256": "5ae755577ee8b06b5a2561616723ae4b7ec8dea78037030a6c0b8cb2524b9b6a"
+      "bytes": 280087,
+      "sha256": "efcb2a686021be6bca126d3f3df1f2ef66e31d630fcd784db7304659b417910e"
     },
     "hiro.html": {
       "bytes": 25630,

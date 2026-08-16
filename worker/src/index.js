@@ -134,11 +134,17 @@ async function handleAuthGoogle(request, env) {
   }
 
   const idToken = body && body.idToken;
-  if (typeof idToken !== 'string' || !idToken) {
+  const googleAccessToken = body && body.googleAccessToken;
+
+  let claims = null;
+  if (typeof idToken === 'string' && idToken) {
+    claims = await verifyGoogleIdToken(idToken, env.GOOGLE_CLIENT_ID);
+  } else if (typeof googleAccessToken === 'string' && googleAccessToken) {
+    claims = await verifyGoogleAccessToken(googleAccessToken, env.GOOGLE_CLIENT_ID);
+  } else {
     return json({ error: 'invalid_token' }, 401);
   }
 
-  const claims = await verifyGoogleIdToken(idToken, env.GOOGLE_CLIENT_ID);
   if (!claims) {
     return json({ error: 'invalid_token' }, 401);
   }
@@ -453,6 +459,50 @@ async function verifyGoogleIdToken(idToken, clientId) {
   if (!valid) return null;
 
   return payload;
+}
+
+async function verifyGoogleAccessToken(accessToken, clientId) {
+  const infoRes = await fetch(
+    'https://oauth2.googleapis.com/tokeninfo?access_token=' + encodeURIComponent(accessToken),
+  );
+  if (!infoRes.ok) return null;
+
+  let info;
+  try {
+    info = await infoRes.json();
+  } catch {
+    return null;
+  }
+  if (info.error) return null;
+
+  const aud = info.aud || info.azp;
+  if (aud !== clientId) return null;
+
+  const expSec = Number(info.exp);
+  if (expSec && expSec * 1000 <= Date.now()) return null;
+
+  const sub = info.sub || info.user_id;
+  if (!sub) return null;
+
+  let email = info.email || '';
+  let name = info.name || null;
+
+  if (!email) {
+    const uiRes = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
+      headers: { Authorization: 'Bearer ' + accessToken },
+    });
+    if (uiRes.ok) {
+      try {
+        const ui = await uiRes.json();
+        email = ui.email || email;
+        name = ui.name || name;
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  return { sub, email, name: name || null };
 }
 
 async function getGoogleJwk(kid) {

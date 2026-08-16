@@ -63,6 +63,10 @@ async function run() {
   if (r.status === 401) ok('不正Google ID Token → 401');
   else fail('不正Google ID Token', `status ${r.status}`);
 
+  r = await request('POST', '/api/auth/google', { body: { googleAccessToken: 'invalid.access.token' } });
+  if (r.status === 401) ok('不正googleAccessToken → 401');
+  else fail('不正googleAccessToken', `status ${r.status}`);
+
   r = await request('POST', '/api/streamer/test-id-xyz/claim', { body: {} });
   if (r.status === 401) ok('claim未ログイン（有効ID） → 401');
   else fail('claim未ログイン', `status ${r.status}`);

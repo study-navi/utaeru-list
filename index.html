@@ -243,7 +243,20 @@
   .publish-btn:not(:disabled):hover { filter: brightness(1.05); }
 
   /* Phase 4C-3: Googleログイン・オンライン公開 */
-  .google-signin-wrap { min-height: 44px; margin: 4px 0 10px; }
+  .google-login-btn {
+    width: 100%;
+    max-width: 320px;
+    min-height: 44px;
+    margin: 4px 0 10px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .auth-not-logged-in {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 0 0 8px;
+    line-height: 1.5;
+  }
   .auth-user-line { font-size: 13.5px; color: var(--text-secondary); margin: 0 0 8px; }
   .auth-message {
     font-size: 13px; line-height: 1.6; margin: 10px 2px 0;
@@ -345,7 +358,7 @@
     .song-settings-btn { font-size: 11px; padding: 5px 9px; }
     .status-btn, .song-tag-chip { font-size: 12px; padding: 6px 10px; }
     .publish-btn { font-size: 11.5px; padding: 9px 10px; }
-    .google-signin-wrap { display: flex; justify-content: center; }
+    .google-login-btn { width: 100%; min-height: 44px; }
     .claim-row { flex-direction: column; align-items: stretch; }
     .claim-row .tool-btn { width: 100%; min-height: 44px; }
     .export-btn { font-size: 12.5px; padding: 9px 12px; }
@@ -417,9 +430,10 @@
 
   <div class="card" id="onlinePublishCard">
     <h2>⑥ オンライン公開</h2>
-    <p class="hint">Googleでログインすると、固定URLで曲リストをインターネット上に公開できます。「📄 ページを書き出す」によるHTMLファイル公開もこれまで通り使えます。<br>※ Googleボタンにアカウント名が表示されていても、下に「<strong>○○ でログイン中</strong>」が出るまで Utaeru へのログインは完了していません。</p>
+    <p class="hint">Googleでログインすると、固定URLで曲リストをインターネット上に公開できます。「📄 ページを書き出す」によるHTMLファイル公開もこれまで通り使えます。</p>
     <div id="authSignedOut">
-      <div id="googleSignInBtn" class="google-signin-wrap"></div>
+      <p class="auth-not-logged-in" id="authLoggedOutHint">Utaeru には未ログインです。下のボタンからログインしてください。</p>
+      <button type="button" class="tool-btn google-login-btn" id="googleLoginBtn">Googleでログイン（Utaeru）</button>
     </div>
     <div id="authSignedIn" style="display:none;">
       <p class="auth-user-line"><span id="authUserEmail"></span> でログイン中</p>
@@ -1217,12 +1231,12 @@ async function apiFetch(path, options = {}) {
   return { res, data };
 }
 
-async function postAuthGoogle(idToken) {
+async function postAuthGoogle(body) {
   const res = await fetch(API_BASE + '/api/auth/google', {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ idToken }),
+    body: JSON.stringify(body),
   });
   let data = null;
   const text = await res.text();
@@ -1303,6 +1317,8 @@ function updateAuthUI() {
   const signedIn = document.getElementById('authSignedIn');
   const claimBtn = document.getElementById('claimBtn');
   const claimStatus = document.getElementById('claimStatus');
+  const googleLoginBtn = document.getElementById('googleLoginBtn');
+  if (googleLoginBtn) googleLoginBtn.disabled = authLoading;
   if (authUser) {
     signedOut.style.display = 'none';
     signedIn.style.display = 'block';
@@ -1357,37 +1373,13 @@ async function refreshAuthMe(explicitToken) {
   }
 }
 
-function googleSignInErrorMessage(err) {
-  const type = err && (err.type || err.message || '');
-  if (/fedcm|third.?party|not.?allowed|disabled|network/i.test(String(type))) {
-    return 'Googleログインを開始できませんでした。ChromeのCookie設定で「サードパーティCookie」またはサイトデータを許可してから、Googleボタンをもう一度押してください。';
-  }
-  if (/popup|closed|blocked/i.test(String(type))) {
-    return 'Googleログイン画面を開けませんでした。ポップアップブロックを解除してからもう一度お試しください。';
-  }
-  return type
-    ? 'Googleログインを開始できませんでした。（' + type + '）'
-    : 'Googleログインを開始できませんでした。Googleボタンをもう一度押してください。';
-}
-
-function onGoogleSignInError(err) {
-  authLoading = false;
-  updateAuthUI();
-  showAuthMessage(googleSignInErrorMessage(err), 'error');
-}
-
-async function handleGoogleCredential(response) {
-  const idToken = response && response.credential;
-  if (!idToken) {
-    showAuthMessage('Googleからログイン情報を取得できませんでした。Googleボタンをもう一度押してください。', 'error');
-    return;
-  }
+async function completeUtaeruLogin(authBody) {
   setStoredAccessToken(null);
   authLoading = true;
   updateAuthUI();
   showAuthMessage('ログイン中…', 'info');
   try {
-    const { res, data } = await postAuthGoogle(idToken);
+    const { res, data } = await postAuthGoogle(authBody);
     if (!res.ok) {
       showAuthMessage(apiErrorMessage(res.status, data), 'error');
       return;
@@ -1412,45 +1404,58 @@ async function handleGoogleCredential(response) {
   }
 }
 
-function initGoogleSignIn() {
-  if (!window.google || !google.accounts || !google.accounts.id) return false;
-  google.accounts.id.initialize({
+let googleTokenClient = null;
+
+function onGoogleTokenResponse(tokenResponse) {
+  if (tokenResponse.error) {
+    authLoading = false;
+    updateAuthUI();
+    const detail = tokenResponse.error_description || tokenResponse.error || '';
+    if (/access_denied|popup_closed|user_cancelled|cancel/i.test(String(detail))) {
+      showAuthMessage('Googleログインがキャンセルされました。', 'info');
+      return;
+    }
+    showAuthMessage('Googleログインに失敗しました。' + (detail ? ' (' + detail + ')' : ''), 'error');
+    return;
+  }
+  if (!tokenResponse.access_token) {
+    authLoading = false;
+    updateAuthUI();
+    showAuthMessage('Googleからアクセストークンを取得できませんでした。', 'error');
+    return;
+  }
+  completeUtaeruLogin({ googleAccessToken: tokenResponse.access_token });
+}
+
+function initGoogleAuth() {
+  if (!window.google || !google.accounts || !google.accounts.oauth2) return false;
+  googleTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
-    callback: handleGoogleCredential,
-    error_callback: onGoogleSignInError,
-    auto_select: false,
-    cancel_on_tap_outside: true,
-    itp_support: true,
+    scope: 'openid email profile',
+    callback: onGoogleTokenResponse,
   });
-  const btnHost = document.getElementById('googleSignInBtn');
-  btnHost.innerHTML = '';
-  google.accounts.id.renderButton(btnHost, {
-    type: 'standard',
-    theme: 'outline',
-    size: 'large',
-    text: 'signin_with',
-    shape: 'rectangular',
-    locale: 'ja',
-    width: Math.min(320, btnHost.clientWidth || 320),
-    click_listener: () => {
-      showAuthMessage('Googleアカウントを確認中…', 'info');
-    },
-  });
-  try {
-    google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) return;
-    });
-  } catch (err) { /* One Tap unavailable */ }
   return true;
 }
 
-function bootGoogleSignIn(attemptsLeft) {
-  if (initGoogleSignIn()) return;
+function startGoogleLogin() {
+  if (!googleTokenClient) {
+    showAuthMessage('Googleログインの読み込みに失敗しました。ページを再読み込みしてください。', 'error');
+    return;
+  }
+  showAuthMessage('Googleログイン画面を開いています…', 'info');
+  googleTokenClient.requestAccessToken({ prompt: 'select_account' });
+}
+
+function bootGoogleAuth(attemptsLeft) {
+  if (initGoogleAuth()) {
+    document.getElementById('googleLoginBtn').addEventListener('click', startGoogleLogin);
+    return;
+  }
   if (attemptsLeft <= 0) {
     showAuthMessage('Googleログインの読み込みに失敗しました。ページを再読み込みしてください。', 'error');
     return;
   }
-  setTimeout(() => bootGoogleSignIn(attemptsLeft - 1), 200);
+  setTimeout(() => bootGoogleAuth(attemptsLeft - 1), 200);
 }
 
 async function logoutUser() {
@@ -1568,7 +1573,7 @@ render();
 updateSelectedCount();
 updateStreamerIdPreview();
 refreshAuthMe();
-bootGoogleSignIn(25);
+bootGoogleAuth(25);
 </script>
 </body>
 </html>
