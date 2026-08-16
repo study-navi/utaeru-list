@@ -30,21 +30,30 @@ async function runViewport(label, width, height) {
   if (errors.length) fail(`${label}: JS エラーなし`, errors.join('; '));
   else ok(`${label}: JS エラーなし`);
 
-  // 曲を2曲選択
-  await page.fill('#searchInput', 'Story');
+  // 曲名の長さが異なる複数曲を選択
+  await page.fill('#searchInput', '');
   await page.dispatchEvent('#searchInput', 'input');
-  await page.waitForTimeout(150);
-  await page.locator('.song-check').first().check();
-  await page.fill('#searchInput', 'AI');
-  await page.dispatchEvent('#searchInput', 'input');
-  await page.waitForTimeout(150);
-  const checks = await page.locator('.song-check');
-  const count = await checks.count();
-  if (count > 0) await checks.nth(0).check();
-
-  const selectedCount = await page.evaluate(() => selectedKeys.size);
-  if (selectedCount < 1) fail(`${label}: 曲選択`, String(selectedCount));
-  else ok(`${label}: 曲選択 (${selectedCount}曲)`);
+  await page.waitForTimeout(100);
+  const pickCount = await page.evaluate(async () => {
+    const picks = [];
+    const seen = new Set();
+    for (const song of MASTER_SONGS) {
+      const key = song.a + '\u0001' + song.t;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      picks.push(song.id);
+      selectedKeys.add(key);
+      if (picks.length >= 4) break;
+    }
+    render();
+    updateSelectedCount();
+    updatePreviewPanel();
+    updateAccSummaries();
+    return picks.length;
+  });
+  await page.waitForTimeout(120);
+  if (pickCount < 3) fail(`${label}: 複数曲選択`, String(pickCount));
+  else ok(`${label}: 複数曲選択 (${pickCount}曲)`);
 
   // 選択中タブ
   await page.click('#viewTabSelected');
@@ -71,6 +80,52 @@ async function runViewport(label, width, height) {
   else ok(`${label}: 横スクロールなし`);
   if (selectedUi.toolBtnH < 44) fail(`${label}: ボタン高さ44px+`, String(selectedUi.toolBtnH));
   else ok(`${label}: ボタン高さ44px+ (${selectedUi.toolBtnH}px)`);
+
+  const alignment = await page.evaluate(() => {
+    const rows = [...document.querySelectorAll('.song-item')];
+    const samples = rows.slice(0, 6).map((row) => {
+      const remove = row.querySelector('.song-remove-btn');
+      const settings = row.querySelector('.song-settings-btn');
+      const removeRect = remove?.getBoundingClientRect();
+      const settingsRect = settings?.getBoundingClientRect();
+      return {
+        removeRight: removeRect?.right ?? null,
+        removeLeft: removeRect?.left ?? null,
+        settingsRight: settingsRect?.right ?? null,
+        settingsLeft: settingsRect?.left ?? null,
+        settingsBeforeRemove: !!(settingsRect && removeRect && settingsRect.right <= removeRect.left + 1),
+        removeHeight: removeRect?.height ?? 0,
+        settingsHeight: settingsRect?.height ?? 0,
+      };
+    }).filter((s) => s.removeRight != null);
+    const removeRights = samples.map((s) => s.removeRight);
+    const removeRightSpread = removeRights.length
+      ? Math.max(...removeRights) - Math.min(...removeRights)
+      : 0;
+    const settingsBeforeRemoveAll = samples.every((s) => s.settingsBeforeRemove);
+    const heightsOk = samples.every((s) => s.removeHeight >= 44 && s.settingsHeight >= 44);
+    const overlap = samples.some((s) => s.settingsRight != null && s.removeLeft != null && s.settingsRight > s.removeLeft + 1);
+    return {
+      count: samples.length,
+      removeRightSpread,
+      settingsBeforeRemoveAll,
+      heightsOk,
+      overlap,
+      docScroll: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    };
+  });
+  if (alignment.count < 3) fail(`${label}: 配置確認用の曲行`, String(alignment.count));
+  else ok(`${label}: 配置確認 ${alignment.count}行`);
+  if (alignment.removeRightSpread > 2) fail(`${label}: 外すボタン右端統一`, String(alignment.removeRightSpread));
+  else ok(`${label}: 外すボタン右端統一 (${alignment.removeRightSpread.toFixed(1)}px)`);
+  if (!alignment.settingsBeforeRemoveAll) fail(`${label}: 設定は外すの左`);
+  else ok(`${label}: 設定は外すの左`);
+  if (!alignment.heightsOk) fail(`${label}: 操作ボタン高さ統一`);
+  else ok(`${label}: 操作ボタン高さ統一`);
+  if (alignment.overlap) fail(`${label}: ボタン重なり`);
+  else ok(`${label}: ボタン重なりなし`);
+  if (alignment.docScroll) fail(`${label}: 選択中リスト横スクロール`);
+  else ok(`${label}: 選択中リスト横スクロールなし`);
 
   // 外すボタン
   const beforeRemove = await page.evaluate(() => selectedKeys.size);
