@@ -109,6 +109,7 @@ async function checkPublic(url, label, width) {
   if (label === 'utalis' && data.h1 !== 'ひろ') fail(`${label} ${width}px: hiro実データ`, data.h1);
   else if (label === 'utalis') ok(`${label} ${width}px: hiro実データ維持 (${data.h1})`);
   if (data.searchPh.includes('hiro')) fail(`${label}: 検索placeholder`, data.searchPh);
+  else if (data.searchPh.includes('Story')) ok(`${label} ${width}px: 検索placeholder 汎用サンプル`);
   if (data.scrollW > data.clientW + 2) fail(`${label} ${width}px: 横スクロール`, `${data.scrollW}/${data.clientW}`);
   else ok(`${label} ${width}px: 横スクロールなし`);
 

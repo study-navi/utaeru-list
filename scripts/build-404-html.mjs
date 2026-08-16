@@ -15,6 +15,9 @@ const cssMatch = hiro.match(/<style>([\s\S]*?)<\/style>/);
 if (!cssMatch) throw new Error('hiro.html style block not found');
 const css = cssMatch[1];
 
+const searchPhMatch = hiro.match(/id="searchInput" placeholder="([^"]*)"/);
+const searchPlaceholder = searchPhMatch ? searchPhMatch[1] : '例：Story / AI';
+
 const viewerStart = hiro.indexOf('const STATUS_LABELS = {');
 const viewerEnd = hiro.lastIndexOf('render();');
 if (viewerStart < 0 || viewerEnd < 0) throw new Error('viewer script block not found in hiro.html');
@@ -78,7 +81,7 @@ ${css}
     <div class="search-shell">
       <label class="search-label" for="searchInput">曲名・アーティスト名で検索</label>
       <div class="search-input-row">
-        <input type="search" id="searchInput" placeholder="例：カブトムシ / aiko" autocomplete="off" />
+        <input type="search" id="searchInput" placeholder="${searchPlaceholder}" autocomplete="off" />
         <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
       </div>
       <div class="gyo-row" id="gyoRow"></div>
