@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-utaeru-builder="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,38 +7,32 @@
 <style>
   :root {
     color-scheme: light;
-    --page: #f9f9f7;
-    --surface: #fcfcfb;
-    --surface-2: #f2f1ee;
-    --text-primary: #0b0b0b;
-    --text-secondary: #52514e;
-    --text-muted: #898781;
-    --grid: #e1e0d9;
-    --border: rgba(11,11,11,0.10);
+    --page: #f6f6f4;
+    --surface: #ffffff;
+    --surface-2: #f0efec;
+    --text-primary: #171717;
+    --text-secondary: #43423e;
+    --text-muted: #5f5e59;
+    --text-placeholder: #767570;
+    --grid: #e8e7e2;
+    --border: rgba(23, 23, 23, 0.12);
     --accent: #2a78d6;
     --accent-ink: #ffffff;
-    --accent-wash: #eaf1fb;
-    --chip-bg: #f2f1ee;
-    --shadow: 0 1px 2px rgba(11,11,11,0.06), 0 4px 16px rgba(11,11,11,0.05);
+    --accent-wash: #e8f1fc;
+    --chip-bg: #f0efec;
+    --shadow: 0 1px 2px rgba(23, 23, 23, 0.05), 0 4px 14px rgba(23, 23, 23, 0.04);
+    --success-bg: #e8f5ec;
+    --success-text: #1f5c33;
+    --error-bg: #fdeeee;
+    --error-text: #8b2020;
+    --warn-bg: #fff4e5;
+    --warn-text: #7a4e00;
+    --disabled-bg: #f3f3f1;
+    --disabled-text: #6a6964;
+    --input-bg: #ffffff;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      color-scheme: dark;
-      --page: #0d0d0d;
-      --surface: #1a1a19;
-      --surface-2: #232322;
-      --text-primary: #ffffff;
-      --text-secondary: #c3c2b7;
-      --text-muted: #898781;
-      --grid: #2c2c2a;
-      --border: rgba(255,255,255,0.10);
-      --accent: #3987e5;
-      --accent-ink: #ffffff;
-      --accent-wash: #16283d;
-      --chip-bg: #232322;
-      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.25);
-    }
-  }
+  /* Phase 6.2: 編集画面は常にライトテーマ（公開ページのテーマ設定とは独立） */
+  html[data-utaeru-builder="light"] { color-scheme: light; }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
@@ -56,15 +50,13 @@
     position: fixed;
     top: 0; left: 0; right: 0;
     z-index: 100;
-    background: rgba(252, 252, 251, 0.92);
+    background: rgba(255, 255, 255, 0.94);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 0 rgba(23, 23, 23, 0.04);
     padding: 0 12px;
     padding-top: env(safe-area-inset-top, 0px);
-  }
-  @media (prefers-color-scheme: dark) {
-    .utaeru-bar { background: rgba(26, 26, 25, 0.92); }
   }
   .utaeru-bar-inner {
     max-width: 960px;
@@ -105,8 +97,8 @@
     background: var(--surface-2);
     white-space: nowrap;
   }
-  .bar-status.is-live { background: var(--accent-wash); color: var(--text-primary); font-weight: 700; }
-  .bar-status.is-dirty { background: #fff4e5; color: #8a5a00; font-weight: 700; }
+  .bar-status.is-live { background: var(--accent-wash); color: var(--success-text); font-weight: 700; }
+  .bar-status.is-dirty { background: var(--warn-bg); color: var(--warn-text); font-weight: 700; }
   .bar-id { font-family: ui-monospace, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; }
   .utaeru-bar-actions {
     display: flex;
@@ -137,7 +129,18 @@
     white-space: nowrap;
   }
   .bar-btn:hover { background: var(--surface-2); }
-  .bar-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .bar-btn:disabled {
+    opacity: 1;
+    cursor: not-allowed;
+    background: var(--disabled-bg);
+    color: var(--disabled-text);
+    border-color: var(--border);
+  }
+  .bar-btn-primary:disabled {
+    background: #9bbce8;
+    border-color: #9bbce8;
+    color: #ffffff;
+  }
   .bar-btn-primary {
     background: var(--accent);
     border-color: var(--accent);
@@ -161,9 +164,9 @@
     max-width: 960px;
     margin: 0 auto;
     padding: 0 0 6px;
-    font-size: 11.5px;
-    color: var(--text-muted);
-    line-height: 1.4;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.45;
   }
   .bar-hint:empty { display: none; }
 
@@ -211,7 +214,7 @@
   .account-section-title {
     font-size: 11px;
     font-weight: 700;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.04em;
     margin: 0 0 8px;
@@ -251,6 +254,12 @@
     color: var(--text-secondary);
     line-height: 1.65;
     margin: 0 0 20px;
+  }
+  .hint {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 12px;
+    line-height: 1.6;
   }
   .section-label {
     font-size: 11px;
@@ -295,7 +304,7 @@
   .acc-summary {
     flex: 1;
     font-size: 13px;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -328,20 +337,39 @@
     font-weight: 800;
     margin: 0 0 6px;
   }
+  .acc-nav {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+  .acc-nav-end { justify-content: flex-end; }
+  .acc-nav-start { justify-content: flex-start; }
+  .acc-prev,
   .acc-next {
-    margin-top: 14px;
-    padding: 10px 14px;
+    flex: 1 1 140px;
     min-height: 44px;
-    width: 100%;
+    padding: 10px 14px;
     border-radius: 10px;
-    border: 1px dashed var(--border);
-    background: transparent;
+    border: 1px solid var(--border);
+    background: var(--surface);
     color: var(--text-secondary);
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
+    text-align: center;
   }
-  .acc-next:hover { background: var(--surface-2); border-color: var(--accent); color: var(--text-primary); }
+  .acc-next {
+    border-color: rgba(42, 120, 214, 0.25);
+    color: var(--accent);
+    background: var(--accent-wash);
+  }
+  .acc-prev:hover { background: var(--surface-2); color: var(--text-primary); }
+  .acc-next:hover { filter: brightness(0.98); border-color: var(--accent); color: var(--accent); }
+  .acc-nav-end .acc-next { flex: 0 1 auto; min-width: 160px; }
+  .acc-nav-start .acc-prev { flex: 0 1 auto; min-width: 160px; }
+  .nav-short { display: none; }
 
   .song-view-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
   .view-tab {
@@ -361,29 +389,31 @@
     font-weight: 700;
   }
   .search-results-head {
-    font-size: 12.5px;
-    color: var(--text-muted);
+    font-size: 13px;
+    color: var(--text-secondary);
     margin: 8px 0 6px;
     font-weight: 700;
   }
-  .flat-artist { font-weight: 700; color: var(--text-secondary); }
+  .flat-artist { font-weight: 700; color: var(--text-primary); }
   .flat-sep { color: var(--text-muted); margin: 0 2px; }
   ul.song-list.flat-list li { padding-left: 12px; }
 
   details.artist-group {
-    margin-bottom: 8px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    margin-bottom: 0;
+    border: none;
+    border-bottom: 1px solid var(--grid);
+    border-radius: 0;
     overflow: hidden;
-    background: var(--page);
+    background: transparent;
   }
+  details.artist-group:last-of-type { border-bottom: none; }
   details.artist-group > summary.artist-head {
     list-style: none;
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 12px;
-    background: var(--surface-2);
+    padding: 11px 4px;
+    background: transparent;
     cursor: pointer;
   }
   details.artist-group > summary.artist-head::-webkit-details-marker { display: none; }
@@ -424,14 +454,14 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px 14px;
-    font-size: 12.5px;
-    color: var(--text-muted);
+    font-size: 13px;
+    color: var(--text-secondary);
   }
   .preview-stats strong { color: var(--text-primary); font-weight: 700; }
   .preview-url {
     margin-top: 10px;
-    font-size: 12px;
-    color: var(--text-muted);
+    font-size: 13px;
+    color: var(--text-secondary);
     word-break: break-all;
   }
 
@@ -487,8 +517,8 @@
     margin: 0 0 4px;
   }
   .card .hint {
-    font-size: 12.5px;
-    color: var(--text-muted);
+    font-size: 13px;
+    color: var(--text-secondary);
     margin: 0 0 12px;
     line-height: 1.6;
   }
@@ -507,11 +537,12 @@
     padding: 10px 12px;
     border-radius: 10px;
     border: 1px solid var(--border);
-    background: var(--page);
+    background: var(--input-bg);
     color: var(--text-primary);
     outline: none;
   }
-  input[type="text"]:focus { border-color: var(--accent); }
+  input[type="text"]::placeholder { color: var(--text-placeholder); opacity: 1; }
+  input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(42, 120, 214, 0.12); }
 
   .swatch-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
   .swatch {
@@ -532,7 +563,7 @@
   .custom-swatch input[type="color"] {
     width: 46px; height: 46px; margin: -6px; border: none; cursor: pointer; padding: 0;
   }
-  .swatch-label { font-size: 11.5px; color: var(--text-muted); width: 100%; margin-top: 2px; }
+  .swatch-label { font-size: 12px; color: var(--text-secondary); width: 100%; margin-top: 2px; }
 
   .file-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .file-btn {
@@ -556,11 +587,12 @@
     padding: 11px 38px 11px 12px;
     border-radius: 10px;
     border: 1px solid var(--border);
-    background: var(--page);
+    background: var(--input-bg);
     color: var(--text-primary);
     outline: none;
   }
-  input[type="search"]:focus { border-color: var(--accent); }
+  input[type="search"]::placeholder { color: var(--text-placeholder); opacity: 1; }
+  input[type="search"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(42, 120, 214, 0.12); }
   input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
   .clear-btn {
     position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
@@ -584,20 +616,28 @@
     border: 1px solid var(--border); background: var(--page); color: var(--text-primary); cursor: pointer;
   }
   .tool-btn:hover { background: var(--surface-2); }
-  .tool-btn.subtle { color: var(--text-muted); }
+  .tool-btn.subtle { color: var(--text-secondary); }
+  .tool-btn:disabled {
+    opacity: 1;
+    cursor: not-allowed;
+    background: var(--disabled-bg);
+    color: var(--disabled-text);
+  }
 
-  .result-meta { font-size: 12.5px; color: var(--text-muted); margin: 10px 2px 8px; }
+  .result-meta { font-size: 13px; color: var(--text-secondary); margin: 10px 2px 8px; }
 
   .artist-head input[type="checkbox"] { width: 17px; height: 17px; flex: 0 0 auto; accent-color: var(--accent); }
   .artist-name { font-size: 13.5px; font-weight: 800; flex: 1; min-width: 0; }
-  .artist-count { font-size: 11.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .artist-count { font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
   ul.song-list { list-style: none; margin: 0; padding: 0; }
   ul.song-list li {
-    padding: 8px 12px 8px 34px;
+    padding: 9px 8px 9px 30px;
     font-size: 14px;
     border-bottom: 1px solid var(--grid);
+    background: transparent;
   }
+  ul.song-list li:has(.song-check:checked) { background: var(--accent-wash); }
   ul.song-list li:last-child { border-bottom: none; }
   .song-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   ul.song-list li input[type="checkbox"] { width: 16px; height: 16px; flex: 0 0 auto; accent-color: var(--accent); }
@@ -605,13 +645,13 @@
   .song-label { flex: 1 1 140px; min-width: 0; }
   mark { background: var(--accent-wash); border-radius: 3px; padding: 0 1px; }
 
-  .empty-state { text-align: center; padding: 32px 16px; color: var(--text-muted); font-size: 13.5px; }
+  .empty-state { text-align: center; padding: 32px 16px; color: var(--text-secondary); font-size: 14px; }
 
   .export-bar {
     position: fixed; left: 0; right: 0; bottom: 0;
-    background: var(--surface);
+    background: rgba(255, 255, 255, 0.96);
     border-top: 1px solid var(--border);
-    box-shadow: 0 -2px 12px rgba(11,11,11,0.06);
+    box-shadow: 0 -1px 0 rgba(23, 23, 23, 0.04);
     padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
     z-index: 20;
   }
@@ -627,7 +667,12 @@
     border: 1px solid var(--border); background: var(--page); color: var(--text-primary);
     cursor: pointer;
   }
-  .export-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .export-btn:disabled {
+    opacity: 1;
+    cursor: not-allowed;
+    background: var(--disabled-bg);
+    color: var(--disabled-text);
+  }
   .export-btn:not(:disabled):hover { background: var(--surface-2); }
   .publish-btn { display: none; } /* Phase 6: 上部バーへ移動 */
 
@@ -644,18 +689,18 @@
     font-weight: 700;
   }
   .auth-not-logged-in {
-    font-size: 12.5px;
-    color: var(--text-muted);
+    font-size: 13px;
+    color: var(--text-secondary);
     margin: 0 0 8px;
     line-height: 1.5;
   }
-  .auth-user-line { font-size: 13.5px; color: var(--text-secondary); margin: 0 0 8px; }
+  .auth-user-line { font-size: 14px; color: var(--text-primary); margin: 0 0 8px; font-weight: 600; }
   /* Phase 4C-3 / Phase 5 / Phase 6 */
   .auth-message--info { background: var(--surface-2); color: var(--text-secondary); }
-  .auth-message--success { background: var(--accent-wash); color: var(--text-primary); }
-  .auth-message--error { background: #fdeeee; color: #8b2020; border-color: rgba(139,32,32,0.2); }
+  .auth-message--success { background: var(--success-bg); color: var(--success-text); border-color: rgba(31, 92, 51, 0.15); }
+  .auth-message--error { background: var(--error-bg); color: var(--error-text); border-color: rgba(139, 32, 32, 0.18); }
   .claim-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
-  .claim-status { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+  .claim-status { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
 
   /* Phase 5: オンライン公開の入口（ログイン不要 / Google / 編集キー） */
   .online-entry { margin-top: 8px; }
@@ -713,10 +758,11 @@
 
   /* Phase 4A: 公開ページID（streamerId）入力 */
   .field-error {
-    font-size: 11.5px; color: #d64545; margin: 5px 2px 0; line-height: 1.5;
+    font-size: 13px; color: var(--error-text); background: var(--error-bg);
+    margin: 8px 0 0; padding: 8px 10px; border-radius: 8px; line-height: 1.5;
   }
   .url-preview {
-    font-size: 12px; color: var(--text-muted); margin: 6px 2px 0; line-height: 1.6;
+    font-size: 13px; color: var(--text-secondary); margin: 8px 0 0; line-height: 1.6;
   }
   .url-preview .path { font-weight: 700; color: var(--text-secondary); font-family: monospace; }
 
@@ -805,6 +851,8 @@
     .acc-head { min-height: 48px; padding: 12px 14px; }
     .acc-title { font-size: 14px; }
     .acc-summary { font-size: 12.5px; }
+    .nav-long { display: none; }
+    .nav-short { display: inline; }
   }
   @media (min-width: 641px) {
     .bar-menu-toggle { display: none; }
@@ -817,6 +865,15 @@
     .claim-row { flex-direction: column; align-items: stretch; }
     .claim-row .tool-btn { width: 100%; min-height: 44px; }
     .export-btn { font-size: 13px; padding: 9px 14px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .acc-chevron,
+    .account-panel,
+    .panel-backdrop,
+    details.artist-group > summary.artist-head::after {
+      transition: none;
+    }
   }
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -956,7 +1013,9 @@
         <p class="hint">半角英小文字・数字・ハイフンのみ（3〜32文字）。固定URL（/u/あなたのID）に使われます。HTML書き出しだけなら空欄でも構いません。</p>
         <p class="field-error" id="streamerIdError" style="display:none;"></p>
         <p class="url-preview" id="streamerIdPreview" style="display:none;">公開予定URL：<span class="path"></span></p>
-        <button type="button" class="acc-next" data-next="songs">次へ：曲を選ぶ</button>
+        <div class="acc-nav acc-nav-end">
+          <button type="button" class="acc-next" data-next="songs"><span class="nav-long">次へ：曲を選ぶ →</span><span class="nav-short">次へ →</span></button>
+        </div>
       </div>
     </section>
 
@@ -985,7 +1044,10 @@
         </div>
         <div class="result-meta" id="resultMeta"></div>
         <div id="results"></div>
-        <button type="button" class="acc-next" data-next="design">次へ：デザイン</button>
+        <div class="acc-nav">
+          <button type="button" class="acc-prev" data-prev="basic"><span class="nav-long">← 基本情報へ戻る</span><span class="nav-short">← 戻る</span></button>
+          <button type="button" class="acc-next" data-next="design"><span class="nav-long">次へ：デザイン →</span><span class="nav-short">次へ →</span></button>
+        </div>
       </div>
     </section>
 
@@ -999,7 +1061,10 @@
       <div class="acc-body" id="accDesignBody">
         <p class="hint">ページのアクセントカラーです。プリセットから選ぶか、右端の丸をタップして好きな色を指定できます。</p>
         <div class="swatch-row" id="swatchRow"></div>
-        <button type="button" class="acc-next" data-next="preview">次へ：プレビュー</button>
+        <div class="acc-nav">
+          <button type="button" class="acc-prev" data-prev="songs"><span class="nav-long">← 曲を選ぶへ戻る</span><span class="nav-short">← 戻る</span></button>
+          <button type="button" class="acc-next" data-next="preview"><span class="nav-long">次へ：プレビュー →</span><span class="nav-short">次へ →</span></button>
+        </div>
       </div>
     </section>
 
@@ -1022,6 +1087,9 @@
             </div>
             <p class="preview-url" id="previewUrl"></p>
           </div>
+        </div>
+        <div class="acc-nav acc-nav-start">
+          <button type="button" class="acc-prev" data-prev="design"><span class="nav-long">← デザインへ戻る</span><span class="nav-short">← 戻る</span></button>
         </div>
       </div>
     </section>
@@ -1613,6 +1681,12 @@ function initAccordion() {
     btn.addEventListener('click', () => {
       const next = btn.dataset.next;
       if (next) setMainAccOpen(next);
+    });
+  });
+  document.querySelectorAll('.acc-prev').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const prev = btn.dataset.prev;
+      if (prev) setMainAccOpen(prev);
     });
   });
   document.querySelectorAll('.view-tab').forEach(tab => {
