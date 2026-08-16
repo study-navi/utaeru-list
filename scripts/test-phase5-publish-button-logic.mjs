@@ -14,10 +14,10 @@ let failed = 0;
 function ok(m) { passed++; console.log(`OK: ${m}`); }
 function fail(m) { failed++; console.error(`FAIL: ${m}`); }
 
-if (/setOnlineMode\('edit-key'\);\s*\n\s*editKeyVerified = true/.test(html)) {
-  ok('verify 成功時: setOnlineMode の後に editKeyVerified = true');
+if (/setOnlineMode\('edit-key', \{ openPanel: false \}\)/.test(html)) {
+  ok('verify/公開後: setOnlineMode は openPanel:false で認証状態を維持');
 } else {
-  fail('verify 成功時の editKeyVerified 設定順序が不正');
+  fail('setOnlineMode openPanel オプション', 'not found');
 }
 
 if (/if \(onlineMode !== mode\)[\s\S]*editKeyVerified = false/.test(html)) {
@@ -32,10 +32,10 @@ if (/editKeyVerifiedStreamerId/.test(html)) {
   fail('editKeyVerifiedStreamerId が未定義');
 }
 
-if (/sidMatchesVerified/.test(html)) {
-  ok('updatePublishButtonState: 認証済み streamerId 一致チェックあり');
+if (/editKeyVerifiedStreamerId !== sid/.test(html)) {
+  ok('getPublishBlockReason: 認証済み streamerId 一致チェックあり');
 } else {
-  fail('updatePublishButtonState に streamerId 一致チェックなし');
+  fail('streamerId 一致チェック', 'not found');
 }
 
 if (failed) process.exit(1);

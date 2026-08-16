@@ -1,15 +1,15 @@
 {
-  "label": "Phase 5 匿名編集キー + Google所有の二方式",
+  "label": "Phase 6 UI/UX全面整理・管理導線の再設計",
   "establishedAt": "2026-08-16",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "Phase 4C OAuth2 Token Client + Bearerセッション",
+    "label": "Phase 5 匿名編集キー + Google所有の二方式",
     "establishedAt": "2026-08-16",
     "files": {
       "index.html": {
-        "bytes": 280087,
-        "sha256": "efcb2a686021be6bca126d3f3df1f2ef66e31d630fcd784db7304659b417910e"
+        "bytes": 295815,
+        "sha256": "e4473f1333cdca6dfaddafcf9334ba34a5d604d1661e36c941d6a6fdd014139b"
       },
       "hiro.html": {
         "bytes": 25630,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 295815,
-      "sha256": "e4473f1333cdca6dfaddafcf9334ba34a5d604d1661e36c941d6a6fdd014139b"
+      "bytes": 308273,
+      "sha256": "b794da569fd2b0f8d16c5a420c79e2beec3546f0b4816818673bf76c8651b07e"
     },
     "hiro.html": {
       "bytes": 25630,

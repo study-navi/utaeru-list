@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>歌える曲リスト ビルダー｜配信者用設定ツール</title>
+<title>Utaeru｜歌える曲リスト</title>
 <style>
   :root {
     color-scheme: light;
@@ -47,32 +47,238 @@
     font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
+    padding-top: calc(56px + env(safe-area-inset-top, 0px));
   }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 120px; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 16px 16px 96px; }
 
-  h1 { font-size: 21px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em; }
-  .lead { font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin: 0 0 20px; }
+  /* Phase 6: 固定管理バー */
+  .utaeru-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(252, 252, 251, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 12px;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    .utaeru-bar { background: rgba(26, 26, 25, 0.92); }
+  }
+  .utaeru-bar-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .utaeru-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+  }
+  .utaeru-brand {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  .bar-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .bar-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    white-space: nowrap;
+  }
+  .bar-status.is-live { background: var(--accent-wash); color: var(--text-primary); font-weight: 700; }
+  .bar-status.is-dirty { background: #fff4e5; color: #8a5a00; font-weight: 700; }
+  .bar-id { font-family: ui-monospace, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; }
+  .utaeru-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .bar-link {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+  .bar-link:hover { background: var(--accent-wash); }
+  .bar-btn {
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 14px;
+    min-height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--page);
+    color: var(--text-primary);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .bar-btn:hover { background: var(--surface-2); }
+  .bar-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .bar-btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 800;
+  }
+  .bar-btn-primary:not(:disabled):hover { filter: brightness(1.05); }
+  .bar-btn-ghost { background: transparent; border-color: transparent; color: var(--text-secondary); }
+  .bar-btn-ghost:hover { background: var(--surface-2); border-color: var(--border); }
+  .bar-menu-toggle {
+    display: none;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--page);
+    cursor: pointer;
+    font-size: 18px;
+  }
+  .bar-hint {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 0 6px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .bar-hint:empty { display: none; }
+
+  /* アカウントパネル（ドロワー） */
+  .panel-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(11,11,11,0.35);
+    z-index: 110;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .panel-backdrop.open { opacity: 1; pointer-events: auto; }
+  .account-panel {
+    position: fixed;
+    top: 0; right: 0;
+    width: min(100%, 380px);
+    height: 100%;
+    z-index: 120;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    box-shadow: -8px 0 32px rgba(11,11,11,0.12);
+    transform: translateX(100%);
+    transition: transform 0.22s ease;
+    overflow-y: auto;
+    padding: calc(12px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+  .account-panel.open { transform: translateX(0); }
+  .account-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .account-panel-head h2 { font-size: 16px; font-weight: 800; margin: 0; }
+  .panel-close {
+    width: 36px; height: 36px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--page);
+    cursor: pointer;
+    font-size: 18px;
+  }
+  .account-section { margin-bottom: 20px; }
+  .account-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 8px;
+  }
+  .account-actions { display: grid; gap: 8px; }
+  .account-actions .tool-btn, .account-actions .google-login-btn {
+    width: 100%;
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  /* モーダル */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(11,11,11,0.4);
+    z-index: 130;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-backdrop[hidden] { display: none; }
+  .modal-card {
+    width: min(100%, 400px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .modal-card h3 { margin: 0 0 8px; font-size: 17px; font-weight: 800; }
+  .modal-card p { margin: 0 0 16px; font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+  .modal-actions { display: grid; gap: 8px; }
+
+  .page-intro {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    margin: 0 0 20px;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+    margin: 0 0 6px;
+  }
+
+  h1 { font-size: 21px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.01em; display: none; }
 
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 14px;
+    border-radius: 16px;
+    padding: 18px 16px;
+    margin-bottom: 16px;
     box-shadow: var(--shadow);
   }
   .card h2 {
-    font-size: 14.5px;
+    font-size: 16px;
     font-weight: 800;
-    margin: 0 0 10px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    margin: 0 0 4px;
   }
   .card .hint {
-    font-size: 12px;
+    font-size: 12.5px;
     color: var(--text-muted);
-    margin: -4px 0 10px;
+    margin: 0 0 12px;
     line-height: 1.6;
   }
 
@@ -208,41 +414,30 @@
     position: fixed; left: 0; right: 0; bottom: 0;
     background: var(--surface);
     border-top: 1px solid var(--border);
-    box-shadow: 0 -4px 16px rgba(11,11,11,0.08);
-    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    box-shadow: 0 -2px 12px rgba(11,11,11,0.06);
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
     z-index: 20;
   }
   .export-bar-inner {
-    max-width: 760px; margin: 0 auto;
+    max-width: 720px; margin: 0 auto;
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
   }
   .export-count { font-size: 13.5px; font-weight: 700; white-space: nowrap; flex: 0 0 auto; }
   .export-count .n { font-variant-numeric: tabular-nums; color: var(--accent); }
   .export-btn {
-    font-size: 14.5px; font-weight: 800;
-    padding: 11px 20px; border-radius: 11px;
-    border: none; background: var(--accent); color: var(--accent-ink);
+    font-size: 14px; font-weight: 700;
+    padding: 10px 18px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--page); color: var(--text-primary);
     cursor: pointer;
   }
   .export-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .export-bar-buttons { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-  .publish-btn {
-    font-size: 13px; font-weight: 700;
-    padding: 11px 14px; border-radius: 11px;
-    border: 1px solid var(--border); background: var(--page); color: var(--text-primary);
-    cursor: pointer; white-space: nowrap;
-  }
-  .publish-btn:hover { background: var(--surface-2); }
-  .publish-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-  .publish-btn:not(:disabled) {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-ink);
-    font-weight: 800;
-  }
-  .publish-btn:not(:disabled):hover { filter: brightness(1.05); }
+  .export-btn:not(:disabled):hover { background: var(--surface-2); }
+  .publish-btn { display: none; } /* Phase 6: 上部バーへ移動 */
 
-  /* Phase 4C-3: Googleログイン・オンライン公開 */
+  .auth-message {
+    font-size: 13px; line-height: 1.6; margin: 0 0 16px;
+    padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border);
+  }
   .google-login-btn {
     width: 100%;
     max-width: 320px;
@@ -258,10 +453,7 @@
     line-height: 1.5;
   }
   .auth-user-line { font-size: 13.5px; color: var(--text-secondary); margin: 0 0 8px; }
-  .auth-message {
-    font-size: 13px; line-height: 1.6; margin: 10px 2px 0;
-    padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border);
-  }
+  /* Phase 4C-3 / Phase 5 / Phase 6 */
   .auth-message--info { background: var(--surface-2); color: var(--text-secondary); }
   .auth-message--success { background: var(--accent-wash); color: var(--text-primary); }
   .auth-message--error { background: #fdeeee; color: #8b2020; border-color: rgba(139,32,32,0.2); }
@@ -406,47 +598,170 @@
   .tag-admin-add-row { display: flex; gap: 8px; }
   .tag-admin-add-row input[type="text"] { flex: 1; }
 
+  @media (max-width: 640px) {
+    body { padding-top: calc(52px + env(safe-area-inset-top, 0px)); }
+    .bar-meta { display: none; }
+    .bar-link, .bar-btn-ghost { display: none; }
+    .bar-menu-toggle { display: inline-flex; align-items: center; justify-content: center; }
+    .utaeru-bar-actions .bar-btn-primary { padding: 8px 12px; font-size: 12.5px; }
+    .wrap { padding-bottom: 88px; }
+  }
+  @media (min-width: 641px) {
+    .bar-menu-toggle { display: none; }
+    .utaeru-bar-actions .bar-btn-ghost { display: inline-flex; align-items: center; }
+  }
   @media (max-width: 420px) {
-    h1 { font-size: 18px; }
-    .export-count { font-size: 12.5px; }
     .song-settings-btn { font-size: 11px; padding: 5px 9px; }
     .status-btn, .song-tag-chip { font-size: 12px; padding: 6px 10px; }
-    .publish-btn { font-size: 11.5px; padding: 9px 10px; }
     .google-login-btn { width: 100%; min-height: 44px; }
     .claim-row { flex-direction: column; align-items: stretch; }
     .claim-row .tool-btn { width: 100%; min-height: 44px; }
-    .export-btn { font-size: 12.5px; padding: 9px 12px; }
+    .export-btn { font-size: 13px; padding: 9px 14px; }
   }
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
+
+<header class="utaeru-bar" id="utaeruBar">
+  <div class="utaeru-bar-inner">
+    <div class="utaeru-bar-left">
+      <span class="utaeru-brand">Utaeru</span>
+      <div class="bar-meta">
+        <span class="bar-status" id="barStatus">未公開</span>
+        <span class="bar-id" id="barStreamerId"></span>
+      </div>
+    </div>
+    <div class="utaeru-bar-actions">
+      <a class="bar-link" id="barViewPage" href="#" target="_blank" rel="noopener noreferrer" style="display:none">公開ページを見る</a>
+      <button type="button" class="bar-btn bar-btn-ghost" id="barCopyUrl" style="display:none">URLをコピー</button>
+      <button type="button" class="bar-btn bar-btn-primary" id="publishBtn" disabled title="">公開する</button>
+      <button type="button" class="bar-btn bar-btn-ghost" id="accountMenuBtn" aria-expanded="false">アカウント</button>
+      <button type="button" class="bar-menu-toggle" id="mobileMenuBtn" aria-label="メニューを開く">☰</button>
+    </div>
+  </div>
+  <p class="bar-hint" id="barPublishHint"></p>
+</header>
+
+<div class="panel-backdrop" id="panelBackdrop"></div>
+<aside class="account-panel" id="accountPanel" aria-hidden="true">
+  <div class="account-panel-head">
+    <h2>アカウント・公開管理</h2>
+    <button type="button" class="panel-close" id="accountPanelClose" aria-label="閉じる">✕</button>
+  </div>
+
+  <div class="account-section">
+    <p class="account-section-title">はじめて公開する</p>
+    <div class="account-actions">
+      <button type="button" class="tool-btn" id="modeAnonymousBtn">ログインせずに作る</button>
+      <button type="button" class="tool-btn google-login-btn" id="modeGoogleBtn">Googleで管理する</button>
+    </div>
+  </div>
+
+  <div class="account-section">
+    <p class="account-section-title">以前作ったページを編集</p>
+    <div class="account-actions">
+      <button type="button" class="tool-btn" id="resumeGoogleBtn">Googleでログイン</button>
+      <button type="button" class="tool-btn" id="modeEditKeyBtn">編集キーを使う</button>
+    </div>
+  </div>
+
+  <div id="anonymousModePanel" class="online-mode-panel" style="display:none;">
+    <p class="hint">ログインなしで公開できます。初回のみ編集キーが表示されます。必ず保管してください。</p>
+  </div>
+
+  <div id="editKeyModePanel" class="online-mode-panel" style="display:none;">
+    <p class="hint">公開ページIDと編集キーを入力してください。</p>
+    <div class="edit-key-form">
+      <div>
+        <label class="field-label" for="editKeyStreamerIdInput">公開ページID</label>
+        <input type="text" id="editKeyStreamerIdInput" placeholder="例：my-id" maxlength="32" autocomplete="off" spellcheck="false" />
+      </div>
+      <div>
+        <label class="field-label" for="editKeyInput">編集キー</label>
+        <input type="password" id="editKeyInput" placeholder="ut_..." autocomplete="off" spellcheck="false" />
+      </div>
+      <button type="button" class="tool-btn" id="editKeyVerifyBtn">編集を開始</button>
+    </div>
+  </div>
+
+  <div id="googleModePanel" class="online-mode-panel" style="display:none;">
+    <div id="authSignedOut">
+      <p class="auth-not-logged-in" id="authLoggedOutHint">Googleアカウントでログインすると、公開ページを管理できます。</p>
+      <button type="button" class="tool-btn google-login-btn" id="googleLoginBtn">Googleでログイン</button>
+    </div>
+    <div id="authSignedIn" style="display:none;">
+      <p class="auth-user-line"><span id="authUserEmail"></span> でログイン中</p>
+      <button type="button" class="tool-btn" id="logoutBtn">ログアウト</button>
+      <p class="hint" id="ownedIdsHint"></p>
+    </div>
+    <div class="claim-row">
+      <button type="button" class="tool-btn" id="claimBtn" disabled>この公開ページIDを取得する</button>
+      <span class="claim-status" id="claimStatus">基本情報で公開ページIDを入力し、Googleでログインしてください。</span>
+    </div>
+  </div>
+
+  <div id="linkGooglePanel" class="online-mode-panel link-google-row" style="display:none;">
+    <p class="hint">Googleアカウントに連携すると、編集キーなしで更新できます（連携後は旧編集キーは無効）。</p>
+    <button type="button" class="tool-btn" id="linkGoogleBtn">Googleアカウントに連携</button>
+  </div>
+</aside>
+
+<div class="modal-backdrop" id="manageModeModal" hidden>
+  <div class="modal-card" role="dialog" aria-labelledby="manageModeTitle">
+    <h3 id="manageModeTitle">このページをどう管理しますか？</h3>
+    <p>公開方法を選んでください。あとから変更することもできます。</p>
+    <div class="modal-actions">
+      <button type="button" class="tool-btn" id="modalChooseAnonymous">ログインせずに作る</button>
+      <button type="button" class="tool-btn google-login-btn" id="modalChooseGoogle">Googleで管理する</button>
+      <button type="button" class="tool-btn" id="modalChooseEditKey">編集キーを使う</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="editKeyIssuedModal" hidden>
+  <div class="modal-card" role="dialog">
+    <p class="edit-key-warning">⚠ この編集キーは再表示できません</p>
+    <p class="hint">次回から更新するには必要です。メモ帳など安全な場所に保管してください。</p>
+    <div id="editKeyIssuedPanel" class="online-mode-panel" style="display:block;">
+      <code class="edit-key-display" id="issuedEditKeyDisplay"></code>
+      <div class="edit-key-actions">
+        <button type="button" class="tool-btn" id="copyEditKeyBtn">編集キーをコピー</button>
+        <button type="button" class="tool-btn" id="editKeyIssuedCloseBtn">閉じる</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="wrap">
 
-  <h1>🎤 歌える曲リスト ビルダー</h1>
-  <p class="lead">配信で歌える曲のページを作成できます。ミラティブ「エモカラ」の楽曲リストから歌える曲を選んで、下の「ページを書き出す」からHTMLファイルをダウンロードしてください。サーバーは不要で、そのファイルをそのまま配信ページやプロフィールで共有できます。</p>
+  <p class="page-intro">配信で歌える曲リストを作成し、固定URLで公開できます。曲を選んで、見た目を整えて、上部の「公開する」からオンライン公開しましょう。</p>
+  <p class="auth-message" id="authMessage" style="display:none;"></p>
 
   <div class="card">
-    <h2>① 配信者情報</h2>
+    <p class="section-label">基本情報</p>
+    <h2>配信者情報</h2>
     <label class="field-label" for="streamerName">配信者名・ページタイトル</label>
     <input type="text" id="streamerName" placeholder="例：ひろの歌える曲リスト" />
     <label class="field-label" for="subtitle">一言・サブタイトル（任意）</label>
     <input type="text" id="subtitle" placeholder="配信で歌える曲を検索できます。曲名・アーティスト名で絞り込めます。" />
-    <label class="field-label" for="streamerIdInput">公開ページID（オンライン公開時に必要）</label>
+    <label class="field-label" for="streamerIdInput">公開ページID</label>
     <input type="text" id="streamerIdInput" placeholder="例：hiro" maxlength="32" autocomplete="off" spellcheck="false" />
-    <p class="hint">半角英小文字・数字・ハイフンのみ、3〜32文字。オンライン公開では固定URL（例：/u/hiro）として使います。HTMLファイルの書き出しだけなら空欄でも構いません。</p>
+    <p class="hint">半角英小文字・数字・ハイフンのみ（3〜32文字）。固定URL（/u/あなたのID）に使われます。HTML書き出しだけなら空欄でも構いません。</p>
     <p class="field-error" id="streamerIdError" style="display:none;"></p>
     <p class="url-preview" id="streamerIdPreview" style="display:none;">公開予定URL：<span class="path"></span></p>
   </div>
 
   <div class="card">
-    <h2>② テーマカラー</h2>
+    <p class="section-label">デザイン</p>
+    <h2>テーマカラー</h2>
     <p class="hint">ページのアクセントカラーです。プリセットから選ぶか、右端の丸をタップして好きな色を指定できます。</p>
     <div class="swatch-row" id="swatchRow"></div>
   </div>
 
   <div class="card">
-    <h2>③ 以前のファイルを読み込んで編集（任意）</h2>
+    <p class="section-label">復元</p>
+    <h2>以前のファイルから復元（任意）</h2>
     <p class="hint">前に書き出したページのHTMLファイルを読み込むと、選択していた曲やテーマカラーを復元して編集を続けられます。</p>
     <div class="file-row">
       <label class="file-btn" for="importFile">ファイルを選択</label>
@@ -456,7 +771,8 @@
   </div>
 
   <div class="card">
-    <h2>④ 歌える曲を選ぶ</h2>
+    <p class="section-label">曲リスト</p>
+    <h2>歌える曲を選ぶ</h2>
     <div class="search-input-row">
       <input type="search" id="searchInput" placeholder="曲名・アーティスト名で検索して絞り込み" autocomplete="off" />
       <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
@@ -473,7 +789,8 @@
   </div>
 
   <div class="card">
-    <h2>⑤ タグの候補を編集（任意）</h2>
+    <p class="section-label">タグ（任意）</p>
+    <h2>タグの候補</h2>
     <p class="hint">曲に付けられるタグの候補です。追加・削除ができます。ここでの変更はすべての曲の設定に反映されます。</p>
     <div class="tag-admin-list" id="tagAdminList"></div>
     <div class="tag-admin-add-row">
@@ -482,88 +799,12 @@
     </div>
   </div>
 
-  <div class="card" id="onlinePublishCard">
-    <h2>⑥ オンライン公開</h2>
-    <p class="hint">固定URL（例：/u/あなたのID）で曲リストを公開できます。「📄 ページを書き出す」によるHTMLファイル公開もこれまで通り使えます。</p>
-
-    <div class="online-entry">
-      <div class="online-entry-group">
-        <p class="online-entry-label">はじめての方</p>
-        <div class="online-entry-buttons">
-          <button type="button" class="tool-btn" id="modeAnonymousBtn">すぐ作る（ログイン不要）</button>
-          <button type="button" class="tool-btn google-login-btn" id="modeGoogleBtn">Googleで始める</button>
-        </div>
-      </div>
-      <div class="online-entry-group">
-        <p class="online-entry-label">以前作った方</p>
-        <div class="online-entry-buttons">
-          <button type="button" class="tool-btn" id="resumeGoogleBtn">Googleでログイン</button>
-          <button type="button" class="tool-btn" id="modeEditKeyBtn">編集キーを使って編集</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="anonymousModePanel" class="online-mode-panel" style="display:none;">
-      <p class="hint">Googleログインなしで公開できます。初回公開時に編集キーが1回だけ表示されます。必ずコピーして安全な場所に保管してください。</p>
-    </div>
-
-    <div id="editKeyModePanel" class="online-mode-panel" style="display:none;">
-      <p class="hint">公開ページIDと編集キーを入力してください。照合できた場合のみ更新できます。</p>
-      <div class="edit-key-form">
-        <div>
-          <label class="field-label" for="editKeyStreamerIdInput">公開ページID</label>
-          <input type="text" id="editKeyStreamerIdInput" placeholder="例：my-id" maxlength="32" autocomplete="off" spellcheck="false" />
-        </div>
-        <div>
-          <label class="field-label" for="editKeyInput">編集キー</label>
-          <input type="password" id="editKeyInput" placeholder="ut_..." autocomplete="off" spellcheck="false" />
-        </div>
-        <button type="button" class="tool-btn" id="editKeyVerifyBtn">編集を開始</button>
-      </div>
-    </div>
-
-    <div id="googleModePanel" class="online-mode-panel" style="display:none;">
-      <div id="authSignedOut">
-        <p class="auth-not-logged-in" id="authLoggedOutHint">Googleアカウントでログインすると、公開ページIDを取得して公開できます。</p>
-        <button type="button" class="tool-btn google-login-btn" id="googleLoginBtn">Googleでログイン</button>
-      </div>
-      <div id="authSignedIn" style="display:none;">
-        <p class="auth-user-line"><span id="authUserEmail"></span> でログイン中</p>
-        <button type="button" class="tool-btn" id="logoutBtn">ログアウト</button>
-        <p class="hint" id="ownedIdsHint"></p>
-      </div>
-      <div class="claim-row">
-        <button type="button" class="tool-btn" id="claimBtn" disabled>この公開ページIDを取得する</button>
-        <span class="claim-status" id="claimStatus">①で公開ページIDを入力し、Googleでログインしてください。</span>
-      </div>
-    </div>
-
-    <div id="editKeyIssuedPanel" class="online-mode-panel" style="display:none;">
-      <p class="edit-key-warning">⚠ この編集キーは再表示できません</p>
-      <p class="hint">次回から更新するには、この編集キーが必要です。メモ帳など安全な場所に保管してください（ブラウザへの保存だけに頼らないでください）。</p>
-      <code class="edit-key-display" id="issuedEditKeyDisplay"></code>
-      <div class="edit-key-actions">
-        <button type="button" class="tool-btn" id="copyEditKeyBtn">編集キーをコピー</button>
-      </div>
-    </div>
-
-    <div id="linkGooglePanel" class="online-mode-panel link-google-row" style="display:none;">
-      <p class="hint">このページをGoogleアカウントに連携すると、編集キーなしで更新できるようになります（連携後は旧編集キーは無効になります）。</p>
-      <button type="button" class="tool-btn" id="linkGoogleBtn">このページをGoogleアカウントに連携</button>
-    </div>
-
-    <p class="auth-message" id="authMessage" style="display:none;"></p>
-  </div>
-
 </div>
 
 <div class="export-bar">
   <div class="export-bar-inner">
     <div class="export-count"><span class="n" id="selectedCount">0</span>曲 選択中</div>
-    <div class="export-bar-buttons">
-      <button class="publish-btn" type="button" id="publishBtn" disabled>🌐 公開する</button>
-      <button class="export-btn" id="exportBtn" disabled>📄 ページを書き出す</button>
-    </div>
+    <button class="export-btn" id="exportBtn" disabled>HTMLファイルを書き出す</button>
   </div>
 </div>
 
@@ -773,10 +1014,12 @@ function refreshSwatchSelection() {
 function selectPreset(i) {
   currentTheme = { type: 'preset', presetIndex: i, customHex: currentTheme.customHex };
   refreshSwatchSelection();
+  updatePublishButtonState();
 }
 function selectCustom(hex) {
   currentTheme = { type: 'custom', presetIndex: currentTheme.presetIndex, customHex: hex };
   refreshSwatchSelection();
+  updatePublishButtonState();
 }
 selectPreset(0);
 
@@ -1310,6 +1553,8 @@ let onlineMode = null; // null | 'anonymous' | 'google' | 'edit-key'
 let editKeyVerified = false;
 let editKeyVerifiedStreamerId = null;
 let issuedEditKeyPlaintext = null;
+let publishedSnapshot = null;
+let publishedStreamerId = null;
 const SESSION_TOKEN_KEY = 'utaeru_access_token';
 const EDIT_KEY_STORAGE_PREFIX = 'utaeru_edit_key:';
 
@@ -1334,10 +1579,163 @@ function getActiveEditKey() {
 
 function clearIssuedEditKeyDisplay() {
   issuedEditKeyPlaintext = null;
-  const panel = document.getElementById('editKeyIssuedPanel');
   const display = document.getElementById('issuedEditKeyDisplay');
+  const modal = document.getElementById('editKeyIssuedModal');
   if (display) display.textContent = '';
-  if (panel) panel.style.display = 'none';
+  if (modal) modal.hidden = true;
+}
+
+function buildPublishSnapshot() {
+  return JSON.stringify({
+    sid: streamerIdInput.value.trim(),
+    name: streamerNameInput.value.trim(),
+    subtitle: subtitleInput.value.trim(),
+    theme: { type: currentTheme.type, presetIndex: currentTheme.presetIndex, customHex: currentTheme.customHex },
+    keys: [...selectedKeys].sort(),
+    meta: songMeta,
+    tags: tagPresets,
+  });
+}
+
+function markPublishedSnapshot() {
+  publishedSnapshot = buildPublishSnapshot();
+  publishedStreamerId = streamerIdInput.value.trim();
+}
+
+function hasUnpublishedChanges() {
+  if (!publishedSnapshot) return true;
+  return buildPublishSnapshot() !== publishedSnapshot;
+}
+
+function getPublicPageUrl(sid) {
+  if (!sid) return null;
+  return PUBLIC_URL_BASE + PUBLIC_URL_PATH_PREFIX + sid;
+}
+
+function getManagementModeLabel() {
+  if (onlineMode === 'google' && authUser) return 'Googleアカウントで管理中';
+  if (onlineMode === 'edit-key' && editKeyVerified) return '編集キーで管理中';
+  if (onlineMode === 'anonymous') return 'ログインなしで管理中';
+  return '';
+}
+
+function getPublishBlockReason() {
+  if (authLoading) return '処理中です…';
+  const name = streamerNameInput.value.trim();
+  if (!name) return '配信者名を入力してください';
+  const sid = streamerIdInput.value.trim();
+  const sidCheck = validateStreamerId(sid);
+  if (!sidCheck.ok) return sidCheck.message || '公開ページIDを入力してください';
+  if (selectedKeys.size === 0) return '曲を1曲以上選択してください';
+  if (!onlineMode) return 'アカウントから公開方法を選んでください';
+  if (onlineMode === 'google') {
+    if (!authUser) return 'Googleでログインしてください';
+    if (!isStreamerIdOwned(sid)) return '公開ページIDを取得してください（アカウントメニュー）';
+  }
+  if (onlineMode === 'edit-key') {
+    if (!editKeyVerified || editKeyVerifiedStreamerId !== sid) return '編集キーで認証してください（アカウントメニュー）';
+  }
+  if (publishedSnapshot && publishedStreamerId === sid && !hasUnpublishedChanges()) {
+    return '変更はありません';
+  }
+  return '';
+}
+
+function getPublishButtonLabel() {
+  const sid = streamerIdInput.value.trim();
+  if (publishedSnapshot && publishedStreamerId === sid) {
+    return hasUnpublishedChanges() ? '変更を公開' : '公開済み';
+  }
+  return '公開する';
+}
+
+function updateManagementBar() {
+  const publishBtn = document.getElementById('publishBtn');
+  const barStatus = document.getElementById('barStatus');
+  const barId = document.getElementById('barStreamerId');
+  const barHint = document.getElementById('barPublishHint');
+  const barView = document.getElementById('barViewPage');
+  const barCopy = document.getElementById('barCopyUrl');
+  const sid = streamerIdInput.value.trim();
+  const sidCheck = validateStreamerId(sid);
+  const blockReason = getPublishBlockReason();
+  const canPublish = !blockReason;
+  const isPublished = !!(publishedSnapshot && publishedStreamerId === sid && sidCheck.ok);
+  const dirty = isPublished && hasUnpublishedChanges();
+  const modeLabel = getManagementModeLabel();
+
+  publishBtn.disabled = !canPublish;
+  publishBtn.textContent = getPublishButtonLabel();
+  publishBtn.title = blockReason || '';
+
+  barStatus.textContent = isPublished ? (dirty ? '未公開の変更あり' : '✓ 公開済み') : '未公開';
+  barStatus.className = 'bar-status' + (isPublished ? (dirty ? ' is-dirty' : ' is-live') : '');
+
+  if (sidCheck.ok && sid) {
+    barId.textContent = 'ID: ' + sid;
+    barId.style.display = '';
+  } else {
+    barId.textContent = '';
+    barId.style.display = 'none';
+  }
+
+  if (modeLabel) {
+    barHint.textContent = modeLabel + (blockReason && blockReason !== '変更はありません' ? ' — ' + blockReason : '');
+  } else {
+    barHint.textContent = blockReason || '';
+  }
+
+  const publicUrl = sidCheck.ok ? getPublicPageUrl(sid) : null;
+  if (isPublished && publicUrl) {
+    barView.href = publicUrl;
+    barView.style.display = '';
+    barCopy.style.display = '';
+  } else {
+    barView.style.display = 'none';
+    barCopy.style.display = 'none';
+  }
+}
+
+function openAccountPanel() {
+  const sid = streamerIdInput.value.trim();
+  if (sid) document.getElementById('editKeyStreamerIdInput').value = sid;
+  document.getElementById('accountPanel').classList.add('open');
+  document.getElementById('accountPanel').setAttribute('aria-hidden', 'false');
+  document.getElementById('panelBackdrop').classList.add('open');
+  document.getElementById('accountMenuBtn').setAttribute('aria-expanded', 'true');
+}
+
+function closeAccountPanel() {
+  document.getElementById('accountPanel').classList.remove('open');
+  document.getElementById('accountPanel').setAttribute('aria-hidden', 'true');
+  document.getElementById('panelBackdrop').classList.remove('open');
+  document.getElementById('accountMenuBtn').setAttribute('aria-expanded', 'false');
+}
+
+function openManageModeModal() {
+  document.getElementById('manageModeModal').hidden = false;
+}
+
+function closeManageModeModal() {
+  document.getElementById('manageModeModal').hidden = true;
+}
+
+function showEditKeyIssuedModal(editKey) {
+  issuedEditKeyPlaintext = editKey;
+  document.getElementById('issuedEditKeyDisplay').textContent = editKey;
+  document.getElementById('editKeyIssuedModal').hidden = false;
+}
+
+async function copyPublicUrl() {
+  const sid = streamerIdInput.value.trim();
+  const url = getPublicPageUrl(sid);
+  if (!url) return;
+  try {
+    await navigator.clipboard.writeText(url);
+    showAuthMessage('公開URLをコピーしました。', 'info');
+  } catch (err) {
+    showAuthMessage('コピーに失敗しました。', 'error');
+  }
 }
 
 function getStoredAccessToken() {
@@ -1442,26 +1840,11 @@ function isStreamerIdOwned(id) {
 }
 
 function updatePublishButtonState() {
-  const publishBtn = document.getElementById('publishBtn');
-  const name = streamerNameInput.value.trim();
-  const sid = streamerIdInput.value.trim();
-  const sidCheck = validateStreamerId(sid);
-  const baseOk = sidCheck.ok && !!name && selectedKeys.size > 0 && !authLoading;
-  let canPublish = false;
-
-  if (onlineMode === 'anonymous') {
-    canPublish = baseOk;
-  } else if (onlineMode === 'edit-key') {
-    const sidMatchesVerified = editKeyVerifiedStreamerId === sid;
-    canPublish = baseOk && editKeyVerified && sidMatchesVerified;
-  } else if (onlineMode === 'google') {
-    canPublish = baseOk && !!authUser && isStreamerIdOwned(sid);
-  }
-
-  publishBtn.disabled = !canPublish;
+  updateManagementBar();
 }
 
-function setOnlineMode(mode) {
+function setOnlineMode(mode, opts = {}) {
+  const openPanel = opts.openPanel !== false;
   if (onlineMode !== mode) {
     editKeyVerified = false;
     editKeyVerifiedStreamerId = null;
@@ -1480,25 +1863,9 @@ function setOnlineMode(mode) {
   panels.editKey.style.display = mode === 'edit-key' ? 'block' : 'none';
   panels.google.style.display = mode === 'google' ? 'block' : 'none';
 
-  ['modeAnonymousBtn', 'modeGoogleBtn', 'resumeGoogleBtn', 'modeEditKeyBtn'].forEach(id => {
-    const btn = document.getElementById(id);
-    if (!btn) return;
-    btn.classList.remove('active');
-  });
-  const activeMap = {
-    anonymous: 'modeAnonymousBtn',
-    google: ['modeGoogleBtn', 'resumeGoogleBtn'],
-    'edit-key': 'modeEditKeyBtn',
-  };
-  const activeIds = activeMap[mode];
-  if (activeIds) {
-    (Array.isArray(activeIds) ? activeIds : [activeIds]).forEach(id => {
-      const btn = document.getElementById(id);
-      if (btn) btn.classList.add('active');
-    });
-  }
-
-  updateLinkGooglePanel();
+  closeManageModeModal();
+  if (openPanel) openAccountPanel();
+  else closeAccountPanel();
   updateAuthUI();
 }
 
@@ -1749,7 +2116,7 @@ async function publishOnline() {
   } else if (onlineMode === 'google') {
     await publishWithGoogle(sid);
   } else {
-    showAuthMessage('⑥で公開方法（すぐ作る / Google / 編集キー）を選んでください。', 'error');
+    openManageModeModal();
   }
 }
 
@@ -1774,8 +2141,11 @@ async function publishAnonymousCreate(sid) {
     }
     issuedEditKeyPlaintext = editKey;
     setStoredEditKey(sid, editKey);
-    document.getElementById('issuedEditKeyDisplay').textContent = editKey;
-    document.getElementById('editKeyIssuedPanel').style.display = 'block';
+    showEditKeyIssuedModal(editKey);
+    setOnlineMode('edit-key', { openPanel: false });
+    editKeyVerified = true;
+    editKeyVerifiedStreamerId = sid;
+    markPublishedSnapshot();
     const publicUrl = PUBLIC_URL_BASE + PUBLIC_URL_PATH_PREFIX + sid;
     showAuthMessage('公開しました。リスナー用URL: ' + publicUrl, 'success');
   } catch (err) {
@@ -1807,6 +2177,7 @@ async function publishWithEditKey(sid) {
       return;
     }
     setStoredEditKey(sid, editKey);
+    markPublishedSnapshot();
     const publicUrl = PUBLIC_URL_BASE + PUBLIC_URL_PATH_PREFIX + sid;
     showAuthMessage('更新しました。リスナー用URL: ' + publicUrl, 'success');
   } catch (err) {
@@ -1836,6 +2207,7 @@ async function publishWithGoogle(sid) {
       showAuthMessage(apiErrorMessage(res.status, data), 'error');
       return;
     }
+    markPublishedSnapshot();
     const publicUrl = PUBLIC_URL_BASE + PUBLIC_URL_PATH_PREFIX + sid;
     showAuthMessage('公開しました。リスナー用URL: ' + publicUrl, 'success');
   } catch (err) {
@@ -1864,6 +2236,7 @@ function applyPublicDataToBuilder(data, streamerId) {
   renderTagAdmin();
   render();
   updateSelectedCount();
+  markPublishedSnapshot();
 }
 
 async function verifyEditKeyAction() {
@@ -1891,7 +2264,7 @@ async function verifyEditKeyAction() {
     streamerIdInput.value = sid;
     updateStreamerIdPreview();
     setStoredEditKey(sid, editKey);
-    setOnlineMode('edit-key');
+    setOnlineMode('edit-key', { openPanel: false });
     editKeyVerified = true;
     editKeyVerifiedStreamerId = sid;
     const pub = await apiFetch('/api/public/' + encodeURIComponent(sid));
@@ -1960,9 +2333,21 @@ document.getElementById('modeAnonymousBtn').addEventListener('click', () => setO
 document.getElementById('modeGoogleBtn').addEventListener('click', () => setOnlineMode('google'));
 document.getElementById('resumeGoogleBtn').addEventListener('click', () => setOnlineMode('google'));
 document.getElementById('modeEditKeyBtn').addEventListener('click', () => setOnlineMode('edit-key'));
+document.getElementById('modalChooseAnonymous').addEventListener('click', () => setOnlineMode('anonymous'));
+document.getElementById('modalChooseGoogle').addEventListener('click', () => setOnlineMode('google'));
+document.getElementById('modalChooseEditKey').addEventListener('click', () => setOnlineMode('edit-key'));
 document.getElementById('editKeyVerifyBtn').addEventListener('click', verifyEditKeyAction);
 document.getElementById('linkGoogleBtn').addEventListener('click', linkGoogleAction);
 document.getElementById('copyEditKeyBtn').addEventListener('click', copyIssuedEditKey);
+document.getElementById('editKeyIssuedCloseBtn').addEventListener('click', clearIssuedEditKeyDisplay);
+document.getElementById('accountMenuBtn').addEventListener('click', openAccountPanel);
+document.getElementById('mobileMenuBtn').addEventListener('click', openAccountPanel);
+document.getElementById('accountPanelClose').addEventListener('click', closeAccountPanel);
+document.getElementById('panelBackdrop').addEventListener('click', closeAccountPanel);
+document.getElementById('barCopyUrl').addEventListener('click', copyPublicUrl);
+document.getElementById('manageModeModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('manageModeModal')) closeManageModeModal();
+});
 
 document.getElementById('logoutBtn').addEventListener('click', logoutUser);
 document.getElementById('claimBtn').addEventListener('click', claimStreamerIdAction);
