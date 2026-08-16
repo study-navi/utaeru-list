@@ -410,22 +410,22 @@
   .bar-hint,
   .modal-card p,
   .preview-shell-note,
-  .acc-summary {
+  .edit-tab-badge {
     overflow: visible;
     overflow-wrap: anywhere;
     word-break: break-word;
   }
 
   .brand-intro {
-    margin: 0 0 10px;
-    padding: 0 0 12px;
+    margin: 0 0 8px;
+    padding: 0;
   }
   .brand-lockup {
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
     gap: 6px 8px;
-    margin: 0 0 4px;
+    margin: 0;
   }
   .brand-wordmark {
     margin: 0;
@@ -441,20 +441,89 @@
     color: var(--text-muted);
     letter-spacing: 0.02em;
   }
-  .brand-tagline {
-    margin: 0 0 4px;
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.35;
-    color: var(--text-primary);
+  .edit-nav {
+    margin: 0 0 14px;
+    border-bottom: 1px solid var(--grid);
   }
-  .brand-note {
-    margin: 0;
-    font-size: 13px;
+  .edit-tabs {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    gap: 0;
+  }
+  .edit-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: var(--ui-btn-h);
+    padding: 8px 4px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    background: transparent;
     color: var(--text-secondary);
-    line-height: 1.5;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: center;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
   }
+  .edit-tab:hover { color: var(--text-primary); background: var(--surface-2); }
+  .edit-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: var(--accent-wash);
+    font-weight: 700;
+  }
+  .edit-tab-text { min-width: 0; }
+  .edit-tab-label-short { display: none; }
+  .edit-tab-more { flex: 0 0 auto; min-width: 44px; padding-left: 6px; padding-right: 6px; }
+  .edit-tab-more .edit-tab-text { letter-spacing: 0.06em; font-weight: 700; }
+  .edit-tab-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .edit-tab-badge[hidden] { display: none; }
+  .edit-panels { min-height: 0; }
+  .edit-panel[hidden] { display: none !important; }
+  .edit-panel {
+    padding: 0 0 4px;
+    scroll-margin-top: var(--builder-scroll-offset, calc(64px + env(safe-area-inset-top, 0px)));
+  }
+  .edit-panel-heading {
+    font-size: 16px;
+    font-weight: 800;
+    margin: 0 0 12px;
+    color: var(--text-primary);
+    line-height: 1.35;
+  }
+  .edit-panel .field-label:first-child { margin-top: 0; }
+  .edit-panel .hint { margin-top: 0; }
+  .edit-panel .hint + .field-label,
+  .edit-panel .hint + input[type="text"],
+  .edit-panel .accent-color-picker { margin-top: 2px; }
+  .edit-panel .field-label + input[type="text"] { margin-bottom: 2px; }
+  .edit-panel .hint + .accent-color-picker { margin-top: 4px; }
+  .edit-panel .sub-block + .sub-block {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--grid);
+  }
+  .edit-panel .sub-block h3 {
+    font-size: 14px;
+    font-weight: 800;
+    margin: 0 0 6px;
+  }
+  .edit-panel input[type="text"] + .field-input-hint { margin-bottom: 2px; }
+  #panelSongs { scroll-margin-top: var(--builder-scroll-offset, calc(64px + env(safe-area-inset-top, 0px))); }
   .page-intro {
     font-size: 14px;
     color: var(--text-secondary);
@@ -495,7 +564,7 @@
   .ui-btn:focus-visible,
   .bar-btn:focus-visible,
   .bar-link:focus-visible,
-  .acc-head:focus-visible,
+  .edit-tab:focus-visible,
   .export-btn:focus-visible,
   .panel-close:focus-visible {
     outline: 2px solid var(--accent);
@@ -516,87 +585,7 @@
   }
 
   .card-songs { scroll-margin-top: var(--builder-scroll-offset, calc(64px + env(safe-area-inset-top, 0px))); }
-  #accSongs { scroll-margin-top: var(--builder-scroll-offset, calc(64px + env(safe-area-inset-top, 0px))); }
   .card-preview { background: var(--page); }
-
-  /* Phase 6.1: メインアコーディオン */
-  .acc-stack {
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    overflow: visible;
-    box-shadow: none;
-    margin-bottom: 8px;
-  }
-  .acc-stack-more { opacity: 1; }
-  .acc-section {
-    border-bottom: 1px solid var(--grid);
-    scroll-margin-top: var(--builder-scroll-offset, calc(64px + env(safe-area-inset-top, 0px)));
-  }
-  .acc-section:last-child { border-bottom: none; }
-  .acc-head {
-    display: grid;
-    grid-template-columns: auto 1fr auto auto;
-    align-items: center;
-    gap: 8px 10px;
-    width: 100%;
-    min-height: 48px;
-    padding: 11px 2px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    text-align: left;
-    font: inherit;
-    color: inherit;
-    transition: background 0.15s ease;
-  }
-  .acc-head:hover { background: var(--surface-2); border-radius: var(--ui-btn-radius); }
-  .acc-title { font-size: 15px; font-weight: 800; line-height: 1.35; white-space: nowrap; }
-  .acc-summary {
-    font-size: 13px;
-    color: var(--text-secondary);
-    min-width: 0;
-    line-height: 1.45;
-    text-align: right;
-    overflow: visible;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-  }
-  .acc-done {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--accent);
-    visibility: hidden;
-    line-height: 1;
-  }
-  .acc-done.visible { visibility: visible; }
-  .acc-chevron {
-    color: var(--text-muted);
-    font-size: 17px;
-    font-weight: 600;
-    line-height: 1;
-    transition: transform 0.15s ease;
-  }
-  .acc-section.open .acc-chevron { transform: rotate(90deg); }
-  .acc-body { display: none; padding: 2px 2px 16px; }
-  .acc-section.open .acc-body { display: block; }
-  .acc-body .field-label:first-child { margin-top: 2px; }
-  .acc-body .hint { margin-top: 0; }
-  .acc-body .hint + .field-label,
-  .acc-body .hint + input[type="text"],
-  .acc-body .accent-color-picker { margin-top: 2px; }
-  .acc-body .field-label + input[type="text"] { margin-bottom: 2px; }
-  .acc-body .hint + .accent-color-picker { margin-top: 4px; }
-  .acc-body .sub-block + .sub-block {
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid var(--grid);
-  }
-  .acc-body .sub-block h3 {
-    font-size: 14px;
-    font-weight: 800;
-    margin: 0 0 6px;
-  }
 
   .song-view-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
   .view-tab {
@@ -1016,7 +1005,7 @@
     font-size: 12.5px;
     line-height: 1.55;
   }
-  .acc-body input[type="text"] + .field-input-hint { margin-bottom: 2px; }
+  .edit-panel input[type="text"] + .field-input-hint { margin-bottom: 2px; }
 
   .accent-color-picker {
     display: flex;
@@ -1491,23 +1480,10 @@
       line-height: 1.5;
       padding-bottom: 8px;
     }
-    .acc-head {
-      min-height: 48px;
-      padding: 10px 2px;
-      gap: 6px 8px;
-    }
-    .acc-title { font-size: 15px; line-height: 1.35; }
-    .acc-summary {
-      font-size: 13px;
-      line-height: 1.45;
-    }
-    .acc-body {
-      padding: 6px 14px 18px;
-    }
-    .acc-body .hint {
-      margin-bottom: 14px;
-      line-height: 1.55;
-    }
+    .edit-tab-label-full { display: none; }
+    .edit-tab-label-short { display: inline; }
+    .edit-tab { font-size: 13px; padding: 8px 2px; }
+    .edit-tab-badge { font-size: 11px; }
     label.field-label {
       font-size: 13px;
       margin: 14px 0 7px;
@@ -1549,7 +1525,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .acc-chevron,
+    .edit-tab,
     .account-panel,
     .panel-backdrop,
     details.artist-group > summary.artist-head::after {
@@ -1740,137 +1716,117 @@
       <h1 class="brand-wordmark">Utalis</h1>
       <span class="brand-wordmark-sub">うたりす</span>
     </div>
-    <p class="brand-tagline">歌える曲、まとめとこ。</p>
-    <p class="brand-note">配信で歌える曲を、見やすいリストに。</p>
   </header>
   <p class="auth-message" id="authMessage" style="display:none;"></p>
 
-  <div class="acc-stack" id="mainAccStack">
-    <section class="acc-section open" data-acc="basic" id="accBasic">
-      <button type="button" class="acc-head" aria-expanded="true" aria-controls="accBasicBody">
-        <span class="acc-title">基本情報</span>
-        <span class="acc-summary" id="accSummaryBasic">配信者名と公開ページIDを入力</span>
-        <span class="acc-done" id="accDoneBasic">✓</span>
-        <span class="acc-chevron" aria-hidden="true">›</span>
+  <nav class="edit-nav" id="editNav" aria-label="編集メニュー">
+    <div class="edit-tabs" role="tablist">
+      <button type="button" class="edit-tab active" role="tab" id="editTabBasic" data-tab="basic" aria-selected="true" aria-controls="panelBasic" tabindex="0">
+        <span class="edit-tab-text"><span class="edit-tab-label-full">基本情報</span><span class="edit-tab-label-short">基本</span></span>
+        <span class="edit-tab-badge" id="tabBadgeBasic" hidden>✓</span>
       </button>
-      <div class="acc-body" id="accBasicBody">
-        <label class="field-label" for="streamerName">配信者名・ページタイトル</label>
-        <input type="text" id="streamerName" placeholder="例：うたりすさん" />
-        <p class="hint field-input-hint">公開ページのタイトルとして表示されます。</p>
-        <label class="field-label" for="subtitle">一言・サブタイトル（任意）</label>
-        <input type="text" id="subtitle" placeholder="例：リクエスト歓迎！" />
-        <p class="hint field-input-hint">公開ページで配信者名の下に表示されます。</p>
-        <label class="field-label" for="streamerIdInput">公開ページID</label>
-        <input type="text" id="streamerIdInput" placeholder="例：sample" maxlength="32" autocomplete="off" spellcheck="false" />
-        <p class="hint">半角英小文字・数字・ハイフンのみ（3〜32文字）。固定URL（/u/あなたのID）に使われます。HTML書き出しだけなら空欄でも構いません。</p>
-        <p class="field-error" id="streamerIdError" style="display:none;"></p>
-        <p class="url-preview" id="streamerIdPreview" style="display:none;">公開予定URL：<span class="path"></span></p>
+      <button type="button" class="edit-tab" role="tab" id="editTabSongs" data-tab="songs" aria-selected="false" aria-controls="panelSongs" tabindex="-1">
+        <span class="edit-tab-text"><span class="edit-tab-label-full">曲を選ぶ</span><span class="edit-tab-label-short">曲</span></span>
+        <span class="edit-tab-badge" id="tabBadgeSongs" hidden></span>
+      </button>
+      <button type="button" class="edit-tab" role="tab" id="editTabDesign" data-tab="design" aria-selected="false" aria-controls="panelDesign" tabindex="-1">
+        <span class="edit-tab-text"><span class="edit-tab-label-full">デザイン</span><span class="edit-tab-label-short">デザイン</span></span>
+        <span class="edit-tab-badge" id="tabBadgeDesign">✓</span>
+      </button>
+      <button type="button" class="edit-tab" role="tab" id="editTabPreview" data-tab="preview" aria-selected="false" aria-controls="panelPreview" tabindex="-1">
+        <span class="edit-tab-text"><span class="edit-tab-label-full">プレビュー</span><span class="edit-tab-label-short">確認</span></span>
+        <span class="edit-tab-badge" id="tabBadgePreview" hidden>✓</span>
+      </button>
+      <button type="button" class="edit-tab edit-tab-more" role="tab" id="editTabMore" data-tab="more" aria-selected="false" aria-controls="panelMore" tabindex="-1" aria-label="その他・データ管理">
+        <span class="edit-tab-text">•••</span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="edit-panels" id="editPanels">
+    <section class="edit-panel" role="tabpanel" id="panelBasic" data-tab-panel="basic" aria-labelledby="editTabBasic">
+      <label class="field-label" for="streamerName">配信者名・ページタイトル</label>
+      <input type="text" id="streamerName" placeholder="例：うたりすさん" />
+      <p class="hint field-input-hint">公開ページのタイトルとして表示されます。</p>
+      <label class="field-label" for="subtitle">一言・サブタイトル（任意）</label>
+      <input type="text" id="subtitle" placeholder="例：リクエスト歓迎！" />
+      <p class="hint field-input-hint">公開ページで配信者名の下に表示されます。</p>
+      <label class="field-label" for="streamerIdInput">公開ページID</label>
+      <input type="text" id="streamerIdInput" placeholder="例：sample" maxlength="32" autocomplete="off" spellcheck="false" />
+      <p class="hint">半角英小文字・数字・ハイフンのみ（3〜32文字）。固定URL（/u/あなたのID）に使われます。HTML書き出しだけなら空欄でも構いません。</p>
+      <p class="field-error" id="streamerIdError" style="display:none;"></p>
+      <p class="url-preview" id="streamerIdPreview" style="display:none;">公開予定URL：<span class="path"></span></p>
+    </section>
+
+    <section class="edit-panel" role="tabpanel" id="panelSongs" data-tab-panel="songs" aria-labelledby="editTabSongs" hidden>
+      <div class="song-view-tabs">
+        <button type="button" class="view-tab active" id="viewTabAll" data-view="all">すべて</button>
+        <button type="button" class="view-tab" id="viewTabSelected" data-view="selected">選択中（<span id="viewTabSelectedCount">0</span>）</button>
+      </div>
+      <div class="search-input-row">
+        <input type="search" id="searchInput" placeholder="曲名・アーティスト名で検索" autocomplete="off" aria-describedby="searchInputHint" />
+        <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
+      </div>
+      <p class="hint field-input-hint" id="searchInputHint">曲名・アーティスト名で絞り込めます。</p>
+      <div class="gyo-row" id="gyoRow"></div>
+      <div class="bulk-row" id="bulkRowPrimary">
+        <button class="tool-btn" id="selectVisibleBtn" type="button">表示中をすべて選択</button>
+        <button class="tool-btn" id="clearVisibleBtn" type="button">表示中の選択を解除</button>
+      </div>
+      <div class="bulk-row bulk-row-secondary" id="bulkRowSecondary">
+        <button class="tool-btn subtle" id="selectAllBtn" type="button">全曲を選択</button>
+        <button class="tool-btn subtle" id="clearAllBtn" type="button">すべて解除</button>
+      </div>
+      <div class="result-meta" id="resultMeta"></div>
+      <div id="results"></div>
+    </section>
+
+    <section class="edit-panel" role="tabpanel" id="panelDesign" data-tab-panel="design" aria-labelledby="editTabDesign" hidden>
+      <p class="hint">公開ページのアクセントカラーを選びます。プリセットまたは『＋ 好きな色』から自由に指定できます。</p>
+      <div class="accent-color-picker" id="accentColorPicker">
+        <div class="swatch-presets" id="swatchPresets"></div>
+        <div class="swatch-custom-wrap">
+          <div class="swatch-divider" aria-hidden="true"></div>
+          <label class="custom-color-btn" id="customColorBtn" title="好きな色を指定">
+            <input type="color" id="customColorInput" class="custom-color-input" value="#2a78d6" />
+            <span class="custom-color-plus" id="customColorPlus">＋</span>
+            <span class="custom-color-dot" id="customColorDot"></span>
+            <span class="custom-color-label">好きな色</span>
+            <span class="custom-color-check" aria-hidden="true">✓</span>
+          </label>
+        </div>
       </div>
     </section>
 
-    <section class="acc-section" data-acc="songs" id="accSongs">
-      <button type="button" class="acc-head" aria-expanded="false" aria-controls="accSongsBody">
-        <span class="acc-title">曲を選ぶ</span>
-        <span class="acc-summary" id="accSummarySongs">まだ曲が選択されていません</span>
-        <span class="acc-done" id="accDoneSongs">✓</span>
-        <span class="acc-chevron" aria-hidden="true">›</span>
-      </button>
-      <div class="acc-body" id="accSongsBody">
-        <div class="song-view-tabs">
-          <button type="button" class="view-tab active" id="viewTabAll" data-view="all">すべて</button>
-          <button type="button" class="view-tab" id="viewTabSelected" data-view="selected">選択中（<span id="viewTabSelectedCount">0</span>）</button>
-        </div>
-        <div class="search-input-row">
-          <input type="search" id="searchInput" placeholder="曲名・アーティスト名で検索" autocomplete="off" aria-describedby="searchInputHint" />
-          <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
-        </div>
-        <p class="hint field-input-hint" id="searchInputHint">曲名・アーティスト名で絞り込めます。</p>
-        <div class="gyo-row" id="gyoRow"></div>
-        <div class="bulk-row" id="bulkRowPrimary">
-          <button class="tool-btn" id="selectVisibleBtn" type="button">表示中をすべて選択</button>
-          <button class="tool-btn" id="clearVisibleBtn" type="button">表示中の選択を解除</button>
-        </div>
-        <div class="bulk-row bulk-row-secondary" id="bulkRowSecondary">
-          <button class="tool-btn subtle" id="selectAllBtn" type="button">全曲を選択</button>
-          <button class="tool-btn subtle" id="clearAllBtn" type="button">すべて解除</button>
-        </div>
-        <div class="result-meta" id="resultMeta"></div>
-        <div id="results"></div>
+    <section class="edit-panel" role="tabpanel" id="panelPreview" data-tab-panel="preview" aria-labelledby="editTabPreview" hidden>
+      <p class="preview-shell-label">公開ページ プレビュー</p>
+      <p class="preview-shell-note">実際の公開ページに近い表示です。編集中の内容がその場で反映されます（未公開でも確認できます）。</p>
+      <div class="preview-frame-wrap">
+        <div class="preview-frame" id="previewFrame" aria-live="polite"></div>
       </div>
     </section>
 
-    <section class="acc-section" data-acc="design" id="accDesign">
-      <button type="button" class="acc-head" aria-expanded="false" aria-controls="accDesignBody">
-        <span class="acc-title">デザイン</span>
-        <span class="acc-summary" id="accSummaryDesign">テーマカラーを選択</span>
-        <span class="acc-done visible" id="accDoneDesign">✓</span>
-        <span class="acc-chevron" aria-hidden="true">›</span>
-      </button>
-      <div class="acc-body" id="accDesignBody">
-        <p class="hint">公開ページのアクセントカラーを選びます。プリセットまたは『＋ 好きな色』から自由に指定できます。</p>
-        <div class="accent-color-picker" id="accentColorPicker">
-          <div class="swatch-presets" id="swatchPresets"></div>
-          <div class="swatch-custom-wrap">
-            <div class="swatch-divider" aria-hidden="true"></div>
-            <label class="custom-color-btn" id="customColorBtn" title="好きな色を指定">
-              <input type="color" id="customColorInput" class="custom-color-input" value="#2a78d6" />
-              <span class="custom-color-plus" id="customColorPlus">＋</span>
-              <span class="custom-color-dot" id="customColorDot"></span>
-              <span class="custom-color-label">好きな色</span>
-              <span class="custom-color-check" aria-hidden="true">✓</span>
-            </label>
-          </div>
+    <section class="edit-panel" role="tabpanel" id="panelMore" data-tab-panel="more" aria-labelledby="editTabMore" hidden>
+      <h2 class="edit-panel-heading">その他・データ管理</h2>
+      <div class="sub-block">
+        <h3>以前のファイルから復元</h3>
+        <p class="hint">前に書き出したページのHTMLファイルを読み込むと、選択していた曲やテーマカラーを復元して編集を続けられます。</p>
+        <div class="file-row">
+          <label class="file-btn" for="importFile">ファイルを選択</label>
+          <input type="file" id="importFile" accept=".html,text/html" />
+          <span class="loaded-name" id="loadedName"></span>
+        </div>
+      </div>
+      <div class="sub-block">
+        <h3>タグの候補（任意）</h3>
+        <p class="hint">曲に付けられるタグの候補です。追加・削除ができます。</p>
+        <div class="tag-admin-list" id="tagAdminList"></div>
+        <div class="tag-admin-add-row">
+          <input type="text" id="tagAdminInput" placeholder="新しいタグ名を入力" maxlength="20" />
+          <button type="button" class="tool-btn" id="tagAdminAddBtn">＋ 追加</button>
         </div>
       </div>
     </section>
-
-    <section class="acc-section" data-acc="preview" id="accPreview">
-      <button type="button" class="acc-head" aria-expanded="false" aria-controls="accPreviewBody">
-        <span class="acc-title">プレビュー</span>
-        <span class="acc-summary" id="accSummaryPreview">公開ページの見え方を確認</span>
-        <span class="acc-done" id="accDonePreview">✓</span>
-        <span class="acc-chevron" aria-hidden="true">›</span>
-      </button>
-      <div class="acc-body" id="accPreviewBody">
-        <p class="preview-shell-label">公開ページ プレビュー</p>
-        <p class="preview-shell-note">実際の公開ページに近い表示です。編集中の内容がその場で反映されます（未公開でも確認できます）。</p>
-        <div class="preview-frame-wrap">
-          <div class="preview-frame" id="previewFrame" aria-live="polite"></div>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <div class="acc-stack acc-stack-more" id="moreAccStack">
-    <section class="acc-section" data-acc="more" id="accMore">
-      <button type="button" class="acc-head" aria-expanded="false" aria-controls="accMoreBody">
-        <span class="acc-title">その他・データ管理</span>
-        <span class="acc-summary" id="accSummaryMore">HTML復元・タグ管理</span>
-        <span class="acc-chevron" aria-hidden="true">›</span>
-      </button>
-      <div class="acc-body" id="accMoreBody">
-        <div class="sub-block">
-          <h3>以前のファイルから復元</h3>
-          <p class="hint">前に書き出したページのHTMLファイルを読み込むと、選択していた曲やテーマカラーを復元して編集を続けられます。</p>
-          <div class="file-row">
-            <label class="file-btn" for="importFile">ファイルを選択</label>
-            <input type="file" id="importFile" accept=".html,text/html" />
-            <span class="loaded-name" id="loadedName"></span>
-          </div>
-        </div>
-        <div class="sub-block">
-          <h3>タグの候補（任意）</h3>
-          <p class="hint">曲に付けられるタグの候補です。追加・削除ができます。</p>
-          <div class="tag-admin-list" id="tagAdminList"></div>
-          <div class="tag-admin-add-row">
-            <input type="text" id="tagAdminInput" placeholder="新しいタグ名を入力" maxlength="20" />
-            <button type="button" class="tool-btn" id="tagAdminAddBtn">＋ 追加</button>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
-
   </div>
 
   <footer class="site-footer">
@@ -2382,20 +2338,13 @@ const gyoRow = document.getElementById('gyoRow');
 const resultsEl = document.getElementById('results');
 const resultMeta = document.getElementById('resultMeta');
 
-const MAIN_ACC_SECTIONS = ['basic', 'songs', 'design', 'preview'];
-let openMainAccId = 'basic';
+const EDIT_TABS = ['basic', 'songs', 'design', 'preview', 'more'];
+let activeEditTab = 'basic';
 let songListView = 'all';
 let openArtistGroups = new Set();
 
-function getBasicSummaryText() {
-  const name = streamerNameInput.value.trim();
-  const sid = streamerIdInput.value.trim();
-  const sidCheck = validateStreamerId(sid);
-  const parts = [];
-  if (name) parts.push(name);
-  if (sidCheck.ok && !sidCheck.empty) parts.push(sid);
-  if (parts.length) return parts.join(' / ');
-  return '配信者名と公開ページIDを入力';
+function editTabDomId(tabId) {
+  return 'editTab' + tabId.charAt(0).toUpperCase() + tabId.slice(1);
 }
 
 function isBasicSectionDone() {
@@ -2404,97 +2353,80 @@ function isBasicSectionDone() {
   return !!name && sidCheck.ok && !sidCheck.empty;
 }
 
-function getSongsSummaryText() {
-  const n = selectedKeys.size;
-  if (n === 0) return 'まだ曲が選択されていません';
-  return n.toLocaleString('ja-JP') + '曲選択中';
-}
-
-function getDesignSummaryText() {
-  if (currentTheme.type === 'preset') {
-    const preset = PRESETS[currentTheme.presetIndex];
-    return preset ? preset.name : 'プリセット';
-  }
-  return 'カスタムカラー';
-}
-
-function updateAccSummaries() {
-  const basicSummary = document.getElementById('accSummaryBasic');
-  const songsSummary = document.getElementById('accSummarySongs');
-  const designSummary = document.getElementById('accSummaryDesign');
-  const previewSummary = document.getElementById('accSummaryPreview');
-  const doneBasic = document.getElementById('accDoneBasic');
-  const doneSongs = document.getElementById('accDoneSongs');
-  const doneDesign = document.getElementById('accDoneDesign');
-  const donePreview = document.getElementById('accDonePreview');
+function updateTabBadges() {
+  const badgeBasic = document.getElementById('tabBadgeBasic');
+  const badgeSongs = document.getElementById('tabBadgeSongs');
+  const badgeDesign = document.getElementById('tabBadgeDesign');
+  const badgePreview = document.getElementById('tabBadgePreview');
   const tabCount = document.getElementById('viewTabSelectedCount');
 
-  if (basicSummary) basicSummary.textContent = getBasicSummaryText();
-  if (songsSummary) songsSummary.textContent = getSongsSummaryText();
-  if (designSummary) designSummary.textContent = getDesignSummaryText();
-  if (previewSummary) previewSummary.textContent = '公開ページの見え方を確認';
-
-  if (doneBasic) doneBasic.classList.toggle('visible', isBasicSectionDone());
-  if (doneSongs) doneSongs.classList.toggle('visible', selectedKeys.size > 0);
-  if (doneDesign) doneDesign.classList.add('visible');
-  if (donePreview) {
-    donePreview.classList.toggle('visible', !!streamerNameInput.value.trim() && selectedKeys.size > 0);
+  if (badgeBasic) {
+    badgeBasic.textContent = '✓';
+    badgeBasic.hidden = !isBasicSectionDone();
+  }
+  if (badgeSongs) {
+    if (selectedKeys.size > 0) {
+      badgeSongs.textContent = selectedKeys.size.toLocaleString('ja-JP');
+      badgeSongs.hidden = false;
+    } else {
+      badgeSongs.hidden = true;
+    }
+  }
+  if (badgeDesign) {
+    badgeDesign.textContent = '✓';
+    badgeDesign.hidden = false;
+  }
+  if (badgePreview) {
+    badgePreview.textContent = '✓';
+    badgePreview.hidden = !(streamerNameInput.value.trim() && selectedKeys.size > 0);
   }
   if (tabCount) tabCount.textContent = selectedKeys.size.toLocaleString('ja-JP');
 }
 
-function setMainAccOpen(id, opts = {}) {
-  if (!MAIN_ACC_SECTIONS.includes(id)) return;
-  openMainAccId = id;
-  MAIN_ACC_SECTIONS.forEach(secId => {
-    const section = document.querySelector(`.acc-section[data-acc="${secId}"]`);
-    if (!section) return;
-    const isOpen = secId === id;
-    section.classList.toggle('open', isOpen);
-    const head = section.querySelector('.acc-head');
-    if (head) head.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+function updateAccSummaries() {
+  updateTabBadges();
+}
+
+function setEditTab(id, opts = {}) {
+  if (!EDIT_TABS.includes(id)) return;
+  activeEditTab = id;
+  EDIT_TABS.forEach(tabId => {
+    const isActive = tabId === id;
+    const tabBtn = document.getElementById(editTabDomId(tabId));
+    const panel = document.querySelector(`[data-tab-panel="${tabId}"]`);
+    if (tabBtn) {
+      tabBtn.classList.toggle('active', isActive);
+      tabBtn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      tabBtn.tabIndex = isActive ? 0 : -1;
+    }
+    if (panel) panel.hidden = !isActive;
   });
-  updateAccSummaries();
+  updateTabBadges();
   if (opts.scroll !== false) {
-    const target = document.getElementById('acc' + id.charAt(0).toUpperCase() + id.slice(1));
-    if (target) {
-      requestAnimationFrame(() => target.scrollIntoView({ behavior: opts.smooth === false ? 'auto' : 'smooth', block: 'start' }));
+    const nav = document.getElementById('editNav');
+    if (nav) {
+      requestAnimationFrame(() => nav.scrollIntoView({ behavior: opts.smooth === false ? 'auto' : 'smooth', block: 'start' }));
     }
   }
 }
 
-function toggleMainAccSection(id) {
-  if (!MAIN_ACC_SECTIONS.includes(id)) return;
-  const section = document.querySelector(`.acc-section[data-acc="${id}"]`);
-  if (!section) return;
-  if (section.classList.contains('open')) {
-    section.classList.remove('open');
-    section.querySelector('.acc-head')?.setAttribute('aria-expanded', 'false');
-    openMainAccId = null;
-  } else {
-    setMainAccOpen(id);
-  }
-}
-
-function toggleMoreAccSection() {
-  const section = document.getElementById('accMore');
-  if (!section) return;
-  const willOpen = !section.classList.contains('open');
-  section.classList.toggle('open', willOpen);
-  section.querySelector('.acc-head')?.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-  if (willOpen) {
-    requestAnimationFrame(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-  }
-}
-
-function initAccordion() {
-  document.querySelectorAll('#mainAccStack .acc-head').forEach(head => {
-    head.addEventListener('click', () => {
-      const id = head.closest('.acc-section')?.dataset.acc;
-      if (id) toggleMainAccSection(id);
+function initEditTabs() {
+  document.querySelectorAll('.edit-tab[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.tab;
+      if (id && id !== activeEditTab) setEditTab(id);
+    });
+    btn.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      const idx = EDIT_TABS.indexOf(activeEditTab);
+      const next = e.key === 'ArrowRight'
+        ? EDIT_TABS[(idx + 1) % EDIT_TABS.length]
+        : EDIT_TABS[(idx - 1 + EDIT_TABS.length) % EDIT_TABS.length];
+      setEditTab(next);
+      document.getElementById(editTabDomId(next))?.focus();
     });
   });
-  document.querySelector('#moreAccStack .acc-head')?.addEventListener('click', toggleMoreAccSection);
   document.querySelectorAll('.view-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       const view = tab.dataset.view;
@@ -2512,7 +2444,7 @@ function initAccordion() {
     });
   });
   updateSongListChrome();
-  setMainAccOpen('basic', { scroll: false, smooth: false });
+  setEditTab('basic', { scroll: false });
 }
 
 function captureOpenArtistGroups() {
@@ -2579,6 +2511,7 @@ function updateStreamerIdPreview() {
   }
   updateAuthUI();
   updatePreviewPanel();
+  updateAccSummaries();
   return result;
 }
 streamerIdInput.addEventListener('input', updateStreamerIdPreview);
@@ -4137,7 +4070,7 @@ if (typeof ResizeObserver !== 'undefined') {
 }
 
 renderTagAdmin();
-initAccordion();
+initEditTabs();
 selectPreset(0);
 render();
 updateSelectedCount();

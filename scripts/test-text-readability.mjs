@@ -57,8 +57,8 @@ async function checkBuilderPlaceholders(label, width, height) {
     else ok(`${label} ${width}px: #${r.id} placeholder 全文 (${r.ph})`);
   }
 
-  await page.click('#accSongs .acc-head');
-  await page.waitForSelector('#accSongs.open #accSongsBody', { state: 'visible', timeout: 5000 });
+  await page.click('#editTabSongs');
+  await page.waitForSelector('#panelSongs:not([hidden])', { state: 'visible', timeout: 5000 });
 
   const searchResult = await page.evaluate(() => {
     function placeholderFits(input) {
@@ -133,11 +133,10 @@ async function checkBuilder(label, width, height) {
     return {
       namePh: pick('#streamerName')?.getAttribute('placeholder') || '',
       idPh: pick('#streamerIdInput')?.getAttribute('placeholder') || '',
-      summary: pick('#accSummaryBasic')?.textContent?.trim() || '',
-      summaryClip: clip(pick('#accSummaryBasic')),
-      hintClip: clip(pick('.brand-note')),
+      nameVal: pick('#streamerName')?.value || '',
+      basicBadge: pick('#tabBadgeBasic')?.textContent?.trim() || '',
+      basicBadgeHidden: pick('#tabBadgeBasic')?.hidden,
       urlPreviewClip: clip(pick('#streamerIdPreview')),
-      accSummaryClamp: getComputedStyle(pick('#accSummaryBasic')).webkitLineClamp,
     };
   });
 
@@ -146,15 +145,12 @@ async function checkBuilder(label, width, height) {
   } else ok(`${label}: 配信者名placeholder に hiro/ひろ なし`);
   if (checks.idPh.includes('hiro')) fail(`${label}: ID placeholder`, checks.idPh);
   else ok(`${label}: ID placeholder = sample 系`);
-  if (!checks.summary.includes('うたりす')) fail(`${label}: acc-summary 反映`, checks.summary);
-  else ok(`${label}: acc-summary に長い配信者名`);
-  if (checks.summaryClip) fail(`${label}: acc-summary 切れ`, checks.summary);
-  else ok(`${label}: acc-summary 全文表示`);
-  if (checks.accSummaryClamp && checks.accSummaryClamp !== 'none' && checks.accSummaryClamp !== '0') {
-    fail(`${label}: acc-summary line-clamp`, checks.accSummaryClamp);
-  } else ok(`${label}: acc-summary line-clamp なし`);
-  if (checks.hintClip) fail(`${label}: brand-note 切れ`);
-  else ok(`${label}: brand-note 全文表示`);
+  if (checks.nameVal !== longName) fail(`${label}: 配信者名入力 全文`, checks.nameVal);
+  else ok(`${label}: 配信者名入力 全文`);
+  if (checks.basicBadge !== '✓' || checks.basicBadgeHidden) fail(`${label}: 基本情報タブ ✓`, checks.basicBadge);
+  else ok(`${label}: 基本情報タブ ✓`);
+  if (checks.urlPreviewClip) fail(`${label}: URLプレビュー 切れ`);
+  else ok(`${label}: URLプレビュー 全文表示`);
 
   const menuBtn = width < 641 ? '#mobileMenuBtn' : '#accountMenuBtn';
   await page.click(menuBtn);

@@ -257,9 +257,9 @@ async function checkPhase9UI() {
   const section = 'phase9';
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 375, height: 812 } });
-  await page.goto(SITE + '/index.html', { waitUntil: 'domcontentloaded', timeout: 90000 });
+  await page.goto('file://' + path.join(ROOT, 'index.html'), { waitUntil: 'domcontentloaded', timeout: 90000 });
   await page.waitForFunction(() => typeof MASTER_SONGS !== 'undefined', { timeout: 20000 });
-  await page.click('#accSongs .acc-head');
+  await page.click('#editTabSongs');
   await page.fill('#searchInput', 'Story');
   await page.dispatchEvent('#searchInput', 'input');
   await page.waitForTimeout(200);
@@ -290,6 +290,7 @@ async function runRegressionScripts() {
     'scripts/test-text-readability.mjs',
     'scripts/test-phase6-2-light-ui-nav.mjs',
     'scripts/test-phase4d-public-viewer.mjs',
+    'scripts/test-edit-tabs-ui.mjs',
     'scripts/test-phase8-public-quality.mjs',
     'scripts/test-phase9-song-selection.mjs',
     'scripts/test-api-phase5.mjs',

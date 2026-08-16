@@ -76,29 +76,29 @@ async function run(label, width, height, colorScheme = 'light') {
   if (previewUrl !== 'https://utalis.github.io/u/phase62test') {
     fail(`${label}: 公開URLプレビュー`, previewUrl || '(empty)');
   } else ok(`${label}: 公開URL https://utalis.github.io/u/…`);
-  await page.click('#accSongs .acc-head');
+  await page.click('#editTabSongs');
   await page.waitForTimeout(120);
 
   await page.fill('#searchInput', 'Story');
   await page.waitForTimeout(80);
   await page.click('.song-check');
-  await page.click('#accDesign .acc-head');
+  await page.click('#editTabDesign');
   await page.waitForTimeout(120);
 
-  await page.click('#accSongs .acc-head');
+  await page.click('#editTabSongs');
   await page.waitForTimeout(120);
 
   const afterHeadNav = await page.evaluate(() => ({
-    basicOpen: document.getElementById('accBasic')?.classList.contains('open'),
-    songsOpen: document.getElementById('accSongs')?.classList.contains('open'),
+    basicOpen: !document.getElementById('panelBasic')?.hidden,
+    songsOpen: !document.getElementById('panelSongs')?.hidden,
     name: document.getElementById('streamerName')?.value,
     sid: document.getElementById('streamerIdInput')?.value,
     search: document.getElementById('searchInput')?.value,
     selected: document.getElementById('selectedCount')?.textContent,
   }));
 
-  if (!afterHeadNav.songsOpen || afterHeadNav.basicOpen) fail(`${label}: 見出しで曲セクション`, JSON.stringify(afterHeadNav));
-  else ok(`${label}: 見出しで曲セクションを開く`);
+  if (!afterHeadNav.songsOpen || afterHeadNav.basicOpen) fail(`${label}: タブで曲セクション`, JSON.stringify(afterHeadNav));
+  else ok(`${label}: タブで曲セクションを開く`);
   if (afterHeadNav.name !== 'Phase62テスト' || afterHeadNav.sid !== 'phase62test') fail(`${label}: 入力値保持`, JSON.stringify(afterHeadNav));
   else ok(`${label}: 配信者名/ID保持`);
   if (afterHeadNav.search !== 'Story') fail(`${label}: 検索保持`, afterHeadNav.search);
@@ -106,17 +106,17 @@ async function run(label, width, height, colorScheme = 'light') {
   if (afterHeadNav.selected === '0') fail(`${label}: 選択曲保持`, afterHeadNav.selected);
   else ok(`${label}: 選択曲数保持 (${afterHeadNav.selected})`);
 
-  await page.click('#accBasic .acc-head');
+  await page.click('#editTabBasic');
   await page.waitForTimeout(120);
-  const basicOpen = await page.evaluate(() => document.getElementById('accBasic')?.classList.contains('open'));
+  const basicOpen = await page.evaluate(() => !document.getElementById('panelBasic')?.hidden);
   if (!basicOpen) fail(`${label}: 基本情報へ戻る`);
-  else ok(`${label}: 見出しで基本情報へ戻る`);
+  else ok(`${label}: タブで基本情報へ戻る`);
 
-  await page.click('#accSongs .acc-head');
+  await page.click('#editTabSongs');
   await page.waitForTimeout(80);
-  await page.click('#accDesign .acc-head');
+  await page.click('#editTabDesign');
   await page.waitForTimeout(80);
-  await page.click('#accPreview .acc-head');
+  await page.click('#editTabPreview');
   await page.waitForTimeout(150);
 
   const previewBefore = await page.evaluate(() => ({
@@ -156,7 +156,7 @@ async function run(label, width, height, colorScheme = 'light') {
   if (!customAccent || customAccent === presetAccent) fail(`${label}: 自由色プレビュー反映`, customAccent);
   else ok(`${label}: 自由色プレビュー反映`);
 
-  await page.click('#accSongs .acc-head');
+  await page.click('#editTabSongs');
   await page.waitForTimeout(80);
   await page.click('.song-check');
   await page.waitForTimeout(120);

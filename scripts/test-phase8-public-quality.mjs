@@ -30,14 +30,14 @@ for (const file of ['terms.html', 'privacy.html', 'contact.html', 'favicon.svg']
   else ok(`file exists: ${file}`);
 }
 
-if (!indexHtml.includes('class="brand-intro"')) fail('index: brand-intro');
-else ok('index: brand-intro');
+if (!indexHtml.includes('role="tablist"')) fail('index: edit tablist');
+else ok('index: edit tablist');
 
-if (!indexHtml.includes('class="brand-tagline"')) fail('index: brand-tagline');
-else ok('index: brand-tagline');
+if (indexHtml.includes('brand-tagline') || indexHtml.includes('brand-note')) fail('index: no catch copy');
+else ok('index: catch copy removed');
 
-if (indexHtml.includes('id="heroStartBtn"') || indexHtml.includes('site-hero')) fail('index: hero CTA removed');
-else ok('index: hero CTA removed');
+if (indexHtml.includes('acc-stack') || indexHtml.includes('acc-head')) fail('index: accordion removed');
+else ok('index: accordion removed');
 
 if (!indexHtml.includes('id="publishSuccessModal"')) fail('index: publishSuccessModal');
 else ok('index: publishSuccessModal');
@@ -137,20 +137,23 @@ async function browserChecks() {
   if (errors.length) fail('browser: no JS errors', errors.join('; '));
   else ok('browser: no JS errors');
 
-  const tagline = await page.locator('.brand-tagline').textContent();
-  if (!tagline?.includes('歌える曲、まとめとこ')) fail('browser: brand tagline', tagline || '');
-  else ok('browser: brand tagline');
+  const tagline = await page.locator('.brand-tagline').count();
+  if (tagline !== 0) fail('browser: no brand tagline');
+  else ok('browser: catch copy removed');
+
+  const basicOpen = await page.evaluate(() => (
+    document.getElementById('editTabBasic')?.getAttribute('aria-selected') === 'true'
+    && !document.getElementById('panelBasic')?.hidden
+  ));
+  if (!basicOpen) fail('browser: basic tab open by default');
+  else ok('browser: basic tab open by default');
 
   const overflow = await page.evaluate(() => ({
     doc: document.documentElement.scrollWidth > document.documentElement.clientWidth,
-    intro: document.querySelector('.brand-intro')?.scrollWidth > document.documentElement.clientWidth,
+    tabs: document.querySelector('.edit-tabs')?.scrollWidth > document.querySelector('.edit-tabs')?.clientWidth,
   }));
-  if (overflow.doc || overflow.intro) fail('browser: no horizontal scroll at 375px', JSON.stringify(overflow));
+  if (overflow.doc || overflow.tabs) fail('browser: no horizontal scroll at 375px', JSON.stringify(overflow));
   else ok('browser: no horizontal scroll at 375px');
-
-  const basicOpen = await page.locator('#accBasic.open').count();
-  if (basicOpen !== 1) fail('browser: basic accordion open by default');
-  else ok('browser: basic accordion open by default');
 
   const shareFn = await page.evaluate(() => typeof sharePublicUrl === 'function');
   if (!shareFn) fail('browser: sharePublicUrl defined');

@@ -35,7 +35,7 @@ for (const vp of cases) {
   ).catch(() => null);
 
   // 曲セクションを開いてからテスト
-  await page.click('#accSongs .acc-head');
+  await page.click('#editTabSongs');
   await page.waitForTimeout(100);
 
   if (errors.length) fail(`${vp.label}: JS エラーなし`, errors.join('; '));
@@ -45,7 +45,7 @@ for (const vp of cases) {
     masterCount: MASTER_SONGS?.length ?? 0,
     artistGroups: document.querySelectorAll('details.artist-group').length,
     resultMeta: document.getElementById('resultMeta')?.textContent ?? '',
-    songSectionTop: Math.round(document.getElementById('accSongs')?.getBoundingClientRect().top ?? -1),
+    songSectionTop: Math.round(document.getElementById('panelSongs')?.getBoundingClientRect().top ?? -1),
   }));
 
   if (initial.masterCount !== 1952) fail(`${vp.label}: MASTER_SONGS 1952件`, String(initial.masterCount));

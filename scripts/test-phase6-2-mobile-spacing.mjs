@@ -33,7 +33,7 @@ async function runWidth(width) {
   const layout = await page.evaluate(() => {
     const bar = document.getElementById('utaeruBar');
     const wrap = document.querySelector('.wrap');
-    const intro = document.querySelector('.page-intro');
+    const intro = document.querySelector('.brand-intro');
     const barRect = bar?.getBoundingClientRect();
     const wrapRect = wrap?.getBoundingClientRect();
     const introRect = intro?.getBoundingClientRect();
@@ -46,8 +46,8 @@ async function runWidth(width) {
       bodyPad,
       barHVar,
       barHeight: barRect?.height,
-      titleSize: parseFloat(getComputedStyle(document.querySelector('.acc-title')).fontSize),
-      hintLH: parseFloat(getComputedStyle(document.querySelector('.acc-body .hint') || document.querySelector('.hint')).lineHeight),
+      titleSize: parseFloat(getComputedStyle(document.querySelector('.edit-tab')).fontSize),
+      hintLH: parseFloat(getComputedStyle(document.querySelector('.edit-panel .hint') || document.querySelector('.hint')).lineHeight),
       labelSize: parseFloat(getComputedStyle(document.querySelector('.field-label')).fontSize),
       inputMinH: parseFloat(getComputedStyle(document.getElementById('streamerName')).minHeight),
       bottomPad: parseFloat(getComputedStyle(wrap).paddingBottom),
@@ -80,21 +80,21 @@ async function runWidth(width) {
   if (layout.bottomPad < layout.exportH + 8) fail(`${width}px: 下部余白`, `${layout.bottomPad} vs export ${layout.exportH}`);
   else ok(`${width}px: 下部固定UI余白`);
 
-  await page.click('#accSongs .acc-head');
+  await page.click('#editTabSongs');
   await page.waitForTimeout(180);
   const afterNext = await page.evaluate(() => {
     const bar = document.getElementById('utaeruBar');
-    const head = document.querySelector('#accSongs .acc-head');
+    const nav = document.getElementById('editNav');
     const barBottom = bar?.getBoundingClientRect().bottom ?? 0;
-    const headTop = head?.getBoundingClientRect().top ?? 0;
-    return { gap: headTop - barBottom };
+    const navTop = nav?.getBoundingClientRect().top ?? 0;
+    return { gap: navTop - barBottom };
   });
-  if (afterNext.gap < 10) fail(`${width}px: 見出し移動後の位置`, `${afterNext.gap}px`);
-  else ok(`${width}px: 見出し移動後余裕 ${Math.round(afterNext.gap)}px`);
+  if (afterNext.gap < 8) fail(`${width}px: タブ位置`, `${afterNext.gap}px`);
+  else ok(`${width}px: タブ余白 ${Math.round(afterNext.gap)}px`);
 
-  await page.click('#accDesign .acc-head');
+  await page.click('#editTabDesign');
   await page.waitForTimeout(120);
-  await page.click('#accPreview .acc-head');
+  await page.click('#editTabPreview');
   await page.waitForTimeout(150);
 
   const preview = await page.evaluate(() => {

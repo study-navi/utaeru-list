@@ -1,26 +1,26 @@
 {
-  "label": "v1.0 若者向けビジュアル調整",
+  "label": "v1.0 編集画面横タブUI",
   "establishedAt": "2026-08-17",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "Phase 9 曲選択・選択済み管理改善",
+    "label": "v1.0 若者向けビジュアル調整",
     "establishedAt": "2026-08-17",
     "files": {
       "index.html": {
-        "bytes": 371192,
-        "sha256": "47dbb70b4cf1f8dfdab6221cffb86940305b9f1f277b6c51614e3a8c27f8ebe4"
+        "bytes": 370844,
+        "sha256": "abe87972c468c203b0e0a5ad2e680e7e9c093fb190bcafbd44070d28f60a2ae4"
       },
       "hiro.html": {
-        "bytes": 25155,
-        "sha256": "2f5800c3c6bc5c19f58a819fd2457f305ea8c61909174cda35dd6b0e4665d7d1"
+        "bytes": 25170,
+        "sha256": "328ce8eb8144d755637583bb8389cb0ff158e87d5e58178825f49bd1525ea5d3"
       }
     }
   },
   "files": {
     "index.html": {
-      "bytes": 370844,
-      "sha256": "abe87972c468c203b0e0a5ad2e680e7e9c093fb190bcafbd44070d28f60a2ae4"
+      "bytes": 368863,
+      "sha256": "25feeb36fc94f9f85274abb55b0471a491333ed6d36762dd8b3a2f43d40a92f1"
     },
     "hiro.html": {
       "bytes": 25170,

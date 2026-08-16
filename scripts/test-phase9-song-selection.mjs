@@ -24,8 +24,8 @@ async function runViewport(label, width, height) {
 
   await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.waitForFunction(() => typeof MASTER_SONGS !== 'undefined', { timeout: 15000 });
-  await page.click('#accSongs .acc-head');
-  await page.waitForSelector('#accSongs.open', { timeout: 5000 });
+  await page.click('#editTabSongs');
+  await page.waitForSelector('#panelSongs:not([hidden])', { timeout: 5000 });
 
   if (errors.length) fail(`${label}: JS エラーなし`, errors.join('; '));
   else ok(`${label}: JS エラーなし`);
