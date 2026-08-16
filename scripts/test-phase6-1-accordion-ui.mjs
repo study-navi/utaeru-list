@@ -71,14 +71,14 @@ async function runViewport(label, width, height) {
 
   await page.click('#accSongs .acc-head');
   await page.waitForTimeout(80);
-  await page.click('[data-next="design"]');
+  await page.click('#accDesign .acc-head');
   await page.waitForTimeout(100);
   const afterNext = await page.evaluate(() => ({
     designOpen: document.getElementById('accDesign')?.classList.contains('open'),
     songsOpen: document.getElementById('accSongs')?.classList.contains('open'),
   }));
-  if (!afterNext.designOpen || afterNext.songsOpen) fail(`${label}: 次へでデザインへ`, JSON.stringify(afterNext));
-  else ok(`${label}: 次へでデザインセクションを開く`);
+  if (!afterNext.designOpen || afterNext.songsOpen) fail(`${label}: 見出しでデザインへ`, JSON.stringify(afterNext));
+  else ok(`${label}: 見出しでデザインセクションを開く`);
 
   await page.click('#accSongs .acc-head');
   await page.fill('#searchInput', 'Story');

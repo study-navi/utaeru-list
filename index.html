@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
 <title>Utaeru｜歌える曲リスト</title>
 <style>
   :root {
@@ -43,8 +44,11 @@
     --builder-bottom-bar-h: 68px;
     --builder-scroll-offset: calc(var(--builder-bar-h) + var(--builder-top-gap));
   }
-  /* Phase 6.2: 編集画面は常にライトテーマ（公開ページのテーマ設定とは独立） */
-  html[data-utaeru-builder="light"] { color-scheme: light; }
+  /* Phase 6.2: 編集画面は常にライトテーマ（OSダークモード・ユーザー切替なし） */
+  html[data-utaeru-builder="light"],
+  html[data-utaeru-builder="light"] body {
+    color-scheme: light only;
+  }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
@@ -465,28 +469,6 @@
     font-weight: 800;
     margin: 0 0 6px;
   }
-  .acc-nav {
-    display: flex;
-    margin-top: 16px;
-    justify-content: flex-end;
-  }
-  .acc-next {
-    flex: 0 1 auto;
-    min-width: 160px;
-    max-width: 100%;
-    min-height: 44px;
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 1px solid rgba(42, 120, 214, 0.25);
-    background: var(--accent-wash);
-    color: var(--accent);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    text-align: center;
-  }
-  .acc-next:hover { filter: brightness(0.98); border-color: var(--accent); color: var(--accent); }
-  .nav-short { display: none; }
 
   .song-view-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
   .view-tab {
@@ -1373,7 +1355,6 @@
       overflow-wrap: anywhere;
       word-break: break-word;
     }
-    .acc-nav { margin-top: 18px; }
     .preview-shell-label { font-size: 13px; line-height: 1.4; margin-bottom: 6px; }
     .preview-shell-note {
       line-height: 1.55;
@@ -1385,16 +1366,12 @@
       line-height: 1.35;
       min-width: 0;
     }
-    .nav-long { display: none; }
-    .nav-short { display: inline; }
   }
   @media (min-width: 641px) {
     .bar-menu-toggle { display: none; }
     .utaeru-bar-actions .bar-btn-ghost { display: inline-flex; align-items: center; }
   }
   @media (max-width: 420px) {
-    .acc-nav { justify-content: stretch; }
-    .acc-nav .acc-next { width: 100%; flex: 1 1 100%; min-width: 0; }
     .song-settings-btn { font-size: 11px; padding: 5px 9px; }
     .status-btn, .song-tag-chip { font-size: 12px; padding: 6px 10px; }
     .export-btn { font-size: 13px; padding: 9px 14px; }
@@ -1566,9 +1543,6 @@
         <p class="hint">半角英小文字・数字・ハイフンのみ（3〜32文字）。固定URL（/u/あなたのID）に使われます。HTML書き出しだけなら空欄でも構いません。</p>
         <p class="field-error" id="streamerIdError" style="display:none;"></p>
         <p class="url-preview" id="streamerIdPreview" style="display:none;">公開予定URL：<span class="path"></span></p>
-        <div class="acc-nav">
-          <button type="button" class="acc-next" data-next="songs"><span class="nav-long">次へ：曲を選ぶ →</span><span class="nav-short">次へ →</span></button>
-        </div>
       </div>
     </section>
 
@@ -1597,9 +1571,6 @@
         </div>
         <div class="result-meta" id="resultMeta"></div>
         <div id="results"></div>
-        <div class="acc-nav">
-          <button type="button" class="acc-next" data-next="design"><span class="nav-long">次へ：デザイン →</span><span class="nav-short">次へ →</span></button>
-        </div>
       </div>
     </section>
 
@@ -1624,9 +1595,6 @@
               <span class="custom-color-check" aria-hidden="true">✓</span>
             </label>
           </div>
-        </div>
-        <div class="acc-nav">
-          <button type="button" class="acc-next" data-next="preview"><span class="nav-long">次へ：プレビュー →</span><span class="nav-short">次へ →</span></button>
         </div>
       </div>
     </section>
@@ -2229,12 +2197,6 @@ function initAccordion() {
     });
   });
   document.querySelector('#moreAccStack .acc-head')?.addEventListener('click', toggleMoreAccSection);
-  document.querySelectorAll('.acc-next').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const next = btn.dataset.next;
-      if (next) setMainAccOpen(next);
-    });
-  });
   document.querySelectorAll('.view-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       const view = tab.dataset.view;

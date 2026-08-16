@@ -1,5 +1,5 @@
 {
-  "label": "Phase 6.2 追加UI調整（スマホ余白・固定ヘッダー視認性）",
+  "label": "Phase 6.2 ライトUI固定・見出し直接操作",
   "establishedAt": "2026-08-16",
   "gitCommit": null,
   "gitCommitShort": null,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 350905,
-      "sha256": "f92764f008f35741ee7d7c81205fe639bad6aec8905eb83cddfec43d3f38067a"
+      "bytes": 349367,
+      "sha256": "2244c7921ec7fbb0a25447db41c7d93de581d58f97caeca15582ef33756dbe9a"
     },
     "hiro.html": {
       "bytes": 25630,

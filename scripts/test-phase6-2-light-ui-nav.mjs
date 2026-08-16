@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Phase 6.2: ライトUI + 次へ導線 + 公開ページプレビュー + state保持
+ * Phase 6.2: ライトUI固定 + 見出し直接操作 + 公開ページプレビュー + state保持
  */
 import { chromium } from 'playwright';
 import { fileURLToPath } from 'url';
@@ -16,9 +16,13 @@ function fail(msg, detail) {
   console.error('FAIL:', msg, detail ? `— ${detail}` : '');
 }
 
-async function run(label, width, height) {
+async function run(label, width, height, colorScheme = 'light') {
   const browser = await chromium.launch();
-  const page = await browser.newPage({ viewport: { width, height } });
+  const context = await browser.newContext({
+    viewport: { width, height },
+    colorScheme,
+  });
+  const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
 
@@ -28,40 +32,40 @@ async function run(label, width, height) {
   if (errors.length) fail(`${label}: JS エラーなし`, errors.join('; '));
   else ok(`${label}: JS エラーなし`);
 
-  const light = await page.evaluate(() => document.documentElement.getAttribute('data-utaeru-builder'));
-  if (light !== 'light') fail(`${label}: 編集画面ライト固定`, light);
+  const chrome = await page.evaluate(() => ({
+    builderLight: document.documentElement.getAttribute('data-utaeru-builder'),
+    colorScheme: getComputedStyle(document.documentElement).colorScheme,
+    pageBg: getComputedStyle(document.body).backgroundColor,
+    prev: document.querySelectorAll('.acc-prev').length,
+    next: document.querySelectorAll('.acc-next').length,
+    builderThemeToggle: document.querySelector('#themeToggle, .theme-toggle:not(.pv-theme-toggle)') ? 1 : 0,
+    accNav: document.querySelectorAll('.acc-nav').length,
+  }));
+
+  if (chrome.builderLight !== 'light') fail(`${label}: 編集画面ライト固定`, chrome.builderLight);
   else ok(`${label}: data-utaeru-builder=light`);
-
-  const prevCount = await page.evaluate(() => document.querySelectorAll('.acc-prev').length);
-  if (prevCount !== 0) fail(`${label}: 戻るボタンなし`, String(prevCount));
-  else ok(`${label}: 戻るボタン0件`);
-
-  const nextCount = await page.evaluate(() => document.querySelectorAll('.acc-next').length);
-  if (nextCount < 3) fail(`${label}: 次へボタン`, String(nextCount));
-  else ok(`${label}: 次へ${nextCount}件`);
-
-  if (width <= 420) {
-    const nextFull = await page.evaluate(() => {
-      const el = document.querySelector('.acc-nav .acc-next');
-      if (!el) return false;
-      const r = el.getBoundingClientRect();
-      const nav = el.closest('.acc-nav')?.getBoundingClientRect();
-      return nav ? r.width >= nav.width * 0.95 : false;
-    });
-    if (!nextFull) fail(`${label}: 次へボタン全幅`);
-    else ok(`${label}: 次へボタン全幅`);
-  }
+  if (!chrome.colorScheme.includes('light')) fail(`${label}: color-scheme light`, chrome.colorScheme);
+  else ok(`${label}: color-scheme=${chrome.colorScheme}`);
+  if (colorScheme === 'dark' && chrome.pageBg !== 'rgb(246, 246, 244)') {
+    fail(`${label}: OSダークでもライト背景`, chrome.pageBg);
+  } else if (colorScheme === 'dark') ok(`${label}: OSダークでもライト背景`);
+  if (chrome.prev !== 0 || chrome.next !== 0) fail(`${label}: 戻る/次へ0件`, `prev=${chrome.prev} next=${chrome.next}`);
+  else ok(`${label}: 戻る/次へ0件`);
+  if (chrome.builderThemeToggle !== 0) fail(`${label}: 編集画面テーマ切替なし`, String(chrome.builderThemeToggle));
+  else ok(`${label}: 編集画面テーマ切替UIなし`);
+  if (chrome.accNav !== 0) fail(`${label}: acc-navコンテナなし`, String(chrome.accNav));
+  else ok(`${label}: ナビコンテナ0件`);
 
   await page.fill('#streamerName', 'Phase62テスト');
   await page.fill('#subtitle', 'サブタイトル確認');
   await page.fill('#streamerIdInput', 'phase62test');
-  await page.click('[data-next="songs"]');
+  await page.click('#accSongs .acc-head');
   await page.waitForTimeout(120);
 
   await page.fill('#searchInput', 'Story');
   await page.waitForTimeout(80);
   await page.click('.song-check');
-  await page.click('[data-next="design"]');
+  await page.click('#accDesign .acc-head');
   await page.waitForTimeout(120);
 
   await page.click('#accSongs .acc-head');
@@ -91,19 +95,19 @@ async function run(label, width, height) {
   if (!basicOpen) fail(`${label}: 基本情報へ戻る`);
   else ok(`${label}: 見出しで基本情報へ戻る`);
 
-  await page.click('[data-next="songs"]');
+  await page.click('#accSongs .acc-head');
   await page.waitForTimeout(80);
-  await page.click('[data-next="design"]');
+  await page.click('#accDesign .acc-head');
   await page.waitForTimeout(80);
-  await page.click('[data-next="preview"]');
+  await page.click('#accPreview .acc-head');
   await page.waitForTimeout(150);
 
   const previewBefore = await page.evaluate(() => ({
     title: document.querySelector('#previewFrame .pv-title')?.textContent,
     subtitle: document.querySelector('#previewFrame .pv-subtitle')?.textContent,
     songs: document.querySelector('#previewFrame .pv-stat-num')?.textContent,
+    hasPreviewToggle: !!document.querySelector('#previewFrame .pv-theme-toggle'),
     hasSearch: !!document.querySelector('#previewFrame .pv-search input'),
-    hasRandom: !!document.querySelector('#previewFrame .pv-random-btn'),
     scrollW: document.getElementById('previewFrame')?.scrollWidth,
     clientW: document.getElementById('previewFrame')?.clientWidth,
   }));
@@ -113,8 +117,8 @@ async function run(label, width, height) {
   else ok(`${label}: プレビューサブタイトル反映`);
   if (previewBefore.songs !== '1') fail(`${label}: プレビュー曲数`, previewBefore.songs);
   else ok(`${label}: プレビュー曲数反映`);
-  if (!previewBefore.hasSearch || !previewBefore.hasRandom) fail(`${label}: プレビュー公開UI`, JSON.stringify(previewBefore));
-  else ok(`${label}: プレビュー公開UI要素`);
+  if (!previewBefore.hasPreviewToggle || !previewBefore.hasSearch) fail(`${label}: プレビュー公開UI`, JSON.stringify(previewBefore));
+  else ok(`${label}: プレビュー公開UI要素（公開ページ再現）`);
   if (previewBefore.scrollW > previewBefore.clientW + 2) fail(`${label}: プレビュー横スクロール`, `${previewBefore.scrollW}/${previewBefore.clientW}`);
   else ok(`${label}: プレビュー横スクロールなし`);
 
@@ -151,11 +155,14 @@ async function run(label, width, height) {
   else if (menuBtns.minH < 44) fail(`${label}: メニューボタン高さ`, String(menuBtns.minH));
   else ok(`${label}: メニューボタン ${menuBtns.count}件・高さ${menuBtns.minH}px+`);
 
+  await context.close();
   await browser.close();
 }
 
 await run('mobile', 390, 844);
+await run('mobile-dark', 390, 844, 'dark');
 await run('pc', 1280, 800);
+await run('pc-dark', 1280, 800, 'dark');
 
 if (failed) {
   console.error(`\n${failed} 件失敗`);

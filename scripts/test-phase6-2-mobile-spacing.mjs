@@ -80,7 +80,7 @@ async function runWidth(width) {
   if (layout.bottomPad < layout.exportH + 8) fail(`${width}px: 下部余白`, `${layout.bottomPad} vs export ${layout.exportH}`);
   else ok(`${width}px: 下部固定UI余白`);
 
-  await page.click('[data-next="songs"]');
+  await page.click('#accSongs .acc-head');
   await page.waitForTimeout(180);
   const afterNext = await page.evaluate(() => {
     const bar = document.getElementById('utaeruBar');
@@ -89,12 +89,12 @@ async function runWidth(width) {
     const headTop = head?.getBoundingClientRect().top ?? 0;
     return { gap: headTop - barBottom };
   });
-  if (afterNext.gap < 10) fail(`${width}px: 次へ後見出し位置`, `${afterNext.gap}px`);
-  else ok(`${width}px: 次へ後見出し余裕 ${Math.round(afterNext.gap)}px`);
+  if (afterNext.gap < 10) fail(`${width}px: 見出し移動後の位置`, `${afterNext.gap}px`);
+  else ok(`${width}px: 見出し移動後余裕 ${Math.round(afterNext.gap)}px`);
 
-  await page.click('[data-next="design"]');
+  await page.click('#accDesign .acc-head');
   await page.waitForTimeout(120);
-  await page.click('[data-next="preview"]');
+  await page.click('#accPreview .acc-head');
   await page.waitForTimeout(150);
 
   const preview = await page.evaluate(() => {
