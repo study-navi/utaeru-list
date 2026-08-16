@@ -606,6 +606,29 @@
   .card-preview { background: var(--page); }
 
   .song-view-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .search-target-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 8px;
+  }
+  .search-target-tab {
+    min-height: 36px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--page);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-secondary);
+  }
+  .search-target-tab.active {
+    background: var(--accent-wash);
+    border-color: var(--accent);
+    color: var(--text-primary);
+    font-weight: 700;
+  }
   .view-tab {
     min-height: var(--ui-btn-h);
     padding: 8px 14px;
@@ -1179,8 +1202,16 @@
   .clear-btn:hover { background: var(--surface-2); }
 
   .gyo-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 2px; }
+  .gyo-sub-row { margin-top: 4px; margin-bottom: 2px; }
+  .gyo-sub-row[hidden] { display: none !important; }
   .chip {
-    font-size: 12.5px; padding: 5px 11px; border-radius: 999px;
+    font-size: 12.5px;
+    min-height: 36px;
+    padding: 6px 11px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border: 1px solid var(--border); background: var(--chip-bg); color: var(--text-secondary);
     cursor: pointer; user-select: none;
   }
@@ -1830,12 +1861,17 @@
         <button type="button" class="view-tab active" id="viewTabAll" data-view="all">すべて</button>
         <button type="button" class="view-tab" id="viewTabSelected" data-view="selected">選択中（<span id="viewTabSelectedCount">0</span>）</button>
       </div>
+      <div class="search-target-tabs" role="tablist" aria-label="検索対象">
+        <button type="button" class="search-target-tab active" id="searchTargetTitle" data-target="title" aria-selected="true">曲名</button>
+        <button type="button" class="search-target-tab" id="searchTargetArtist" data-target="artist" aria-selected="false">アーティスト</button>
+      </div>
       <div class="search-input-row">
-        <input type="search" id="searchInput" placeholder="曲名・アーティスト名で検索" autocomplete="off" aria-describedby="searchInputHint" />
+        <input type="search" id="searchInput" placeholder="曲名を入力して検索" autocomplete="off" aria-describedby="searchInputHint" />
         <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
       </div>
-      <p class="hint field-input-hint" id="searchInputHint">曲名・アーティスト名で絞り込めます。</p>
+      <p class="hint field-input-hint" id="searchInputHint">曲名で絞り込めます。行フィルターと組み合わせもできます。</p>
       <div class="gyo-row" id="gyoRow"></div>
+      <div class="gyo-row gyo-sub-row" id="gyoSubRow" hidden aria-label="五十音 1文字"></div>
       <div class="bulk-row" id="bulkRowPrimary">
         <button class="tool-btn" id="selectVisibleBtn" type="button">表示中をすべて選択</button>
         <button class="tool-btn" id="clearVisibleBtn" type="button">表示中の選択を解除</button>
@@ -2264,15 +2300,23 @@ function sortSongsForDisplay(songs) {
 function updateSongListChrome() {
   const isSelectedView = songListView === 'selected';
   if (gyoRow) gyoRow.style.display = isSelectedView ? 'none' : '';
+  if (gyoSubRow) gyoSubRow.style.display = isSelectedView ? 'none' : '';
   const hint = document.getElementById('searchInputHint');
   if (searchInput) {
-    searchInput.placeholder = isSelectedView ? '選択中の曲を検索' : '曲名・アーティスト名で検索';
-    searchInput.setAttribute('aria-label', isSelectedView ? '選択中の曲を検索' : '曲名・アーティスト名で検索');
+    const placeholder = isSelectedView
+      ? (searchTarget === 'artist' ? '選択中のアーティストを検索' : '選択中の曲名を検索')
+      : (searchTarget === 'artist' ? 'アーティスト名を入力して検索' : '曲名を入力して検索');
+    searchInput.placeholder = placeholder;
+    searchInput.setAttribute('aria-label', placeholder);
   }
   if (hint) {
     hint.textContent = isSelectedView
-      ? '選択済みの曲だけを表示しています。曲名・アーティスト名で絞り込めます。'
-      : '曲名・アーティスト名で絞り込めます。行フィルターと組み合わせもできます。';
+      ? (searchTarget === 'artist'
+        ? '選択済みの曲のうち、アーティスト名で絞り込めます。'
+        : '選択済みの曲のうち、曲名で絞り込めます。')
+      : (searchTarget === 'artist'
+        ? 'アーティスト名で絞り込めます。行フィルターと組み合わせもできます。'
+        : '曲名で絞り込めます。行フィルターと組み合わせもできます。');
   }
   const selectVisibleBtn = document.getElementById('selectVisibleBtn');
   const clearVisibleBtn = document.getElementById('clearVisibleBtn');
@@ -2311,7 +2355,7 @@ function songItemHtml(s, q) {
       <div class="song-row${tappable}">
         <input type="checkbox" class="song-check" id="sc-${s.id}" data-key="${escapeHtml(key)}" ${selectedKeys.has(key) ? 'checked' : ''} />
         <div class="song-row-main">
-          <label for="sc-${s.id}" class="song-label">${highlight(s.t, q)}</label>
+          <label for="sc-${s.id}" class="song-label">${highlightFor('title', s.t, q)}</label>
           <span class="song-badges">${badgesHtml(meta)}</span>
         </div>
         ${songRowActionsHtml(key, expanded)}
@@ -2403,9 +2447,25 @@ const GYO = [
   { label: 'ら', chars: 'らりるれろ' },
   { label: 'わ', chars: 'わをん' },
 ];
+const GYO_SUB_CHARS = {
+  'あ': 'あいうえお',
+  'か': 'かきくけこ',
+  'さ': 'さしすせそ',
+  'た': 'たちつてと',
+  'な': 'なにぬねの',
+  'は': 'はひふへほ',
+  'ま': 'まみむめも',
+  'や': 'やゆよ',
+  'ら': 'らりるれろ',
+  'わ': 'わをん',
+};
 function gyoOf(kanaHead) {
   for (const g of GYO) if (g.chars.includes(kanaHead)) return g.label;
   return null;
+}
+function subCharsForGyo(gyoLabel) {
+  const chars = GYO_SUB_CHARS[gyoLabel];
+  return chars ? [...chars] : [];
 }
 function toHiragana(str) { return str.replace(/[ァ-ヶ]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60)); }
 function norm(str) { return toHiragana(str).toLowerCase(); }
@@ -2413,12 +2473,14 @@ function norm(str) { return toHiragana(str).toLowerCase(); }
 const searchInput = document.getElementById('searchInput');
 const clearBtn = document.getElementById('clearBtn');
 const gyoRow = document.getElementById('gyoRow');
+const gyoSubRow = document.getElementById('gyoSubRow');
 const resultsEl = document.getElementById('results');
 const resultMeta = document.getElementById('resultMeta');
 
 const EDIT_TABS = ['basic', 'songs', 'design', 'preview', 'more'];
 let activeEditTab = 'basic';
 let songListView = 'all';
+let searchTarget = 'title';
 let openArtistGroups = new Set();
 
 function editTabDomId(tabId) {
@@ -2520,11 +2582,7 @@ function initEditTabs() {
     tab.addEventListener('click', () => {
       const view = tab.dataset.view;
       if (!view || view === songListView) return;
-      if (view === 'selected' && activeGyo) {
-        activeGyo = null;
-        [...gyoRow.children].forEach(c => c.classList.remove('active'));
-        if (gyoRow.children[0]) gyoRow.children[0].classList.add('active');
-      }
+      if (view === 'selected') resetGyoFilters();
       songListView = view;
       document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
       updateSongListChrome();
@@ -2559,8 +2617,8 @@ function flatSongItemHtml(s, q) {
       <div class="song-row${tappable}">
         <input type="checkbox" class="song-check" id="sc-${s.id}" data-key="${escapeHtml(key)}" ${selectedKeys.has(key) ? 'checked' : ''} />
         <div class="song-row-main">
-          <span class="flat-artist">${highlight(s.a, q)}</span><span class="flat-sep"> — </span>
-          <label for="sc-${s.id}" class="song-label">${highlight(s.t, q)}</label>
+          <span class="flat-artist">${highlightFor('artist', s.a, q)}</span><span class="flat-sep"> — </span>
+          <label for="sc-${s.id}" class="song-label">${highlightFor('title', s.t, q)}</label>
           <span class="song-badges">${badgesHtml(meta)}</span>
         </div>
         ${songRowActionsHtml(key, expanded)}
@@ -2607,6 +2665,7 @@ function updateStreamerIdPreview() {
 streamerIdInput.addEventListener('input', updateStreamerIdPreview);
 
 let activeGyo = null;
+let activeKana = null;
 const allChip = document.createElement('div');
 allChip.className = 'chip active';
 allChip.textContent = 'すべて';
@@ -2619,12 +2678,91 @@ GYO.forEach(g => {
   chip.addEventListener('click', () => setGyo(g.label));
   gyoRow.appendChild(chip);
 });
+function resetGyoFilters() {
+  activeGyo = null;
+  activeKana = null;
+  [...gyoRow.children].forEach(c => c.classList.remove('active'));
+  if (gyoRow.children[0]) gyoRow.children[0].classList.add('active');
+  updateGyoSubRow();
+}
+function updateGyoSubRow() {
+  if (!gyoSubRow) return;
+  gyoSubRow.innerHTML = '';
+  if (!activeGyo || songListView === 'selected') {
+    gyoSubRow.hidden = true;
+    return;
+  }
+  gyoSubRow.hidden = false;
+  const allSubChip = document.createElement('div');
+  allSubChip.className = 'chip' + (activeKana ? '' : ' active');
+  allSubChip.textContent = 'すべて';
+  allSubChip.addEventListener('click', () => setKana(null));
+  gyoSubRow.appendChild(allSubChip);
+  subCharsForGyo(activeGyo).forEach(ch => {
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (activeKana === ch ? ' active' : '');
+    chip.textContent = ch;
+    chip.addEventListener('click', () => setKana(ch));
+    gyoSubRow.appendChild(chip);
+  });
+}
+function setKana(char) {
+  activeKana = char;
+  updateGyoSubRow();
+  render();
+}
 function setGyo(label) {
   activeGyo = label;
+  activeKana = null;
   [...gyoRow.children].forEach(c => c.classList.remove('active'));
   const idx = label ? GYO.findIndex(g => g.label === label) + 1 : 0;
   gyoRow.children[idx].classList.add('active');
+  updateGyoSubRow();
   render();
+}
+function setSearchTarget(target) {
+  if (target !== 'title' && target !== 'artist') return;
+  searchTarget = target;
+  document.querySelectorAll('.search-target-tab').forEach(tab => {
+    const active = tab.dataset.target === target;
+    tab.classList.toggle('active', active);
+    tab.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  updateSongListChrome();
+  render();
+}
+function initSearchTargetTabs() {
+  document.querySelectorAll('.search-target-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.target;
+      if (target && target !== searchTarget) setSearchTarget(target);
+    });
+  });
+}
+function filterSongsForList(baseList) {
+  let filtered = baseList;
+  if (songListView === 'selected') {
+    filtered = filtered.filter(s => selectedKeys.has(keyOf(s)));
+  }
+  if (activeGyo && songListView !== 'selected') {
+    filtered = filtered.filter(s => gyoOf(s.k) === activeGyo);
+    if (activeKana) filtered = filtered.filter(s => norm(s.k) === norm(activeKana));
+  }
+  const q = searchInput.value.trim();
+  if (q) {
+    const nq = norm(q);
+    filtered = filtered.filter(s => {
+      if (searchTarget === 'artist') return norm(s.a).includes(nq);
+      return norm(s.t).includes(nq);
+    });
+  }
+  return filtered;
+}
+function highlightQuery() {
+  return searchInput.value.trim();
+}
+function highlightFor(field, text, q) {
+  return highlight(text, field === searchTarget ? q : '');
 }
 
 function highlight(text, q) {
@@ -2641,15 +2779,7 @@ function render() {
   const q = searchInput.value.trim();
   clearBtn.style.display = q ? 'block' : 'none';
 
-  let filtered = MASTER_SONGS;
-  if (songListView === 'selected') {
-    filtered = filtered.filter(s => selectedKeys.has(keyOf(s)));
-  }
-  if (activeGyo) filtered = filtered.filter(s => gyoOf(s.k) === activeGyo);
-  if (q) {
-    const nq = norm(q);
-    filtered = filtered.filter(s => norm(s.t).includes(nq) || norm(s.a).includes(nq) || norm(s.y).includes(nq));
-  }
+  const filtered = filterSongsForList(MASTER_SONGS);
   lastFiltered = filtered;
 
   const artistCount = new Set(filtered.map(s => s.a)).size;
@@ -2658,8 +2788,10 @@ function render() {
 
   if (filtered.length === 0) {
     const emptyMsg = songListView === 'selected'
-      ? `選択中の曲がありません。${q ? '検索条件を変えるか、' : ''}<div class="empty-state-action"><button type="button" class="tool-btn" id="emptyGoAllBtn">すべての曲から選ぶ</button></div>`
-      : '🔍 該当する曲が見つかりませんでした';
+      ? (selectedKeys.size === 0
+        ? `選択中の曲がありません。<div class="empty-state-action"><button type="button" class="tool-btn" id="emptyGoAllBtn">すべての曲から選ぶ</button></div>`
+        : '条件に合う曲がありません。検索条件を変えてみてください。')
+      : '条件に合う曲がありません。検索条件を変えてみてください。';
     resultsEl.innerHTML = `<div class="empty-state">${emptyMsg}</div>`;
     updateSongListChrome();
     updateAccSummaries();
@@ -2700,7 +2832,7 @@ function render() {
     <details class="artist-group"${openAttr} data-artist="${escapeHtml(g.artist)}">
       <summary class="artist-head">
         <input type="checkbox" class="artist-check" ${allChecked ? 'checked' : ''} data-artist="${escapeHtml(g.artist)}" />
-        <span class="artist-name">${highlight(g.artist, q)}</span>
+        <span class="artist-name">${highlightFor('artist', g.artist, q)}</span>
         <span class="artist-count">${artistCountLabel(checkedCount, g.songs.length)}</span>
       </summary>
       <ul class="song-list">
@@ -4170,6 +4302,7 @@ if (typeof ResizeObserver !== 'undefined') {
 
 renderTagAdmin();
 initEditTabs();
+initSearchTargetTabs();
 selectPreset(0);
 render();
 updateSelectedCount();

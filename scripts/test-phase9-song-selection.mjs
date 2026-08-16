@@ -61,6 +61,7 @@ async function runViewport(label, width, height) {
 
   const selectedUi = await page.evaluate(() => ({
     gyoHidden: document.getElementById('gyoRow')?.style.display === 'none',
+    subHidden: document.getElementById('gyoSubRow')?.hidden || document.getElementById('gyoSubRow')?.style.display === 'none',
     removeBtns: document.querySelectorAll('.song-remove-btn').length,
     selectVisibleHidden: document.getElementById('selectVisibleBtn')?.style.display === 'none',
     placeholder: document.getElementById('searchInput')?.placeholder || '',
@@ -68,7 +69,7 @@ async function runViewport(label, width, height) {
     toolBtnH: document.getElementById('clearVisibleBtn')?.offsetHeight || 0,
   }));
 
-  if (!selectedUi.gyoHidden) fail(`${label}: 選択中タブで行フィルター非表示`);
+  if (!selectedUi.gyoHidden || !selectedUi.subHidden) fail(`${label}: 選択中タブで行フィルター非表示`);
   else ok(`${label}: 選択中タブで行フィルター非表示`);
   if (selectedUi.removeBtns < 1) fail(`${label}: 外すボタン表示`, String(selectedUi.removeBtns));
   else ok(`${label}: 外すボタン ${selectedUi.removeBtns}件`);

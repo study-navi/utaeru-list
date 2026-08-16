@@ -1,15 +1,15 @@
 {
-  "label": "v1.0 選択中曲一覧ボタン配置統一",
+  "label": "v1.0 曲検索・五十音フィルター改善",
   "establishedAt": "2026-08-17",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "v1.0 編集タブ固定化・管理タブ・フッター整理",
+    "label": "v1.0 選択中曲一覧ボタン配置統一",
     "establishedAt": "2026-08-17",
     "files": {
       "index.html": {
-        "bytes": 370360,
-        "sha256": "0ee878c5d88fb40cca6ba7fd147bfd9c5ba8328ccc679f38298245084bff73e8"
+        "bytes": 371262,
+        "sha256": "dbb957ec2215f8415f4af9cb043b360c9ef48aa53ec7123c1574e08bc0f71cb5"
       },
       "hiro.html": {
         "bytes": 25170,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 371262,
-      "sha256": "dbb957ec2215f8415f4af9cb043b360c9ef48aa53ec7123c1574e08bc0f71cb5"
+      "bytes": 375668,
+      "sha256": "22cf9e398cf50fa58aeb910822e8530aaabc50e5389bf4d990112ffdd73e00bc"
     },
     "hiro.html": {
       "bytes": 25170,
