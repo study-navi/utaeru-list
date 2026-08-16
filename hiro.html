@@ -392,17 +392,39 @@
 
 <script type="application/json" id="builder-config">{"streamerName":"ひろ","subtitle":"ひろの配信で歌える曲を検索できます。曲名・アーティスト名で絞り込めます。","themeType":"preset","presetIndex":0,"customHex":null,"selected":["相川七瀬\u0001夢見る少女じゃいられない","相川七瀬\u0001恋心","相川七瀬\u0001Sweet Emotion","aiko\u0001カブトムシ","aiko\u0001ボーイフレンド","aiko\u0001KissHug","aiko\u0001相思相愛","aiko\u0001横顔","aiko\u0001恋のスーパーボール","aiko\u0001キラキラ","aiko\u0001milk","aiko\u0001花火","aiko\u0001二時頃","aiko\u0001ストロー"]}</script>
 <script>
+// 埋め込みの曲データは既存契約どおり、ここでトップレベルの SONGS にそのまま代入する
+// (この代入の形は互換性検証スクリプトが前提にしているため変更しない)。
 const SONGS = [{"k":"あ","y":"あいかわななせ","a":"相川七瀬","t":"夢見る少女じゃいられない"},{"k":"あ","y":"あいかわななせ","a":"相川七瀬","t":"恋心"},{"k":"あ","y":"あいかわななせ","a":"相川七瀬","t":"Sweet Emotion"},{"k":"あ","y":"あいこ","a":"aiko","t":"カブトムシ"},{"k":"あ","y":"あいこ","a":"aiko","t":"ボーイフレンド"},{"k":"あ","y":"あいこ","a":"aiko","t":"KissHug"},{"k":"あ","y":"あいこ","a":"aiko","t":"相思相愛"},{"k":"あ","y":"あいこ","a":"aiko","t":"横顔"},{"k":"あ","y":"あいこ","a":"aiko","t":"恋のスーパーボール"},{"k":"あ","y":"あいこ","a":"aiko","t":"キラキラ"},{"k":"あ","y":"あいこ","a":"aiko","t":"milk"},{"k":"あ","y":"あいこ","a":"aiko","t":"花火"},{"k":"あ","y":"あいこ","a":"aiko","t":"二時頃"},{"k":"あ","y":"あいこ","a":"aiko","t":"ストロー"}];
 
-// Phase 3: builder-config に埋め込まれた songMeta / tagPresets を公開ページ側でも読み取る。
-// 埋め込みが無い・壊れている場合は空値にフォールバックし、エラーにはしない（旧v1形式の互換性維持）。
-let VCONFIG = {};
-try {
-  const cfgEl = document.getElementById('builder-config');
-  if (cfgEl && cfgEl.textContent.trim()) VCONFIG = JSON.parse(cfgEl.textContent);
-} catch (e) { VCONFIG = {}; }
-const SONG_META = (VCONFIG.songMeta && typeof VCONFIG.songMeta === 'object') ? VCONFIG.songMeta : {};
-const TAG_PRESETS = Array.isArray(VCONFIG.tagPresets) ? VCONFIG.tagPresets : [];
+// Phase 4A: 「埋め込みデータ(builder-config)の取得・解釈」と「画面への描画」を分離しておく。
+// 将来この関数の中身だけを GET /api/public/{id} を呼ぶ非同期実装に差し替えれば、
+// 以降の描画ロジック（render() 等）には手を入れずに済むようにするための下準備。
+// 現時点ではサーバー通信は一切行わず、HTML内に埋め込まれたbuilder-configを読み取るだけ。
+// 返り値の形は、将来 D1 等から返す想定の公開データ形式（docs/public-data-format.schema.json）に合わせている。
+// 埋め込みが無い・壊れている場合はすべて空値にフォールバックし、エラーにはしない（旧v1形式の互換性維持）。
+function loadEmbeddedPublicData() {
+  let cfg = {};
+  try {
+    const cfgEl = document.getElementById('builder-config');
+    if (cfgEl && cfgEl.textContent.trim()) cfg = JSON.parse(cfgEl.textContent);
+  } catch (e) { cfg = {}; }
+  return {
+    version: Number.isInteger(cfg.configVersion) ? cfg.configVersion : 1,
+    streamer: {
+      id: (typeof cfg.streamerId === 'string' && cfg.streamerId) ? cfg.streamerId : null,
+      name: cfg.streamerName || '',
+      subtitle: cfg.subtitle || '',
+    },
+    songs: SONGS,
+    songMeta: (cfg.songMeta && typeof cfg.songMeta === 'object') ? cfg.songMeta : {},
+    tagPresets: Array.isArray(cfg.tagPresets) ? cfg.tagPresets : [],
+    updatedAt: cfg.updatedAt || null,
+  };
+}
+
+const PUBLIC_DATA = loadEmbeddedPublicData();
+const SONG_META = PUBLIC_DATA.songMeta;
+const TAG_PRESETS = PUBLIC_DATA.tagPresets;
 function keyOf(s) { return s.a + '' + s.t; }
 
 const STATUS_LABELS = {
