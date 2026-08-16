@@ -138,6 +138,8 @@ async function runViewport(label, width, height) {
     name: document.getElementById('streamerName')?.value,
     search: document.getElementById('searchInput')?.value,
     selected: document.getElementById('selectedCount')?.textContent,
+    designBadgeHidden: document.getElementById('tabBadgeDesign')?.hidden,
+    designTabText: document.getElementById('editTabDesign')?.textContent?.includes('✓'),
   }));
   await switchTab(page, 'songs');
   if (preserved.name !== 'タブ保持テスト') fail(`${label}: 入力state保持`, preserved.name);
@@ -146,6 +148,9 @@ async function runViewport(label, width, height) {
   else ok(`${label}: 検索文字保持`);
   if (preserved.selected === '0') fail(`${label}: 曲選択保持`, preserved.selected);
   else ok(`${label}: 曲選択保持 (${preserved.selected})`);
+  if (!preserved.designBadgeHidden || preserved.designTabText) {
+    fail(`${label}: デザインタブ✓なし`, JSON.stringify(preserved));
+  } else ok(`${label}: デザインタブ✓なし`);
 
   await switchTab(page, 'preview');
   const preview = await page.evaluate(() => ({

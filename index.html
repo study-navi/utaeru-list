@@ -62,6 +62,9 @@
     --builder-chrome-h: calc(var(--builder-bar-h) + var(--builder-tabs-h));
     --builder-bottom-bar-h: 68px;
     --builder-scroll-offset: calc(var(--builder-chrome-h) + var(--builder-top-gap));
+    --ui-group: #ffffff;
+    --ui-group-soft: #eef4fb;
+    --ui-group-border: #e4ebf2;
   }
   /* Phase 6.2: 編集画面は常にライトテーマ（OSダークモード・ユーザー切替なし） */
   html[data-utaeru-builder="light"],
@@ -601,6 +604,43 @@
     letter-spacing: 0.03em;
     margin: 0 0 6px;
   }
+  .ui-field-group {
+    background: var(--ui-group);
+    border: 1px solid var(--ui-group-border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .ui-field-group:last-child { margin-bottom: 0; }
+  .ui-field-group .field-label:first-child,
+  .ui-field-group .field-label { margin-top: 0; }
+  .ui-field-group .hint { margin-bottom: 0; }
+  .ui-field-group .hint + .field-label,
+  .ui-field-group .hint + input[type="text"] { margin-top: 10px; }
+  .ui-field-group .field-input-hint { margin-top: 6px; }
+  .ui-section-soft {
+    background: var(--ui-group-soft);
+    border: 1px solid var(--ui-group-border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .ui-section-soft[hidden] { display: none !important; }
+  .ui-section-soft--compact { padding: 8px 12px; }
+  .song-search-block .search-target-tabs { margin-top: 0; }
+  .song-search-block .hint.field-input-hint { margin-top: 8px; }
+  .song-bulk-block .bulk-row { margin-top: 0; margin-bottom: 0; }
+  .song-bulk-block .bulk-row + .bulk-row { margin-top: 8px; }
+  .song-results-block .result-meta { margin-top: 0; }
+  .preview-shell-block .preview-shell-label { margin-top: 0; }
+  .preview-shell-block .preview-shell-note { margin-bottom: 10px; }
+  .preview-shell-block .preview-frame-wrap { margin-top: 4px; }
+  #panelMore .ui-field-group h3 {
+    font-size: 14px;
+    font-weight: 800;
+    margin: 0 0 6px;
+  }
+  #panelMore .ui-field-group .hint { margin-bottom: 10px; }
 
   .card-songs { scroll-margin-top: var(--builder-scroll-offset, calc(64px + env(safe-area-inset-top, 0px))); }
   .card-preview { background: var(--page); }
@@ -1074,15 +1114,16 @@
     justify-content: center;
     flex: 0 0 auto;
     box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
-  .swatch.selected { border-color: var(--text-primary); }
-  .swatch .check {
-    color: #fff;
-    font-size: 14px;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
-    display: none;
+  .swatch.selected {
+    transform: scale(1.08);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), 0 0 0 2px var(--ui-group), 0 0 0 4px var(--text-primary);
   }
-  .swatch.selected .check { display: block; }
+  .swatch:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
   .swatch-custom-wrap {
     display: inline-flex;
     align-items: center;
@@ -1115,7 +1156,10 @@
     box-sizing: border-box;
     max-width: 100%;
   }
-  .custom-color-btn.selected { border-color: var(--text-primary); }
+  .custom-color-btn.selected {
+    border-color: var(--text-primary);
+    box-shadow: 0 0 0 2px var(--accent-wash), 0 0 0 3px var(--text-primary);
+  }
   .custom-color-input {
     position: absolute;
     inset: 0;
@@ -1141,15 +1185,120 @@
     flex-shrink: 0;
   }
   .custom-color-label { line-height: 1.2; white-space: nowrap; }
-  .custom-color-check {
-    color: var(--text-primary);
-    font-size: 14px;
-    line-height: 1;
-    display: none;
-    flex-shrink: 0;
-  }
-  .custom-color-btn.selected .custom-color-check { display: block; }
   .custom-color-btn:not(.has-custom) .custom-color-dot { display: none; }
+  .theme-picker-hint { margin-bottom: 10px; }
+  .theme-current {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--ui-group-border);
+  }
+  .theme-current-label {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
+  .theme-current-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+  }
+  .theme-current-hex {
+    font-size: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+  }
+  .theme-mini-note {
+    margin: 0 0 10px;
+    font-size: 12.5px;
+  }
+  .theme-mini-preview {
+    background: var(--page);
+    border: 1px solid var(--ui-group-border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    max-width: 100%;
+    --tm-accent: var(--accent);
+    --tm-accent-ink: var(--accent-ink);
+    --tm-accent-wash: var(--accent-wash);
+  }
+  .theme-mini-preview .tm-mark {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--tm-accent);
+    opacity: 0.8;
+    margin-bottom: 6px;
+  }
+  .theme-mini-preview .tm-name {
+    font-size: 15px;
+    font-weight: 800;
+    margin: 0 0 2px;
+    line-height: 1.3;
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+  }
+  .theme-mini-preview .tm-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 0 0 10px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+  .theme-mini-preview .tm-search {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 38px;
+    padding: 9px 12px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--ui-group-border);
+    background: var(--ui-group);
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  .theme-mini-preview .tm-sample-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .theme-mini-preview .tm-chip-active {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: var(--tm-accent);
+    border: 1px solid var(--tm-accent);
+    color: var(--tm-accent-ink);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .theme-mini-preview .tm-btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 5px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--tm-accent);
+    background: var(--tm-accent-wash);
+    color: var(--tm-accent);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
   .custom-color-btn.has-custom .custom-color-plus { display: none; }
   @media (max-width: 420px) {
     .swatch-custom-wrap {
@@ -1829,7 +1978,7 @@
       </button>
       <button type="button" class="edit-tab" role="tab" id="editTabDesign" data-tab="design" aria-selected="false" aria-controls="panelDesign" tabindex="-1">
         <span class="edit-tab-text"><span class="edit-tab-label-full">デザイン</span><span class="edit-tab-label-short">デザイン</span></span>
-        <span class="edit-tab-badge" id="tabBadgeDesign">✓</span>
+        <span class="edit-tab-badge" id="tabBadgeDesign" hidden></span>
       </button>
       <button type="button" class="edit-tab" role="tab" id="editTabPreview" data-tab="preview" aria-selected="false" aria-controls="panelPreview" tabindex="-1">
         <span class="edit-tab-text"><span class="edit-tab-label-full">プレビュー</span><span class="edit-tab-label-short">確認</span></span>
@@ -1843,17 +1992,23 @@
 
   <div class="edit-panels" id="editPanels">
     <section class="edit-panel" role="tabpanel" id="panelBasic" data-tab-panel="basic" aria-labelledby="editTabBasic">
-      <label class="field-label" for="streamerName">配信者名・ページタイトル</label>
-      <input type="text" id="streamerName" placeholder="例：うたりすさん" />
-      <p class="hint field-input-hint">公開ページのタイトルとして表示されます。</p>
-      <label class="field-label" for="subtitle">一言・サブタイトル（任意）</label>
-      <input type="text" id="subtitle" placeholder="例：リクエスト歓迎！" />
-      <p class="hint field-input-hint">公開ページで配信者名の下に表示されます。</p>
-      <label class="field-label" for="streamerIdInput">公開ページID</label>
-      <input type="text" id="streamerIdInput" placeholder="例：sample" maxlength="32" autocomplete="off" spellcheck="false" />
-      <p class="hint">半角英小文字・数字・ハイフンのみ（3〜32文字）。固定URL（/u/あなたのID）に使われます。HTML書き出しだけなら空欄でも構いません。</p>
-      <p class="field-error" id="streamerIdError" style="display:none;"></p>
-      <p class="url-preview" id="streamerIdPreview" style="display:none;">公開予定URL：<span class="path"></span></p>
+      <div class="ui-field-group">
+        <label class="field-label" for="streamerName">配信者名・ページタイトル</label>
+        <input type="text" id="streamerName" placeholder="例：うたりすさん" />
+        <p class="hint field-input-hint">公開ページのタイトルとして表示されます。</p>
+      </div>
+      <div class="ui-field-group">
+        <label class="field-label" for="subtitle">一言・サブタイトル（任意）</label>
+        <input type="text" id="subtitle" placeholder="例：リクエスト歓迎！" />
+        <p class="hint field-input-hint">公開ページで配信者名の下に表示されます。</p>
+      </div>
+      <div class="ui-field-group">
+        <label class="field-label" for="streamerIdInput">公開ページID</label>
+        <input type="text" id="streamerIdInput" placeholder="例：sample" maxlength="32" autocomplete="off" spellcheck="false" />
+        <p class="hint">半角英小文字・数字・ハイフンのみ（3〜32文字）。固定URL（/u/あなたのID）に使われます。HTML書き出しだけなら空欄でも構いません。</p>
+        <p class="field-error" id="streamerIdError" style="display:none;"></p>
+        <p class="url-preview" id="streamerIdPreview" style="display:none;">公開予定URL：<span class="path"></span></p>
+      </div>
     </section>
 
     <section class="edit-panel" role="tabpanel" id="panelSongs" data-tab-panel="songs" aria-labelledby="editTabSongs" hidden>
@@ -1861,57 +2016,88 @@
         <button type="button" class="view-tab active" id="viewTabAll" data-view="all">すべて</button>
         <button type="button" class="view-tab" id="viewTabSelected" data-view="selected">選択中（<span id="viewTabSelectedCount">0</span>）</button>
       </div>
-      <div class="search-target-tabs" role="tablist" aria-label="検索対象">
-        <button type="button" class="search-target-tab active" id="searchTargetTitle" data-target="title" aria-selected="true">曲名</button>
-        <button type="button" class="search-target-tab" id="searchTargetArtist" data-target="artist" aria-selected="false">アーティスト</button>
+      <div class="ui-field-group song-search-block">
+        <div class="search-target-tabs" role="tablist" aria-label="検索対象">
+          <button type="button" class="search-target-tab active" id="searchTargetTitle" data-target="title" aria-selected="true">曲名</button>
+          <button type="button" class="search-target-tab" id="searchTargetArtist" data-target="artist" aria-selected="false">アーティスト</button>
+        </div>
+        <div class="search-input-row">
+          <input type="search" id="searchInput" placeholder="曲名を入力して検索" autocomplete="off" aria-describedby="searchInputHint" />
+          <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
+        </div>
+        <p class="hint field-input-hint" id="searchInputHint">曲名で絞り込めます。行フィルターと組み合わせもできます。</p>
       </div>
-      <div class="search-input-row">
-        <input type="search" id="searchInput" placeholder="曲名を入力して検索" autocomplete="off" aria-describedby="searchInputHint" />
-        <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
+      <div class="ui-section-soft song-filter-block" id="gyoFilterBlock">
+        <div class="gyo-row" id="gyoRow"></div>
+        <div class="gyo-row gyo-sub-row" id="gyoSubRow" hidden aria-label="五十音 1文字"></div>
       </div>
-      <p class="hint field-input-hint" id="searchInputHint">曲名で絞り込めます。行フィルターと組み合わせもできます。</p>
-      <div class="gyo-row" id="gyoRow"></div>
-      <div class="gyo-row gyo-sub-row" id="gyoSubRow" hidden aria-label="五十音 1文字"></div>
-      <div class="bulk-row" id="bulkRowPrimary">
-        <button class="tool-btn" id="selectVisibleBtn" type="button">表示中をすべて選択</button>
-        <button class="tool-btn" id="clearVisibleBtn" type="button">表示中の選択を解除</button>
+      <div class="ui-section-soft ui-section-soft--compact song-bulk-block">
+        <div class="bulk-row" id="bulkRowPrimary">
+          <button class="tool-btn" id="selectVisibleBtn" type="button">表示中をすべて選択</button>
+          <button class="tool-btn" id="clearVisibleBtn" type="button">表示中の選択を解除</button>
+        </div>
+        <div class="bulk-row bulk-row-secondary" id="bulkRowSecondary">
+          <button class="tool-btn subtle" id="selectAllBtn" type="button">全曲を選択</button>
+          <button class="tool-btn subtle" id="clearAllBtn" type="button">すべて解除</button>
+        </div>
       </div>
-      <div class="bulk-row bulk-row-secondary" id="bulkRowSecondary">
-        <button class="tool-btn subtle" id="selectAllBtn" type="button">全曲を選択</button>
-        <button class="tool-btn subtle" id="clearAllBtn" type="button">すべて解除</button>
+      <div class="ui-field-group song-results-block">
+        <div class="result-meta" id="resultMeta"></div>
+        <div id="results"></div>
       </div>
-      <div class="result-meta" id="resultMeta"></div>
-      <div id="results"></div>
     </section>
 
     <section class="edit-panel" role="tabpanel" id="panelDesign" data-tab-panel="design" aria-labelledby="editTabDesign" hidden>
-      <p class="hint">公開ページのアクセントカラーを選びます。プリセットまたは『＋ 好きな色』から自由に指定できます。</p>
-      <div class="accent-color-picker" id="accentColorPicker">
-        <div class="swatch-presets" id="swatchPresets"></div>
-        <div class="swatch-custom-wrap">
-          <div class="swatch-divider" aria-hidden="true"></div>
-          <label class="custom-color-btn" id="customColorBtn" title="好きな色を指定">
-            <input type="color" id="customColorInput" class="custom-color-input" value="#2a78d6" />
-            <span class="custom-color-plus" id="customColorPlus">＋</span>
-            <span class="custom-color-dot" id="customColorDot"></span>
-            <span class="custom-color-label">好きな色</span>
-            <span class="custom-color-check" aria-hidden="true">✓</span>
-          </label>
+      <div class="ui-field-group theme-picker-block">
+        <p class="section-label">テーマカラー</p>
+        <p class="hint theme-picker-hint">公開ページのアクセントカラーを選びます。プリセットまたは『＋ 好きな色』から自由に指定できます。</p>
+        <div class="accent-color-picker" id="accentColorPicker">
+          <div class="swatch-presets" id="swatchPresets"></div>
+          <div class="swatch-custom-wrap">
+            <div class="swatch-divider" aria-hidden="true"></div>
+            <label class="custom-color-btn" id="customColorBtn" title="好きな色を指定">
+              <input type="color" id="customColorInput" class="custom-color-input" value="#2a78d6" />
+              <span class="custom-color-plus" id="customColorPlus">＋</span>
+              <span class="custom-color-dot" id="customColorDot"></span>
+              <span class="custom-color-label">好きな色</span>
+            </label>
+          </div>
+        </div>
+        <div class="theme-current" id="themeCurrentColor">
+          <span class="theme-current-label">選択中のカラー</span>
+          <span class="theme-current-swatch" id="themeCurrentSwatch" aria-hidden="true"></span>
+          <span class="theme-current-hex" id="themeCurrentHex"></span>
+        </div>
+      </div>
+      <div class="ui-field-group theme-mini-block">
+        <p class="section-label">テーマ見本</p>
+        <p class="hint theme-mini-note">選択した色が公開ページのアクセント（ボタン・選択状態など）に使われます。</p>
+        <div class="theme-mini-preview" id="themeMiniPreview" aria-live="polite">
+          <span class="tm-mark">Utalis theme</span>
+          <p class="tm-name" id="themeMiniName">配信者名</p>
+          <p class="tm-sub" id="themeMiniSub">サブタイトル</p>
+          <span class="tm-search">曲を検索</span>
+          <div class="tm-sample-row">
+            <span class="tm-chip-active">● 選択状態のサンプル</span>
+            <span class="tm-btn">ボタン</span>
+          </div>
         </div>
       </div>
     </section>
 
     <section class="edit-panel" role="tabpanel" id="panelPreview" data-tab-panel="preview" aria-labelledby="editTabPreview" hidden>
-      <p class="preview-shell-label">公開ページ プレビュー</p>
-      <p class="preview-shell-note">実際の公開ページに近い表示です。編集中の内容がその場で反映されます（未公開でも確認できます）。</p>
-      <div class="preview-frame-wrap">
-        <div class="preview-frame" id="previewFrame" aria-live="polite"></div>
+      <div class="ui-field-group preview-shell-block">
+        <p class="preview-shell-label">公開ページ プレビュー</p>
+        <p class="preview-shell-note">実際の公開ページに近い表示です。編集中の内容がその場で反映されます（未公開でも確認できます）。</p>
+        <div class="preview-frame-wrap">
+          <div class="preview-frame" id="previewFrame" aria-live="polite"></div>
+        </div>
       </div>
     </section>
 
     <section class="edit-panel" role="tabpanel" id="panelMore" data-tab-panel="more" aria-labelledby="editTabMore" hidden>
       <h2 class="edit-panel-heading">管理</h2>
-      <div class="sub-block">
+      <div class="ui-field-group">
         <h3>以前のファイルから復元</h3>
         <p class="hint">前に書き出したページのHTMLファイルを読み込むと、選択していた曲やテーマカラーを復元して編集を続けられます。</p>
         <div class="file-row">
@@ -1920,7 +2106,7 @@
           <span class="loaded-name" id="loadedName"></span>
         </div>
       </div>
-      <div class="sub-block">
+      <div class="ui-field-group">
         <h3>タグの候補（任意）</h3>
         <p class="hint">曲に付けられるタグの候補です。追加・削除ができます。</p>
         <div class="tag-admin-list" id="tagAdminList"></div>
@@ -2154,8 +2340,12 @@ PRESETS.forEach((p, i) => {
   el.className = 'swatch';
   el.style.background = p.light;
   el.title = p.name;
-  el.innerHTML = '<span class="check">✓</span>';
+  el.setAttribute('role', 'button');
+  el.setAttribute('tabindex', '0');
   el.addEventListener('click', () => selectPreset(i));
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectPreset(i); }
+  });
   swatchPresets.appendChild(el);
 });
 
@@ -2164,6 +2354,23 @@ customColorInput.addEventListener('input', () => selectCustom(customColorInput.v
 
 let customColorConfigured = false;
 
+function updateThemePickerUi() {
+  const theme = resolveTheme();
+  const swatchEl = document.getElementById('themeCurrentSwatch');
+  const hexEl = document.getElementById('themeCurrentHex');
+  if (swatchEl) swatchEl.style.background = theme.light;
+  if (hexEl) hexEl.textContent = theme.light.toUpperCase();
+  const mini = document.getElementById('themeMiniPreview');
+  if (mini) {
+    mini.style.setProperty('--tm-accent', theme.light);
+    mini.style.setProperty('--tm-accent-ink', theme.lightInk);
+    mini.style.setProperty('--tm-accent-wash', theme.lightWash);
+  }
+  const miniName = document.getElementById('themeMiniName');
+  const miniSub = document.getElementById('themeMiniSub');
+  if (miniName) miniName.textContent = streamerNameInput.value.trim() || '配信者名';
+  if (miniSub) miniSub.textContent = subtitleInput.value.trim() || 'サブタイトル';
+}
 function refreshSwatchSelection() {
   [...swatchPresets.querySelectorAll('.swatch')].forEach((el, i) => {
     el.classList.toggle('selected', currentTheme.type === 'preset' && currentTheme.presetIndex === i);
@@ -2172,6 +2379,7 @@ function refreshSwatchSelection() {
   customColorBtn.classList.toggle('selected', isCustomActive);
   customColorBtn.classList.toggle('has-custom', customColorConfigured);
   if (customColorConfigured) customColorDot.style.background = currentTheme.customHex;
+  updateThemePickerUi();
 }
 function selectPreset(i) {
   currentTheme = { type: 'preset', presetIndex: i, customHex: currentTheme.customHex };
@@ -2300,6 +2508,8 @@ function sortSongsForDisplay(songs) {
 function updateSongListChrome() {
   const isSelectedView = songListView === 'selected';
   const showArtistGyo = shouldShowArtistGyoFilters();
+  const gyoFilterBlock = document.getElementById('gyoFilterBlock');
+  if (gyoFilterBlock) gyoFilterBlock.hidden = !showArtistGyo;
   if (gyoRow) gyoRow.style.display = showArtistGyo ? '' : 'none';
   if (gyoSubRow && !showArtistGyo) gyoSubRow.hidden = true;
   if (showArtistGyo) updateGyoSubRow();
@@ -2503,10 +2713,9 @@ function updateTabBadges() {
   const badgePreview = document.getElementById('tabBadgePreview');
   const tabCount = document.getElementById('viewTabSelectedCount');
 
-  if (badgeBasic) {
-    badgeBasic.textContent = '✓';
-    badgeBasic.hidden = !isBasicSectionDone();
-  }
+  if (badgeBasic) badgeBasic.hidden = true;
+  if (badgeDesign) badgeDesign.hidden = true;
+  if (badgePreview) badgePreview.hidden = true;
   if (badgeSongs) {
     if (selectedKeys.size > 0) {
       badgeSongs.textContent = selectedKeys.size.toLocaleString('ja-JP');
@@ -2514,14 +2723,6 @@ function updateTabBadges() {
     } else {
       badgeSongs.hidden = true;
     }
-  }
-  if (badgeDesign) {
-    badgeDesign.textContent = '✓';
-    badgeDesign.hidden = false;
-  }
-  if (badgePreview) {
-    badgePreview.textContent = '✓';
-    badgePreview.hidden = !(streamerNameInput.value.trim() && selectedKeys.size > 0);
   }
   if (tabCount) tabCount.textContent = selectedKeys.size.toLocaleString('ja-JP');
 }
@@ -3157,6 +3358,7 @@ function updatePreviewPanel() {
   frame.style.setProperty('--pv-accent-ink', theme.lightInk);
   frame.style.setProperty('--pv-accent-wash', theme.lightWash);
   frame.innerHTML = buildPreviewFrameHtml();
+  updateThemePickerUi();
 }
 streamerNameInput.addEventListener('input', updateSelectedCount);
 subtitleInput.addEventListener('input', updatePreviewPanel);

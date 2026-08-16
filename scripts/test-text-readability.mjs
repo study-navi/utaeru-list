@@ -134,7 +134,6 @@ async function checkBuilder(label, width, height) {
       namePh: pick('#streamerName')?.getAttribute('placeholder') || '',
       idPh: pick('#streamerIdInput')?.getAttribute('placeholder') || '',
       nameVal: pick('#streamerName')?.value || '',
-      basicBadge: pick('#tabBadgeBasic')?.textContent?.trim() || '',
       basicBadgeHidden: pick('#tabBadgeBasic')?.hidden,
       urlPreviewClip: clip(pick('#streamerIdPreview')),
     };
@@ -147,8 +146,8 @@ async function checkBuilder(label, width, height) {
   else ok(`${label}: ID placeholder = sample 系`);
   if (checks.nameVal !== longName) fail(`${label}: 配信者名入力 全文`, checks.nameVal);
   else ok(`${label}: 配信者名入力 全文`);
-  if (checks.basicBadge !== '✓' || checks.basicBadgeHidden) fail(`${label}: 基本情報タブ ✓`, checks.basicBadge);
-  else ok(`${label}: 基本情報タブ ✓`);
+  if (!checks.basicBadgeHidden) fail(`${label}: 基本情報タブ ✓なし`);
+  else ok(`${label}: 基本情報タブ ✓なし`);
   if (checks.urlPreviewClip) fail(`${label}: URLプレビュー 切れ`);
   else ok(`${label}: URLプレビュー 全文表示`);
 

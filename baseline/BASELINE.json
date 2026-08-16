@@ -1,15 +1,15 @@
 {
-  "label": "v1.0 曲名/アーティスト検索分離・五十音改善",
+  "label": "v1.0 編集画面視認性・デザインタブ最終調整",
   "establishedAt": "2026-08-17",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "v1.0 曲検索・五十音フィルター改善",
+    "label": "v1.0 曲名/アーティスト検索分離・五十音改善",
     "establishedAt": "2026-08-17",
     "files": {
       "index.html": {
-        "bytes": 375668,
-        "sha256": "22cf9e398cf50fa58aeb910822e8530aaabc50e5389bf4d990112ffdd73e00bc"
+        "bytes": 375855,
+        "sha256": "c868e7f33dd8fc271fe59d2795f756b50f9c89480f1fb1880484f2967b97453e"
       },
       "hiro.html": {
         "bytes": 25170,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 375855,
-      "sha256": "c868e7f33dd8fc271fe59d2795f756b50f9c89480f1fb1880484f2967b97453e"
+      "bytes": 382957,
+      "sha256": "d88ee7df8b2f1144b9f72597cd940f3d7ed00c1806d3054c4357ab1d83d9c8d9"
     },
     "hiro.html": {
       "bytes": 25170,
