@@ -9,6 +9,16 @@
 <meta property="og:description" content="配信で歌える曲リストを作成し、固定URLで公開できます。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://utalis.github.io/">
+<meta property="og:image" content="https://utalis.github.io/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Utalis（うたりす）— 歌える曲リストを、かんたんに作って共有。">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Utalis｜うたりす — 歌える曲リスト">
+<meta name="twitter:description" content="配信で歌える曲リストを作成し、固定URLで公開できます。">
+<meta name="twitter:image" content="https://utalis.github.io/og-image.png">
+<meta name="twitter:image:alt" content="Utalis（うたりす）— 歌える曲リストを、かんたんに作って共有。">
 <link rel="canonical" href="https://utalis.github.io/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <title>Utalis｜うたりす — 歌える曲リスト</title>
@@ -1643,7 +1653,7 @@
   </div>
 </aside>
 
-<div class="modal-backdrop" id="manageModeModal" hidden>
+<div class="modal-backdrop" id="manageModeModal" hidden aria-modal="true">
   <div class="modal-card" role="dialog" aria-labelledby="manageModeTitle">
     <h3 id="manageModeTitle">このページをどう管理しますか？</h3>
     <p>公開後の更新方法を選んでください。あとから変更することもできます。</p>
@@ -1658,7 +1668,7 @@
   </div>
 </div>
 
-<div class="modal-backdrop" id="publishSuccessModal" hidden>
+<div class="modal-backdrop" id="publishSuccessModal" hidden aria-modal="true">
   <div class="modal-card" role="dialog" aria-labelledby="publishSuccessTitle">
     <p class="publish-success-title" id="publishSuccessTitle">✓ 公開しました</p>
     <p class="hint">リスナーに共有できるURLです。配信の概要欄やSNSに貼り付けて使えます。</p>
@@ -1672,7 +1682,7 @@
   </div>
 </div>
 
-<div class="modal-backdrop" id="editKeyIssuedModal" hidden>
+<div class="modal-backdrop" id="editKeyIssuedModal" hidden aria-modal="true">
   <div class="modal-card" role="dialog" aria-labelledby="editKeyIssuedTitle">
     <p class="edit-key-warning" id="editKeyIssuedTitle">編集キーを保管してください</p>
     <p class="hint">このキーは、次回からページを更新するときに必要です。メモ帳など安全な場所にコピーして保管してください。なくすと更新できません（再表示はできません）。</p>
@@ -1686,7 +1696,7 @@
   </div>
 </div>
 
-<div class="modal-backdrop" id="deletePageModal" hidden>
+<div class="modal-backdrop" id="deletePageModal" hidden aria-modal="true">
   <div class="modal-card" role="dialog" aria-labelledby="deletePageTitle">
     <h3 id="deletePageTitle">この公開ページを削除しますか？</h3>
     <p>公開ページID：<strong id="deleteConfirmIdLabel"></strong></p>
@@ -3990,6 +4000,15 @@ document.getElementById('deleteConfirmInput')?.addEventListener('input', () => {
 });
 document.getElementById('deletePageModal')?.addEventListener('click', (e) => {
   if (e.target === document.getElementById('deletePageModal')) closeDeletePageModal();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (!document.getElementById('deletePageModal')?.hidden) closeDeletePageModal();
+  else if (!document.getElementById('publishSuccessModal')?.hidden) closePublishSuccessModal();
+  else if (!document.getElementById('editKeyIssuedModal')?.hidden) clearIssuedEditKeyDisplay();
+  else if (!document.getElementById('manageModeModal')?.hidden) closeManageModeModal();
+  else if (document.getElementById('accountPanel')?.classList.contains('open')) closeAccountPanel();
 });
 
 window.addEventListener('resize', syncBuilderChromeInsets, { passive: true });

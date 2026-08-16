@@ -25,50 +25,62 @@
   <h2>1. 概要</h2>
   <p>Utalis（うたりす）は、歌える曲リストの作成・公開サービスです。本ポリシーは、本サービスで取り扱う情報について説明します。</p>
 
-  <h2>2. 収集・保存する情報</h2>
-  <p>本サービスでは、以下の情報を Cloudflare D1 データベース等に保存します。</p>
+  <h2>2. サーバー（D1）に保存する情報</h2>
+  <p>Cloudflare D1 データベースに、以下を保存します。</p>
   <ul>
-    <li><strong>公開ページデータ</strong>: 配信者名、サブタイトル、選択した曲情報、タグ・状態・新着設定、テーマ設定、公開ページ ID、作成日時・更新日時</li>
-    <li><strong>Google ログイン利用時</strong>: Google アカウント ID（sub）、メールアドレス、表示名、ログイン日時</li>
-    <li><strong>匿名作成・編集キー管理時</strong>: 編集キーのハッシュ値（平文の編集キーは保存しません）</li>
-    <li><strong>削除済みページ</strong>: 公開ページ ID と削除日時（ソフト削除。ID の再取得防止のため保持）</li>
+    <li><strong>公開ページデータ（<code>streamers.public_data</code>）</strong>: 配信者名、サブタイトル、選択した曲情報、曲ごとのタグ・状態・新着設定、タグプリセット、テーマ設定、公開ページ ID、設定バージョン、更新日時等（JSON 形式）</li>
+    <li><strong>公開ページのメタ情報</strong>: 公開ページ ID、作成日時、更新日時</li>
+    <li><strong>Google ログイン利用時（<code>users</code>）</strong>: 内部ユーザー ID、Google アカウント ID（sub）、メールアドレス、表示名、作成日時、最終ログイン日時</li>
+    <li><strong>Google 管理の紐付け（<code>streamer_owners</code>）</strong>: どの Google アカウントがどの公開ページ ID を管理しているか</li>
+    <li><strong>匿名作成・編集キー管理（<code>streamer_edit_keys</code>）</strong>: 編集キーの SHA-256 ハッシュ値（サーバー側の秘密値と組み合わせて計算）。平文の編集キーは保存しません。Google 連携後は無効化（<code>revoked_at</code>）されます</li>
+    <li><strong>削除済みページ</strong>: 公開ページ ID、削除日時（<code>deleted_at</code>）。ソフト削除のため ID 再取得防止のために保持します</li>
   </ul>
 
-  <h2>3. 保存しない情報</h2>
+  <h2>3. ブラウザに保存する情報</h2>
+  <p>Utalis のビルダー画面（<code>index.html</code>）では、利便性のため以下をブラウザの <code>sessionStorage</code> に保存することがあります（タブを閉じると消える一時保存）。</p>
+  <ul>
+    <li>Google ログイン後に発行されるセッショントークン（API 認証用）</li>
+    <li>編集キー（匿名作成・編集キー管理を選んだ場合。端末内にのみ保持）</li>
+  </ul>
+  <p>これらは Utalis のサーバー（D1）へ平文で送信されるのは API 利用時のみであり、編集キーの平文は D1 に保存されません。</p>
+
+  <h2>4. 保存しない情報</h2>
   <p>以下は、運営統計や分析目的で D1 に恒久保存しません。</p>
   <ul>
     <li>リスナー（公開ページ閲覧者）の Google アカウント情報</li>
-    <li>リスナーの閲覧履歴・行動履歴の詳細</li>
+    <li>リスナーの閲覧履歴・行動履歴</li>
     <li>端末情報のプロファイリング</li>
-    <li>編集キーの平文</li>
+    <li>編集キーの平文（サーバー側）</li>
   </ul>
-  <p>なお、スパム防止のため、書き込み系 API では Cloudflare Workers のレート制限機能により、短時間のリクエスト元 IP が一時的に利用される場合があります。これは D1 への恒久保存ではありません。</p>
+  <p>スパム防止のため、書き込み系 API では Cloudflare Workers のレート制限機能により、短時間のリクエスト元 IP が一時的に利用される場合があります（D1 への恒久保存ではありません）。</p>
 
-  <h2>4. Google ログイン</h2>
-  <p>Google アカウントで管理する場合、Google OAuth により認証します。Utalis は Google からメールアドレス等を受け取り、セッション管理に利用します。Google 側の取り扱いについては、<a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google プライバシーポリシー</a>もご確認ください。</p>
+  <h2>5. Google ログイン</h2>
+  <p>Google アカウントで管理する場合、Google OAuth（Google Identity Services）により認証します。Utalis は Google からアカウント ID（sub）、メールアドレス、表示名等を受け取り、ログイン状態の管理と公開ページの所有者確認に利用します。</p>
+  <p>セッションは署名付きトークンで管理されます。GitHub Pages（<code>utalis.github.io</code>）から API（<code>utaeru-api.manabit.workers.dev</code>）へはクロスサイトとなるため、ブラウザの <code>sessionStorage</code> にトークンを保持し、API リクエスト時に送信する方式を用いています。</p>
+  <p>Google 側の取り扱いについては、<a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google プライバシーポリシー</a>もご確認ください。</p>
 
-  <h2>5. 公開データ</h2>
-  <p>公開した曲リストは、固定 URL から誰でも閲覧できる状態になります。公開する内容（配信者名・曲名等）に個人情報や機密情報を含めないようご注意ください。</p>
+  <h2>6. 公開データ</h2>
+  <p>公開した曲リストは、固定 URL から誰でも閲覧できる状態になります。リスナーのログインは不要です。公開する内容（配信者名・曲名等）に個人情報や機密情報を含めないようご注意ください。</p>
 
-  <h2>6. 利用目的</h2>
+  <h2>7. 利用目的</h2>
   <ul>
     <li>歌える曲リストの作成・公開・更新・削除機能の提供</li>
     <li>Google 管理・編集キー認証によるページ管理</li>
     <li>不正利用・大量作成の防止（レート制限）</li>
-    <li>サービス運営に必要な最小限の統計（ページ数、曲数等の集計。個人を特定しない形式）</li>
+    <li>サービス運営に必要な最小限の集計（公開ページ数、曲数等。個人を特定しない形式）</li>
   </ul>
 
-  <h2>7. 第三者サービス</h2>
+  <h2>8. 第三者サービス</h2>
   <ul>
     <li><strong>GitHub Pages</strong>: ビルダー画面・公開ページ viewer の配信</li>
     <li><strong>Cloudflare Workers / D1</strong>: API とデータ保存</li>
     <li><strong>Google</strong>: OAuth 認証（Google 管理を選んだ場合）</li>
   </ul>
 
-  <h2>8. 削除</h2>
-  <p>利用者は公開ページを削除できます。削除後も公開ページ ID の予約のため、識別子と削除日時等は一定期間保持されます。詳細は<a href="terms.html">利用規約</a>を参照してください。</p>
+  <h2>9. 削除</h2>
+  <p>利用者は公開ページを削除できます。削除後も公開ページ ID の予約のため、識別子と削除日時等は保持されます。詳細は<a href="terms.html">利用規約</a>を参照してください。</p>
 
-  <h2>9. お問い合わせ</h2>
+  <h2>10. お問い合わせ</h2>
   <p>本ポリシーに関するお問い合わせは、<a href="contact.html">お問い合わせ</a>ページをご覧ください。</p>
 
   <footer class="site-footer">

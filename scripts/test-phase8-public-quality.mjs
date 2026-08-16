@@ -45,6 +45,21 @@ else ok('index: publishSuccessShare');
 if (!indexHtml.includes('id="barShareUrl"')) fail('index: barShareUrl');
 else ok('index: barShareUrl');
 
+if (!indexHtml.includes('property="og:image"')) fail('index: og:image meta');
+else ok('index: og:image meta');
+
+if (!indexHtml.includes('twitter:card')) fail('index: twitter card meta');
+else ok('index: twitter card meta');
+
+if (!fs.existsSync(path.join(ROOT, 'og-image.png'))) fail('og-image.png exists');
+else ok('og-image.png exists');
+
+const ogSize = await import('node:child_process').then(({ execSync }) =>
+  execSync('sips -g pixelWidth -g pixelHeight og-image.png', { cwd: ROOT, encoding: 'utf8' }),
+).catch(() => '');
+if (!ogSize.includes('1200') || !ogSize.includes('630')) fail('og-image.png 1200x630', ogSize.trim());
+else ok('og-image.png 1200x630');
+
 if (!indexHtml.includes('href="favicon.svg"')) fail('index: favicon link');
 else ok('index: favicon link');
 
@@ -84,6 +99,22 @@ for (const [file, section] of [
   if (!privacy.includes(section) && file === 'privacy.html') fail(`${file}: ${section}`);
   else if (file === 'privacy.html') ok(`${file}: ${section}`);
 }
+
+const contact = read('contact.html');
+if (contact.includes('issues/new')) ok('contact: direct new issue link');
+else fail('contact: direct new issue link');
+
+if (privacy.includes('sessionStorage')) ok('privacy: sessionStorage documented');
+else fail('privacy: sessionStorage documented');
+
+if (privacy.includes('streamer_owners')) ok('privacy: streamer_owners documented');
+else fail('privacy: streamer_owners documented');
+
+if (terms.includes('ID予約') || terms.includes('ソフト削除')) ok('terms: soft delete / ID reservation');
+else fail('terms: soft delete / ID reservation');
+
+if (indexHtml.includes('aria-modal="true"')) ok('index: modal aria-modal');
+else fail('index: modal aria-modal');
 
 async function browserChecks() {
   let browser;

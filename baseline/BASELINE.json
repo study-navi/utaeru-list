@@ -1,26 +1,26 @@
 {
-  "label": "Phase 8 一般公開品質・初回体験",
+  "label": "Phase 8.5 公開前最終仕上げ（OGP・法務照合）",
   "establishedAt": "2026-08-17",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "Phase 7 運営基盤（soft delete・管理統計）",
+    "label": "Phase 8 一般公開品質・初回体験",
     "establishedAt": "2026-08-17",
     "files": {
       "index.html": {
-        "bytes": 355306,
-        "sha256": "b30ce1731b11c746bc566b95db8280dbebe99cb537e68fef7e88855bc9eaf955"
+        "bytes": 364240,
+        "sha256": "cd57f8d885fa993a65e4925c7f3e50acfff966b44416f05761f2f41b7cbb3083"
       },
       "hiro.html": {
-        "bytes": 24413,
-        "sha256": "a7e49ef25659be6d7f62f028a275032cacbcbfc5bf7e46f4efb4a3e5091bf5df"
+        "bytes": 25155,
+        "sha256": "2f5800c3c6bc5c19f58a819fd2457f305ea8c61909174cda35dd6b0e4665d7d1"
       }
     }
   },
   "files": {
     "index.html": {
-      "bytes": 364240,
-      "sha256": "cd57f8d885fa993a65e4925c7f3e50acfff966b44416f05761f2f41b7cbb3083"
+      "bytes": 365679,
+      "sha256": "f1664b4e48eb6415b2820d43b3f9d5a60231176c33e1c1aa31bf1c132ce9cf1c"
     },
     "hiro.html": {
       "bytes": 25155,
