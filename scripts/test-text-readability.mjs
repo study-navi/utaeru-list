@@ -21,6 +21,90 @@ function isClipped(el) {
   return el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1;
 }
 
+async function checkBuilderPlaceholders(label, width, height) {
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width, height } });
+  await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForFunction(() => typeof MASTER_SONGS !== 'undefined', { timeout: 15000 });
+
+  const basicIds = ['streamerName', 'subtitle', 'streamerIdInput'];
+  const basicResults = await page.evaluate((inputIds) => {
+    function placeholderFits(input) {
+      if (!input || !input.placeholder) return { ok: true, ph: '' };
+      if (input.clientWidth < 1) return { ok: false, ph: input.placeholder, reason: 'not_visible' };
+      const style = getComputedStyle(input);
+      const span = document.createElement('span');
+      span.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;';
+      span.style.font = style.font;
+      span.textContent = input.placeholder;
+      document.body.appendChild(span);
+      const textWidth = span.offsetWidth;
+      span.remove();
+      const pad = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      const available = input.clientWidth - pad;
+      const fits = textWidth <= available + 1;
+      return { ok: fits, ph: input.placeholder, textWidth, available };
+    }
+    return inputIds.map((id) => {
+      const el = document.getElementById(id);
+      const r = placeholderFits(el);
+      return { id, ...r };
+    });
+  }, basicIds);
+
+  for (const r of basicResults) {
+    if (!r.ok) fail(`${label} ${width}px: #${r.id} placeholder 切れ`, r.ph);
+    else ok(`${label} ${width}px: #${r.id} placeholder 全文 (${r.ph})`);
+  }
+
+  await page.click('#accSongs .acc-head');
+  await page.waitForSelector('#accSongs.open #accSongsBody', { state: 'visible', timeout: 5000 });
+
+  const searchResult = await page.evaluate(() => {
+    function placeholderFits(input) {
+      if (!input || !input.placeholder) return { ok: true, ph: '' };
+      if (input.clientWidth < 1) return { ok: false, ph: input.placeholder, reason: 'not_visible' };
+      const style = getComputedStyle(input);
+      const span = document.createElement('span');
+      span.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;';
+      span.style.font = style.font;
+      span.textContent = input.placeholder;
+      document.body.appendChild(span);
+      const textWidth = span.offsetWidth;
+      span.remove();
+      const pad = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      const available = input.clientWidth - pad;
+      const fits = textWidth <= available + 1;
+      return { ok: fits, ph: input.placeholder };
+    }
+    const el = document.getElementById('searchInput');
+    const r = placeholderFits(el);
+    return { id: 'searchInput', ...r };
+  });
+
+  if (!searchResult.ok) fail(`${label} ${width}px: #${searchResult.id} placeholder 切れ`, searchResult.ph);
+  else ok(`${label} ${width}px: #${searchResult.id} placeholder 全文 (${searchResult.ph})`);
+
+  const subtitleHint = await page.evaluate(() => {
+    const el = document.querySelector('#subtitle + .field-input-hint');
+    if (!el) return { missing: true };
+    return {
+      missing: false,
+      text: el.textContent.trim(),
+      clip: el.scrollHeight > el.clientHeight + 1,
+    };
+  });
+  if (subtitleHint.missing) fail(`${label} ${width}px: subtitle 補足なし`);
+  else if (subtitleHint.clip) fail(`${label} ${width}px: subtitle 補足 切れ`, subtitleHint.text);
+  else ok(`${label} ${width}px: subtitle 補足 全文`);
+
+  const subPh = await page.evaluate(() => document.getElementById('subtitle')?.getAttribute('placeholder') || '');
+  if (subPh !== '例：リクエスト歓迎！') fail(`${label} ${width}px: subtitle placeholder 文言`, subPh);
+  else ok(`${label} ${width}px: subtitle placeholder 短文化`);
+
+  await browser.close();
+}
+
 async function checkBuilder(label, width, height) {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width, height } });
@@ -116,6 +200,11 @@ async function checkPublic(url, label, width) {
   await browser.close();
 }
 
+await checkBuilderPlaceholders('mobile', 320, 844);
+for (const w of [375, 390, 430]) {
+  await checkBuilderPlaceholders('mobile', w, 844);
+}
+await checkBuilderPlaceholders('pc', 1280, 900);
 await checkBuilder('mobile', 390, 844);
 await checkBuilder('pc', 1280, 900);
 for (const w of [320, 375, 390, 430]) {

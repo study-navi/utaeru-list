@@ -916,6 +916,12 @@
   }
   input[type="text"]::placeholder { color: var(--text-placeholder); opacity: 1; }
   input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(42, 120, 214, 0.12); }
+  .field-input-hint {
+    margin: 4px 0 0;
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+  .acc-body input[type="text"] + .field-input-hint { margin-bottom: 2px; }
 
   .accent-color-picker {
     display: flex;
@@ -1586,9 +1592,11 @@
       </button>
       <div class="acc-body" id="accBasicBody">
         <label class="field-label" for="streamerName">配信者名・ページタイトル</label>
-        <input type="text" id="streamerName" placeholder="例：うたりすさんの歌える曲リスト" />
+        <input type="text" id="streamerName" placeholder="例：うたりすさん" />
+        <p class="hint field-input-hint">公開ページのタイトルとして表示されます。</p>
         <label class="field-label" for="subtitle">一言・サブタイトル（任意）</label>
-        <input type="text" id="subtitle" placeholder="配信で歌える曲を検索できます。曲名・アーティスト名で絞り込めます。" />
+        <input type="text" id="subtitle" placeholder="例：リクエスト歓迎！" />
+        <p class="hint field-input-hint">公開ページで配信者名の下に表示されます。</p>
         <label class="field-label" for="streamerIdInput">公開ページID</label>
         <input type="text" id="streamerIdInput" placeholder="例：sample" maxlength="32" autocomplete="off" spellcheck="false" />
         <p class="hint">半角英小文字・数字・ハイフンのみ（3〜32文字）。固定URL（/u/あなたのID）に使われます。HTML書き出しだけなら空欄でも構いません。</p>
@@ -1610,9 +1618,10 @@
           <button type="button" class="view-tab" id="viewTabSelected" data-view="selected">選択中（<span id="viewTabSelectedCount">0</span>）</button>
         </div>
         <div class="search-input-row">
-          <input type="search" id="searchInput" placeholder="曲名・アーティスト名で検索して絞り込み" autocomplete="off" />
+          <input type="search" id="searchInput" placeholder="例：Story / AI" autocomplete="off" />
           <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
         </div>
+        <p class="hint field-input-hint">曲名・アーティスト名で絞り込めます。</p>
         <div class="gyo-row" id="gyoRow"></div>
         <div class="bulk-row">
           <button class="tool-btn" id="selectVisibleBtn">表示中をすべて選択</button>
