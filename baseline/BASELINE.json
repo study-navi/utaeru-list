@@ -1,15 +1,15 @@
 {
-  "label": "v1.0 曲検索・五十音フィルター改善",
+  "label": "v1.0 曲名/アーティスト検索分離・五十音改善",
   "establishedAt": "2026-08-17",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "v1.0 選択中曲一覧ボタン配置統一",
+    "label": "v1.0 曲検索・五十音フィルター改善",
     "establishedAt": "2026-08-17",
     "files": {
       "index.html": {
-        "bytes": 371262,
-        "sha256": "dbb957ec2215f8415f4af9cb043b360c9ef48aa53ec7123c1574e08bc0f71cb5"
+        "bytes": 375668,
+        "sha256": "22cf9e398cf50fa58aeb910822e8530aaabc50e5389bf4d990112ffdd73e00bc"
       },
       "hiro.html": {
         "bytes": 25170,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 375668,
-      "sha256": "22cf9e398cf50fa58aeb910822e8530aaabc50e5389bf4d990112ffdd73e00bc"
+      "bytes": 375855,
+      "sha256": "c868e7f33dd8fc271fe59d2795f756b50f9c89480f1fb1880484f2967b97453e"
     },
     "hiro.html": {
       "bytes": 25170,

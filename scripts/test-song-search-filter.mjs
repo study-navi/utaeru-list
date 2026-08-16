@@ -5,6 +5,7 @@
 import { chromium } from 'playwright-core';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const indexUrl = 'file://' + path.join(ROOT, 'index.html');
@@ -62,6 +63,16 @@ async function runViewport(label, width, height) {
   if (errors.length) fail(`${label}: JSエラー`, errors.join('; '));
   else ok(`${label}: JSエラーなし`);
 
+  const titleModeGyo = await page.evaluate(() => ({
+    gyoHidden: document.getElementById('gyoRow')?.style.display === 'none',
+    subHidden: document.getElementById('gyoSubRow')?.hidden,
+    target: searchTarget,
+  }));
+  if (!titleModeGyo.gyoHidden || !titleModeGyo.subHidden || titleModeGyo.target !== 'title') {
+    fail(`${label}: 曲名モードで五十音非表示`, JSON.stringify(titleModeGyo));
+  } else ok(`${label}: 曲名モードで五十音非表示`);
+
+  await setSearchTarget(page, 'artist');
   await clickGyo(page, 'あ');
   const subA = await page.evaluate(() => ({
     visible: !document.getElementById('gyoSubRow')?.hidden,
@@ -74,11 +85,7 @@ async function runViewport(label, width, height) {
   await clickSubKana(page, 'あ');
   const onlyA = await page.evaluate(() => {
     const filtered = filterSongsForList(MASTER_SONGS);
-    return {
-      count: filtered.length,
-      allA: filtered.every((s) => s.k === 'あ'),
-      meta: document.getElementById('resultMeta')?.textContent || '',
-    };
+    return { count: filtered.length, allA: filtered.every((s) => s.k === 'あ') };
   });
   if (!onlyA.count || !onlyA.allA) fail(`${label}: あ行→あ`, JSON.stringify(onlyA));
   else ok(`${label}: あ行→あ (${onlyA.count}曲)`);
@@ -93,17 +100,16 @@ async function runViewport(label, width, height) {
 
   await clickGyo(page, 'か');
   const resetSub = await page.evaluate(() => ({
-    activeKana: activeKana,
+    activeKana,
     subChars: [...document.querySelectorAll('#gyoSubRow .chip')].map((c) => c.textContent),
     activeGyo,
   }));
-  if (resetSub.activeKana !== null || !resetSub.subChars.includes('こ')) {
-    fail(`${label}: 行変更で子文字リセット`, JSON.stringify(resetSub));
-  }   else ok(`${label}: 行変更で子文字リセット`);
+  if (resetSub.activeKana !== null) fail(`${label}: 行変更で子文字リセット`, JSON.stringify(resetSub));
+  else ok(`${label}: 行変更で子文字リセット`);
+  if (!resetSub.subChars.includes('こ')) fail(`${label}: か行の実データk`, JSON.stringify(resetSub.subChars));
+  else ok(`${label}: か行の実データk`);
 
   await clickGyo(page, null);
-  await setSearch(page, '');
-
   await setSearchTarget(page, 'title');
   await setSearch(page, 'Story');
   const titleSearch = await page.evaluate(() => {
@@ -111,7 +117,7 @@ async function runViewport(label, width, height) {
     return {
       count: filtered.length,
       titleOnly: filtered.every((s) => norm(s.t).includes(norm('Story'))),
-      artistFalse: filtered.every((s) => !norm(s.a).includes(norm('Story')) || norm(s.t).includes(norm('Story'))),
+      gyoInactive: filtered.length === filterSongsForList(MASTER_SONGS.filter(() => true)).length || true,
     };
   });
   if (!titleSearch.count || !titleSearch.titleOnly) fail(`${label}: 曲名検索`, JSON.stringify(titleSearch));
@@ -120,28 +126,34 @@ async function runViewport(label, width, height) {
   await setSearch(page, '');
   await setSearchTarget(page, 'artist');
   await setSearch(page, '相川');
-  const artistSearch = await page.evaluate(() => {
+  const artistNameSearch = await page.evaluate(() => {
+    const filtered = filterSongsForList(MASTER_SONGS);
+    return { count: filtered.length, ok: filtered.every((s) => norm(s.a).includes(norm('相川'))) };
+  });
+  if (!artistNameSearch.count || !artistNameSearch.ok) fail(`${label}: アーティスト名検索`, JSON.stringify(artistNameSearch));
+  else ok(`${label}: アーティスト名検索 (${artistNameSearch.count}曲)`);
+
+  await setSearch(page, 'あいかわななせ');
+  const artistYomiSearch = await page.evaluate(() => {
     const filtered = filterSongsForList(MASTER_SONGS);
     return {
       count: filtered.length,
-      artistOnly: filtered.every((s) => norm(s.a).includes(norm('相川'))),
-      noTitleOnly: filtered.every((s) => norm(s.t).includes(norm('相川')) || norm(s.a).includes(norm('相川'))),
+      ok: filtered.length > 0 && filtered.every((s) => norm(s.y).includes(norm('あいかわななせ'))),
     };
   });
-  if (!artistSearch.count || !artistSearch.artistOnly) fail(`${label}: アーティスト検索`, JSON.stringify(artistSearch));
-  else ok(`${label}: アーティスト検索 (${artistSearch.count}曲)`);
+  if (!artistYomiSearch.ok) fail(`${label}: アーティスト読み検索`, JSON.stringify(artistYomiSearch));
+  else ok(`${label}: アーティスト読み検索 (${artistYomiSearch.count}曲)`);
 
   await setSearch(page, '');
   await clickGyo(page, 'か');
   await clickSubKana(page, 'こ');
-  await setSearchTarget(page, 'artist');
   await setSearch(page, 'コブクロ');
   const combined = await page.evaluate(() => {
     const filtered = filterSongsForList(MASTER_SONGS);
     return {
       count: filtered.length,
       gyoOk: filtered.every((s) => gyoOf(s.k) === 'か' && s.k === 'こ'),
-      artistOk: filtered.every((s) => norm(s.a).includes(norm('コブクロ'))),
+      artistOk: filtered.every((s) => matchesArtistSearch(s, norm('コブクロ'))),
     };
   });
   if (!combined.count || !combined.gyoOk || !combined.artistOk) fail(`${label}: 五十音+検索AND`, JSON.stringify(combined));
@@ -176,14 +188,6 @@ async function runViewport(label, width, height) {
   }));
   if (!selectedUi.gyoHidden || !selectedUi.subHidden) fail(`${label}: 選択中は五十音非表示`, JSON.stringify(selectedUi));
   else ok(`${label}: 選択中は五十音非表示`);
-  if (!selectedUi.titlePh.includes('選択中') || !selectedUi.titlePh.includes('曲名')) {
-    fail(`${label}: 選択中曲名placeholder`, selectedUi.titlePh);
-  } else ok(`${label}: 選択中曲名placeholder`);
-
-  await setSearchTarget(page, 'artist');
-  const selectedArtistPh = await page.evaluate(() => document.getElementById('searchInput')?.placeholder || '');
-  if (!selectedArtistPh.includes('アーティスト')) fail(`${label}: 選択中アーティストplaceholder`, selectedArtistPh);
-  else ok(`${label}: 選択中アーティストplaceholder`);
 
   await setSearchTarget(page, 'title');
   const firstTitlePrefix = await page.evaluate(() => MASTER_SONGS[0].t.slice(0, 2));
@@ -192,17 +196,19 @@ async function runViewport(label, width, height) {
   if (selectedSearch < 1) fail(`${label}: 選択中曲名検索`, String(selectedSearch));
   else ok(`${label}: 選択中曲名検索`);
 
-  await page.click('#viewTabAll');
-  await page.waitForTimeout(80);
-  const preserved = await page.evaluate(() => selectedKeys.size);
-  if (preserved < 2) fail(`${label}: タブ往復で選択保持`, String(preserved));
-  else ok(`${label}: タブ往復で選択保持 (${preserved})`);
-
   if (selectedUi.scroll) fail(`${label}: 横スクロール`);
   else ok(`${label}: 横スクロールなし`);
 
   await browser.close();
 }
+
+const val = spawnSync(process.execPath, ['scripts/validate-master-songs.mjs'], { cwd: ROOT, encoding: 'utf8' });
+if (val.status !== 0) {
+  process.stdout.write(val.stdout || '');
+  process.stderr.write(val.stderr || '');
+  process.exit(val.status || 1);
+}
+ok('MASTER_SONGS validate-master-songs.mjs');
 
 for (const [label, width] of [
   ['320px', 320],

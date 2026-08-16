@@ -294,6 +294,7 @@ async function runRegressionScripts() {
     'scripts/test-phase8-public-quality.mjs',
     'scripts/test-phase9-song-selection.mjs',
     'scripts/test-song-search-filter.mjs',
+    'scripts/validate-master-songs.mjs',
     'scripts/test-api-phase5.mjs',
     'scripts/test-api-phase7.mjs',
   ];
