@@ -48,7 +48,26 @@ async function run(label, width, height) {
   await page.click('[data-next="design"]');
   await page.waitForTimeout(120);
 
-  await page.click('[data-prev="songs"]');
+  if (width <= 420) {
+    const prevHidden = await page.evaluate(() => {
+      const el = document.querySelector('.acc-prev');
+      return el ? getComputedStyle(el).display === 'none' : true;
+    });
+    if (!prevHidden) fail(`${label}: 420px以下で戻る非表示`);
+    else ok(`${label}: 420px以下で戻る非表示`);
+    const nextFull = await page.evaluate(() => {
+      const el = document.querySelector('.acc-nav .acc-next');
+      if (!el) return false;
+      const r = el.getBoundingClientRect();
+      const nav = el.closest('.acc-nav')?.getBoundingClientRect();
+      return nav ? r.width >= nav.width * 0.95 : false;
+    });
+    if (!nextFull) fail(`${label}: 次へボタン全幅`);
+    else ok(`${label}: 次へボタン全幅`);
+    await page.click('#accSongs .acc-head');
+  } else {
+    await page.click('[data-prev="songs"]');
+  }
   await page.waitForTimeout(120);
 
   const afterBack = await page.evaluate(() => ({
@@ -70,18 +89,36 @@ async function run(label, width, height) {
   if (afterBack.selected === '0') fail(`${label}: 選択曲保持`, afterBack.selected);
   else ok(`${label}: 選択曲数保持 (${afterBack.selected})`);
 
-  await page.click('[data-prev="basic"]');
+  if (width <= 420) {
+    await page.click('#accBasic .acc-head');
+  } else {
+    await page.click('[data-prev="basic"]');
+  }
   await page.waitForTimeout(120);
   const basicOpen = await page.evaluate(() => document.getElementById('accBasic')?.classList.contains('open'));
   if (!basicOpen) fail(`${label}: 基本情報へ戻る`);
   else ok(`${label}: 基本情報へ戻る`);
 
   const navBtns = await page.evaluate(() => ({
-    prev: document.querySelectorAll('.acc-prev').length,
+    prev: [...document.querySelectorAll('.acc-prev')].filter(el => getComputedStyle(el).display !== 'none').length,
     next: document.querySelectorAll('.acc-next').length,
   }));
-  if (navBtns.prev < 3 || navBtns.next < 3) fail(`${label}: 戻る/次へボタン数`, JSON.stringify(navBtns));
+  const expectPrev = width <= 420 ? 0 : 3;
+  if (navBtns.prev !== expectPrev || navBtns.next < 3) fail(`${label}: 戻る/次へボタン数`, JSON.stringify(navBtns));
   else ok(`${label}: 戻る${navBtns.prev} / 次へ${navBtns.next}`);
+
+  const menuBtn = width <= 640 ? '#mobileMenuBtn' : '#accountMenuBtn';
+  await page.click(menuBtn);
+  await page.waitForSelector('#accountPanel.open', { timeout: 5000 });
+  await page.waitForTimeout(80);
+  const menuBtns = await page.evaluate(() => {
+    const btns = [...document.querySelectorAll('#accountPanel.open .ui-btn')];
+    const minHs = btns.map(b => parseFloat(getComputedStyle(b).minHeight));
+    return { count: btns.length, minH: minHs.length ? Math.min(...minHs) : 0 };
+  });
+  if (menuBtns.count < 4) fail(`${label}: アカウントメニューボタン`, String(menuBtns.count));
+  else if (menuBtns.minH < 44) fail(`${label}: メニューボタン高さ`, String(menuBtns.minH));
+  else ok(`${label}: メニューボタン ${menuBtns.count}件・高さ${menuBtns.minH}px+`);
 
   await browser.close();
 }

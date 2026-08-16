@@ -30,6 +30,14 @@
     --disabled-bg: #f3f3f1;
     --disabled-text: #6a6964;
     --input-bg: #ffffff;
+    --ui-gap-xs: 6px;
+    --ui-gap-sm: 10px;
+    --ui-gap-md: 14px;
+    --ui-gap-lg: 18px;
+    --ui-btn-h: 44px;
+    --ui-btn-radius: 10px;
+    --ui-btn-pad-x: 14px;
+    --ui-btn-font: 14px;
   }
   /* Phase 6.2: 編集画面は常にライトテーマ（公開ページのテーマ設定とは独立） */
   html[data-utaeru-builder="light"] { color-scheme: light; }
@@ -203,28 +211,132 @@
   }
   .account-panel-head h2 { font-size: 16px; font-weight: 800; margin: 0; }
   .panel-close {
-    width: 36px; height: 36px;
+    width: 44px; height: 44px;
     border: 1px solid var(--border);
-    border-radius: 10px;
-    background: var(--page);
+    border-radius: var(--ui-btn-radius);
+    background: var(--input-bg);
     cursor: pointer;
     font-size: 18px;
   }
-  .account-section { margin-bottom: 20px; }
-  .account-section-title {
+
+  /* 共通 UI ボタン（アカウントメニュー等） */
+  .ui-stack { display: flex; flex-direction: column; gap: var(--ui-gap-sm); width: 100%; }
+  .ui-field { display: flex; flex-direction: column; gap: var(--ui-gap-xs); width: 100%; }
+  .ui-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+  .ui-input,
+  .account-panel input[type="text"],
+  .account-panel input[type="password"] {
+    width: 100%;
+    min-height: var(--ui-btn-h);
+    padding: 0 var(--ui-btn-pad-x);
+    border-radius: var(--ui-btn-radius);
+    border: 1px solid var(--border);
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 15px;
+    outline: none;
+    box-sizing: border-box;
+  }
+  .ui-input:focus,
+  .account-panel input[type="text"]:focus,
+  .account-panel input[type="password"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(42, 120, 214, 0.12);
+  }
+  .ui-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: var(--ui-btn-h);
+    padding: 0 var(--ui-btn-pad-x);
+    border-radius: var(--ui-btn-radius);
+    font-size: var(--ui-btn-font);
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+  }
+  .ui-btn:disabled {
+    cursor: not-allowed;
+    background: var(--disabled-bg);
+    color: var(--disabled-text);
+    border-color: var(--border);
+  }
+  .ui-btn-primary {
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: var(--accent-ink);
+  }
+  .ui-btn-primary:not(:disabled):hover { filter: brightness(1.04); }
+  .ui-btn-secondary {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+  }
+  .ui-btn-secondary:not(:disabled):hover { background: var(--surface-2); }
+  .ui-btn-tertiary {
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--text-secondary);
+  }
+  .ui-btn-tertiary:not(:disabled):hover { background: var(--surface-2); color: var(--text-primary); }
+  .ui-btn-danger {
+    background: var(--error-bg);
+    border: 1px solid rgba(139, 32, 32, 0.14);
+    color: var(--error-text);
+  }
+  .ui-btn-danger:not(:disabled):hover { filter: brightness(0.98); }
+
+  .account-block { margin-bottom: var(--ui-gap-md); }
+  .account-block-title {
     font-size: 11px;
     font-weight: 700;
     color: var(--text-secondary);
-    text-transform: uppercase;
     letter-spacing: 0.04em;
-    margin: 0 0 8px;
+    text-transform: uppercase;
+    margin: 0 0 var(--ui-gap-xs);
   }
-  .account-actions { display: grid; gap: 8px; }
-  .account-actions .tool-btn, .account-actions .google-login-btn {
-    width: 100%;
-    min-height: 44px;
-    font-size: 14px;
+  .account-lead {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 var(--ui-gap-sm);
+    line-height: 1.55;
   }
+  .account-divider {
+    border-top: 1px solid var(--grid);
+    margin: var(--ui-gap-md) 0;
+  }
+  .account-mode-panel .hint { margin-bottom: var(--ui-gap-sm); }
+  .ui-status { margin-bottom: var(--ui-gap-sm); }
+  .account-email {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 4px;
+    word-break: break-all;
+  }
+  .account-status-line {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+  .claim-status {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+    text-align: center;
+  }
+  .modal-actions { display: flex; flex-direction: column; gap: var(--ui-gap-sm); }
+  .edit-key-actions { display: flex; flex-direction: column; gap: var(--ui-gap-sm); }
 
   /* モーダル */
   .modal-backdrop {
@@ -246,8 +358,7 @@
     box-shadow: var(--shadow);
   }
   .modal-card h3 { margin: 0 0 8px; font-size: 17px; font-weight: 800; }
-  .modal-card p { margin: 0 0 16px; font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
-  .modal-actions { display: grid; gap: 8px; }
+  .modal-card p { margin: 0 0 var(--ui-gap-md); font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
 
   .page-intro {
     font-size: 14px;
@@ -859,11 +970,13 @@
     .utaeru-bar-actions .bar-btn-ghost { display: inline-flex; align-items: center; }
   }
   @media (max-width: 420px) {
+    .acc-prev { display: none !important; }
+    .acc-nav { flex-direction: column; }
+    .acc-nav .acc-next { flex: 1 1 100%; width: 100%; min-width: 0; }
+    .acc-nav-end .acc-next,
+    .acc-nav-start .acc-next { width: 100%; max-width: none; }
     .song-settings-btn { font-size: 11px; padding: 5px 9px; }
     .status-btn, .song-tag-chip { font-size: 12px; padding: 6px 10px; }
-    .google-login-btn { width: 100%; min-height: 44px; }
-    .claim-row { flex-direction: column; align-items: stretch; }
-    .claim-row .tool-btn { width: 100%; min-height: 44px; }
     .export-btn { font-size: 13px; padding: 9px 14px; }
   }
 
@@ -907,60 +1020,80 @@
     <button type="button" class="panel-close" id="accountPanelClose" aria-label="閉じる">✕</button>
   </div>
 
-  <div class="account-section">
-    <p class="account-section-title">はじめて公開する</p>
-    <div class="account-actions">
-      <button type="button" class="tool-btn" id="modeAnonymousBtn">ログインせずに作る</button>
-      <button type="button" class="tool-btn google-login-btn" id="modeGoogleBtn">Googleで管理する</button>
+  <div class="account-block">
+    <p class="account-block-title">管理方法</p>
+    <p class="account-lead">Utaeruの管理方法を選択</p>
+    <div class="ui-stack">
+      <button type="button" class="ui-btn ui-btn-primary" id="modeGoogleBtn">Googleで管理する</button>
+      <button type="button" class="ui-btn ui-btn-secondary" id="modeEditKeyBtn">編集キーを使う</button>
+      <button type="button" class="ui-btn ui-btn-tertiary" id="modeAnonymousBtn">ログインせずに作る</button>
     </div>
   </div>
 
-  <div class="account-section">
-    <p class="account-section-title">以前作ったページを編集</p>
-    <div class="account-actions">
-      <button type="button" class="tool-btn" id="resumeGoogleBtn">Googleでログイン</button>
-      <button type="button" class="tool-btn" id="modeEditKeyBtn">編集キーを使う</button>
+  <div class="account-divider"></div>
+
+  <div class="account-block">
+    <p class="account-block-title">再編集</p>
+    <p class="account-lead">以前作ったページを編集</p>
+    <div class="ui-stack">
+      <button type="button" class="ui-btn ui-btn-primary" id="resumeGoogleBtn">Googleでログイン</button>
     </div>
   </div>
 
-  <div id="anonymousModePanel" class="online-mode-panel" style="display:none;">
+  <div id="anonymousModePanel" class="account-mode-panel online-mode-panel" style="display:none;">
+    <div class="account-divider"></div>
     <p class="hint">ログインなしで公開できます。初回のみ編集キーが表示されます。必ず保管してください。</p>
   </div>
 
-  <div id="editKeyModePanel" class="online-mode-panel" style="display:none;">
+  <div id="editKeyModePanel" class="account-mode-panel online-mode-panel" style="display:none;">
+    <div class="account-divider"></div>
     <p class="hint">公開ページIDと編集キーを入力してください。</p>
-    <div class="edit-key-form">
-      <div>
-        <label class="field-label" for="editKeyStreamerIdInput">公開ページID</label>
+    <div class="ui-stack edit-key-form">
+      <div class="ui-field">
+        <label class="ui-label" for="editKeyStreamerIdInput">公開ページID</label>
         <input type="text" id="editKeyStreamerIdInput" placeholder="例：my-id" maxlength="32" autocomplete="off" spellcheck="false" />
       </div>
-      <div>
-        <label class="field-label" for="editKeyInput">編集キー</label>
+      <div class="ui-field">
+        <label class="ui-label" for="editKeyInput">編集キー</label>
         <input type="password" id="editKeyInput" placeholder="ut_..." autocomplete="off" spellcheck="false" />
       </div>
-      <button type="button" class="tool-btn" id="editKeyVerifyBtn">編集を開始</button>
+      <button type="button" class="ui-btn ui-btn-primary" id="editKeyVerifyBtn">編集を開始</button>
     </div>
   </div>
 
-  <div id="googleModePanel" class="online-mode-panel" style="display:none;">
+  <div id="googleModePanel" class="account-mode-panel online-mode-panel" style="display:none;">
+    <div class="account-divider"></div>
     <div id="authSignedOut">
-      <p class="auth-not-logged-in" id="authLoggedOutHint">Googleアカウントでログインすると、公開ページを管理できます。</p>
-      <button type="button" class="tool-btn google-login-btn" id="googleLoginBtn">Googleでログイン</button>
+      <p class="account-lead" id="authLoggedOutHint">Googleアカウントでログインすると、公開ページを管理できます。</p>
+      <div class="ui-stack">
+        <button type="button" class="ui-btn ui-btn-primary" id="googleLoginBtn">Googleでログイン</button>
+      </div>
     </div>
     <div id="authSignedIn" style="display:none;">
-      <p class="auth-user-line"><span id="authUserEmail"></span> でログイン中</p>
-      <button type="button" class="tool-btn" id="logoutBtn">ログアウト</button>
+      <div class="ui-status">
+        <p class="account-email" id="authUserEmail"></p>
+        <p class="account-status-line">Googleアカウントで管理中</p>
+      </div>
+      <div class="ui-stack" id="accountQuickActions" style="display:none">
+        <a class="ui-btn ui-btn-secondary" id="accountViewPage" href="#" target="_blank" rel="noopener noreferrer">公開ページを見る</a>
+        <button type="button" class="ui-btn ui-btn-secondary" id="accountCopyUrl">URLをコピー</button>
+      </div>
       <p class="hint" id="ownedIdsHint"></p>
-    </div>
-    <div class="claim-row">
-      <button type="button" class="tool-btn" id="claimBtn" disabled>この公開ページIDを取得する</button>
-      <span class="claim-status" id="claimStatus">基本情報で公開ページIDを入力し、Googleでログインしてください。</span>
+      <div class="ui-stack">
+        <button type="button" class="ui-btn ui-btn-primary" id="claimBtn" disabled>この公開ページIDを取得する</button>
+        <p class="claim-status" id="claimStatus">基本情報で公開ページIDを入力し、Googleでログインしてください。</p>
+      </div>
+      <div class="account-divider"></div>
+      <button type="button" class="ui-btn ui-btn-danger" id="logoutBtn">ログアウト</button>
     </div>
   </div>
 
-  <div id="linkGooglePanel" class="online-mode-panel link-google-row" style="display:none;">
+  <div id="linkGooglePanel" class="account-mode-panel online-mode-panel link-google-row" style="display:none;">
+    <div class="account-divider"></div>
     <p class="hint">Googleアカウントに連携すると、編集キーなしで更新できます（連携後は旧編集キーは無効）。</p>
-    <button type="button" class="tool-btn" id="linkGoogleBtn">Googleアカウントに連携</button>
+    <div class="ui-stack">
+      <button type="button" class="ui-btn ui-btn-primary" id="linkGoogleBtn">Googleアカウントに連携</button>
+    </div>
   </div>
 </aside>
 
@@ -968,10 +1101,10 @@
   <div class="modal-card" role="dialog" aria-labelledby="manageModeTitle">
     <h3 id="manageModeTitle">このページをどう管理しますか？</h3>
     <p>公開方法を選んでください。あとから変更することもできます。</p>
-    <div class="modal-actions">
-      <button type="button" class="tool-btn" id="modalChooseAnonymous">ログインせずに作る</button>
-      <button type="button" class="tool-btn google-login-btn" id="modalChooseGoogle">Googleで管理する</button>
-      <button type="button" class="tool-btn" id="modalChooseEditKey">編集キーを使う</button>
+    <div class="modal-actions ui-stack">
+      <button type="button" class="ui-btn ui-btn-tertiary" id="modalChooseAnonymous">ログインせずに作る</button>
+      <button type="button" class="ui-btn ui-btn-primary" id="modalChooseGoogle">Googleで管理する</button>
+      <button type="button" class="ui-btn ui-btn-secondary" id="modalChooseEditKey">編集キーを使う</button>
     </div>
   </div>
 </div>
@@ -982,9 +1115,9 @@
     <p class="hint">次回から更新するには必要です。メモ帳など安全な場所に保管してください。</p>
     <div id="editKeyIssuedPanel" class="online-mode-panel" style="display:block;">
       <code class="edit-key-display" id="issuedEditKeyDisplay"></code>
-      <div class="edit-key-actions">
-        <button type="button" class="tool-btn" id="copyEditKeyBtn">編集キーをコピー</button>
-        <button type="button" class="tool-btn" id="editKeyIssuedCloseBtn">閉じる</button>
+      <div class="edit-key-actions ui-stack">
+        <button type="button" class="ui-btn ui-btn-secondary" id="copyEditKeyBtn">編集キーをコピー</button>
+        <button type="button" class="ui-btn ui-btn-tertiary" id="editKeyIssuedCloseBtn">閉じる</button>
       </div>
     </div>
   </div>
@@ -2259,13 +2392,18 @@ function updateManagementBar() {
   }
 
   const publicUrl = sidCheck.ok ? getPublicPageUrl(sid) : null;
+  const accountQuick = document.getElementById('accountQuickActions');
+  const accountView = document.getElementById('accountViewPage');
   if (isPublished && publicUrl) {
     barView.href = publicUrl;
     barView.style.display = '';
     barCopy.style.display = '';
+    if (accountQuick) accountQuick.style.display = '';
+    if (accountView) accountView.href = publicUrl;
   } else {
     barView.style.display = 'none';
     barCopy.style.display = 'none';
+    if (accountQuick) accountQuick.style.display = 'none';
   }
 }
 
@@ -2472,7 +2610,7 @@ function updateAuthUI() {
     const owned = authUser.ownedStreamerIds;
     document.getElementById('ownedIdsHint').textContent = owned.length
       ? `取得済みの公開ページID: ${owned.join(', ')}`
-      : 'まだ公開ページIDを取得していません。①でIDを入力し、下のボタンから取得してください。';
+      : 'まだ公開ページIDを取得していません。基本情報でIDを入力し、下のボタンから取得してください。';
   } else {
     signedOut.style.display = 'block';
     signedIn.style.display = 'none';
@@ -2483,7 +2621,7 @@ function updateAuthUI() {
     claimStatus.textContent = 'Googleでログイン後、公開ページIDを取得できます。';
     claimBtn.disabled = !sid || !sidCheck.ok || authLoading;
   } else if (!sid) {
-    claimStatus.textContent = '①で公開ページIDを入力してください。';
+    claimStatus.textContent = '基本情報で公開ページIDを入力してください。';
     claimBtn.disabled = true;
   } else if (!sidCheck.ok) {
     claimStatus.textContent = sidCheck.message;
@@ -2918,6 +3056,7 @@ document.getElementById('mobileMenuBtn').addEventListener('click', openAccountPa
 document.getElementById('accountPanelClose').addEventListener('click', closeAccountPanel);
 document.getElementById('panelBackdrop').addEventListener('click', closeAccountPanel);
 document.getElementById('barCopyUrl').addEventListener('click', copyPublicUrl);
+document.getElementById('accountCopyUrl')?.addEventListener('click', copyPublicUrl);
 document.getElementById('manageModeModal').addEventListener('click', (e) => {
   if (e.target === document.getElementById('manageModeModal')) closeManageModeModal();
 });

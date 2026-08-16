@@ -1,5 +1,5 @@
 {
-  "label": "Phase 6.2 ライトUI・視認性改善・戻る導線",
+  "label": "Phase 6.2 追加UI調整（スマホ戻る非表示・アカウントメニュー統一）",
   "establishedAt": "2026-08-16",
   "gitCommit": null,
   "gitCommitShort": null,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 329847,
-      "sha256": "a2233d787589ca9b3bd935e568a2f7919483dd00d519021220f37f4b6205a1ec"
+      "bytes": 334648,
+      "sha256": "68561b2e8cd518933dab45b16a2c395668ea9371079e9d8792d457e96dbefaa7"
     },
     "hiro.html": {
       "bytes": 25630,
