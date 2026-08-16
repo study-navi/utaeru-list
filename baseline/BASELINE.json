@@ -1,5 +1,5 @@
 {
-  "label": "Phase 6.2 追加UI調整（スマホ戻る非表示・アカウントメニュー統一）",
+  "label": "Phase 6.2 追加UI調整（アカウントメニュー統一・アクセントカラーUI）",
   "establishedAt": "2026-08-16",
   "gitCommit": null,
   "gitCommitShort": null,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 334648,
-      "sha256": "68561b2e8cd518933dab45b16a2c395668ea9371079e9d8792d457e96dbefaa7"
+      "bytes": 337399,
+      "sha256": "37580a868b04332f110e491bcbfbbd0c2c43a7152d4520bd95142b2ffd7183b3"
     },
     "hiro.html": {
       "bytes": 25630,

@@ -655,26 +655,121 @@
   input[type="text"]::placeholder { color: var(--text-placeholder); opacity: 1; }
   input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(42, 120, 214, 0.12); }
 
-  .swatch-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+  .accent-color-picker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    margin-top: 4px;
+    max-width: 100%;
+  }
+  .swatch-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+  }
   .swatch {
-    width: 34px; height: 34px; border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
     border: 2px solid transparent;
     cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
   }
   .swatch.selected { border-color: var(--text-primary); }
-  .swatch .check { color: #fff; font-size: 14px; text-shadow: 0 1px 1px rgba(0,0,0,0.4); display: none; }
+  .swatch .check {
+    color: #fff;
+    font-size: 14px;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+    display: none;
+  }
   .swatch.selected .check { display: block; }
-  .custom-swatch {
-    width: 34px; height: 34px; border-radius: 50%; padding: 0; border: 2px solid transparent;
-    cursor: pointer; background: none; overflow: hidden;
+  .swatch-custom-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 1 auto;
+    max-width: 100%;
   }
-  .custom-swatch.selected { border-color: var(--text-primary); }
-  .custom-swatch input[type="color"] {
-    width: 46px; height: 46px; margin: -6px; border: none; cursor: pointer; padding: 0;
+  .swatch-divider {
+    width: 1px;
+    height: 34px;
+    background: var(--border);
+    flex-shrink: 0;
   }
-  .swatch-label { font-size: 12px; color: var(--text-secondary); width: 100%; margin-top: 2px; }
+  .custom-color-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 38px;
+    min-width: 44px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+  .custom-color-btn.selected { border-color: var(--text-primary); }
+  .custom-color-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+  }
+  .custom-color-plus {
+    font-size: 15px;
+    line-height: 1;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+  .custom-color-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+  }
+  .custom-color-label { line-height: 1.2; white-space: nowrap; }
+  .custom-color-check {
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1;
+    display: none;
+    flex-shrink: 0;
+  }
+  .custom-color-btn.selected .custom-color-check { display: block; }
+  .custom-color-btn:not(.has-custom) .custom-color-dot { display: none; }
+  .custom-color-btn.has-custom .custom-color-plus { display: none; }
+  @media (max-width: 420px) {
+    .swatch-custom-wrap {
+      flex: 1 1 100%;
+      width: 100%;
+      padding-top: 6px;
+      margin-top: 2px;
+      border-top: 1px solid var(--border);
+      gap: 0;
+    }
+    .swatch-divider { display: none; }
+    .custom-color-btn { width: 100%; }
+  }
 
   .file-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .file-btn {
@@ -1192,8 +1287,20 @@
         <span class="acc-chevron" aria-hidden="true">▼</span>
       </button>
       <div class="acc-body" id="accDesignBody">
-        <p class="hint">ページのアクセントカラーです。プリセットから選ぶか、右端の丸をタップして好きな色を指定できます。</p>
-        <div class="swatch-row" id="swatchRow"></div>
+        <p class="hint">公開ページのアクセントカラーを選びます。プリセットまたは『＋ 好きな色』から自由に指定できます。</p>
+        <div class="accent-color-picker" id="accentColorPicker">
+          <div class="swatch-presets" id="swatchPresets"></div>
+          <div class="swatch-custom-wrap">
+            <div class="swatch-divider" aria-hidden="true"></div>
+            <label class="custom-color-btn" id="customColorBtn" title="好きな色を指定">
+              <input type="color" id="customColorInput" class="custom-color-input" value="#2a78d6" />
+              <span class="custom-color-plus" id="customColorPlus">＋</span>
+              <span class="custom-color-dot" id="customColorDot"></span>
+              <span class="custom-color-label">好きな色</span>
+              <span class="custom-color-check" aria-hidden="true">✓</span>
+            </label>
+          </div>
+        </div>
         <div class="acc-nav">
           <button type="button" class="acc-prev" data-prev="songs"><span class="nav-long">← 曲を選ぶへ戻る</span><span class="nav-short">← 戻る</span></button>
           <button type="button" class="acc-next" data-next="preview"><span class="nav-long">次へ：プレビュー →</span><span class="nav-short">次へ →</span></button>
@@ -1441,7 +1548,9 @@ const DEFAULT_TAG_PRESETS = [
 ];
 let tagPresets = DEFAULT_TAG_PRESETS.map(t => ({ ...t })); // { id: string, label: string, color?: string|null }[]
 
-const swatchRow = document.getElementById('swatchRow');
+const swatchPresets = document.getElementById('swatchPresets');
+const customColorBtn = document.getElementById('customColorBtn');
+const customColorDot = document.getElementById('customColorDot');
 const streamerNameInput = document.getElementById('streamerName');
 const subtitleInput = document.getElementById('subtitle');
 const streamerIdInput = document.getElementById('streamerIdInput');
@@ -1454,26 +1563,22 @@ PRESETS.forEach((p, i) => {
   el.title = p.name;
   el.innerHTML = '<span class="check">✓</span>';
   el.addEventListener('click', () => selectPreset(i));
-  swatchRow.appendChild(el);
+  swatchPresets.appendChild(el);
 });
-const customWrap = document.createElement('label');
-customWrap.className = 'custom-swatch';
-customWrap.title = 'カスタムカラー';
-customWrap.innerHTML = '<input type="color" id="customColorInput" value="#2a78d6" />';
-swatchRow.appendChild(customWrap);
-const customLabel = document.createElement('div');
-customLabel.className = 'swatch-label';
-customLabel.textContent = 'プリセットから選ぶか、右端で好きな色を指定できます';
-swatchRow.appendChild(customLabel);
 
 const customColorInput = document.getElementById('customColorInput');
 customColorInput.addEventListener('input', () => selectCustom(customColorInput.value));
 
+let customColorConfigured = false;
+
 function refreshSwatchSelection() {
-  [...swatchRow.querySelectorAll('.swatch')].forEach((el, i) => {
+  [...swatchPresets.querySelectorAll('.swatch')].forEach((el, i) => {
     el.classList.toggle('selected', currentTheme.type === 'preset' && currentTheme.presetIndex === i);
   });
-  customWrap.classList.toggle('selected', currentTheme.type === 'custom');
+  const isCustomActive = currentTheme.type === 'custom';
+  customColorBtn.classList.toggle('selected', isCustomActive);
+  customColorBtn.classList.toggle('has-custom', customColorConfigured);
+  if (customColorConfigured) customColorDot.style.background = currentTheme.customHex;
 }
 function selectPreset(i) {
   currentTheme = { type: 'preset', presetIndex: i, customHex: currentTheme.customHex };
@@ -1482,6 +1587,7 @@ function selectPreset(i) {
   updatePreviewPanel();
 }
 function selectCustom(hex) {
+  customColorConfigured = true;
   currentTheme = { type: 'custom', presetIndex: currentTheme.presetIndex, customHex: hex };
   refreshSwatchSelection();
   updatePublishButtonState();
@@ -2230,6 +2336,11 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
   streamerIdInput.value = typeof config.streamerId === 'string' ? config.streamerId : '';
   updateStreamerIdPreview();
   if (config.themeType === 'preset' && Number.isInteger(config.presetIndex)) {
+    customColorConfigured = false;
+    if (typeof config.customHex === 'string') {
+      currentTheme.customHex = config.customHex;
+      customColorInput.value = config.customHex;
+    }
     selectPreset(config.presetIndex);
   } else if (config.customHex) {
     customColorInput.value = config.customHex;
@@ -2935,6 +3046,11 @@ function applyPublicDataToBuilder(data, streamerId) {
   streamerIdInput.value = streamerId;
   updateStreamerIdPreview();
   if (data.themeType === 'preset' && Number.isInteger(data.presetIndex)) {
+    customColorConfigured = false;
+    if (typeof data.customHex === 'string') {
+      currentTheme.customHex = data.customHex;
+      customColorInput.value = data.customHex;
+    }
     selectPreset(data.presetIndex);
   } else if (data.customHex) {
     customColorInput.value = data.customHex;
