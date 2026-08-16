@@ -38,6 +38,10 @@
     --ui-btn-radius: 10px;
     --ui-btn-pad-x: 14px;
     --ui-btn-font: 14px;
+    --builder-top-gap: 14px;
+    --builder-bar-h: 52px;
+    --builder-bottom-bar-h: 68px;
+    --builder-scroll-offset: calc(var(--builder-bar-h) + var(--builder-top-gap));
   }
   /* Phase 6.2: 編集画面は常にライトテーマ（公開ページのテーマ設定とは独立） */
   html[data-utaeru-builder="light"] { color-scheme: light; }
@@ -49,9 +53,13 @@
     font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
-    padding-top: calc(56px + env(safe-area-inset-top, 0px));
+    padding-top: var(--builder-bar-h, calc(52px + env(safe-area-inset-top, 0px)));
   }
-  .wrap { max-width: 720px; margin: 0 auto; padding: 16px 16px 96px; }
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 16px 16px calc(var(--builder-bottom-bar-h, 96px) + 16px);
+  }
 
   /* Phase 6: 固定管理バー */
   .utaeru-bar {
@@ -380,8 +388,8 @@
     margin: 0 0 6px;
   }
 
-  .card-songs { scroll-margin-top: calc(64px + env(safe-area-inset-top, 0px)); }
-  #accSongs { scroll-margin-top: calc(64px + env(safe-area-inset-top, 0px)); }
+  .card-songs { scroll-margin-top: var(--builder-scroll-offset, calc(64px + env(safe-area-inset-top, 0px))); }
+  #accSongs { scroll-margin-top: var(--builder-scroll-offset, calc(64px + env(safe-area-inset-top, 0px))); }
   .card-preview { background: var(--page); }
 
   /* Phase 6.1: メインアコーディオン */
@@ -394,7 +402,10 @@
     margin-bottom: 12px;
   }
   .acc-stack-more { opacity: 0.92; }
-  .acc-section { border-bottom: 1px solid var(--grid); scroll-margin-top: calc(64px + env(safe-area-inset-top, 0px)); }
+  .acc-section {
+    border-bottom: 1px solid var(--grid);
+    scroll-margin-top: var(--builder-scroll-offset, calc(64px + env(safe-area-inset-top, 0px)));
+  }
   .acc-section:last-child { border-bottom: none; }
   .acc-head {
     display: flex;
@@ -435,9 +446,15 @@
     transition: transform 0.15s;
   }
   .acc-section.open .acc-chevron { transform: rotate(180deg); }
-  .acc-body { display: none; padding: 0 16px 16px; }
+  .acc-body { display: none; padding: 2px 16px 18px; }
   .acc-section.open .acc-body { display: block; }
-  .acc-body .field-label:first-child { margin-top: 0; }
+  .acc-body .field-label:first-child { margin-top: 2px; }
+  .acc-body .hint { margin-top: 0; }
+  .acc-body .hint + .field-label,
+  .acc-body .hint + input[type="text"],
+  .acc-body .accent-color-picker { margin-top: 2px; }
+  .acc-body .field-label + input[type="text"] { margin-bottom: 2px; }
+  .acc-body .hint + .accent-color-picker { margin-top: 4px; }
   .acc-body .sub-block + .sub-block {
     margin-top: 20px;
     padding-top: 16px;
@@ -544,6 +561,7 @@
     justify-content: center;
     width: 100%;
     overflow: hidden;
+    max-width: 100%;
   }
   .preview-frame {
     width: 100%;
@@ -784,8 +802,21 @@
   @media (max-width: 420px) {
     .preview-frame { padding: 14px 10px 12px; border-radius: 12px; }
     .preview-frame .pv-title { font-size: 18px; }
-    .preview-frame .pv-stat-num { font-size: 17px; }
+    .preview-frame .pv-stat-num { font-size: 16px; }
     .preview-frame .pv-stats { gap: 6px; }
+    .preview-frame .pv-stat { padding: 8px 8px; min-width: 0; }
+    .preview-frame .pv-stat-num { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .preview-frame .pv-gyo,
+    .preview-frame .pv-filter-row {
+      flex-wrap: wrap;
+      overflow-x: hidden;
+      max-width: 100%;
+    }
+    .preview-frame .pv-random-btn {
+      max-width: 100%;
+      white-space: normal;
+      line-height: 1.4;
+    }
   }
 
   details.card-more {
@@ -1182,7 +1213,13 @@
   .url-preview {
     font-size: 13px; color: var(--text-secondary); margin: 8px 0 0; line-height: 1.6;
   }
-  .url-preview .path { font-weight: 700; color: var(--text-secondary); font-family: monospace; }
+  .url-preview .path {
+    font-weight: 700;
+    color: var(--text-secondary);
+    font-family: monospace;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+  }
 
   /* Phase 2: 曲ごとの状態・タグ・追加日 編集UI */
   .song-badges { display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; font-size: 13px; }
@@ -1260,15 +1297,94 @@
   .tag-admin-add-row input[type="text"] { flex: 1; }
 
   @media (max-width: 640px) {
-    body { padding-top: calc(52px + env(safe-area-inset-top, 0px)); }
+    :root { --builder-top-gap: 16px; }
+    body { padding-top: var(--builder-bar-h, calc(52px + env(safe-area-inset-top, 0px))); }
+    .wrap {
+      padding: 10px 14px calc(var(--builder-bottom-bar-h, 76px) + 14px);
+    }
+    .page-intro {
+      margin: 2px 0 16px;
+      line-height: 1.6;
+    }
     .bar-meta { display: none; }
     .bar-link, .bar-btn-ghost { display: none; }
     .bar-menu-toggle { display: inline-flex; align-items: center; justify-content: center; }
-    .utaeru-bar-actions .bar-btn-primary { padding: 8px 12px; font-size: 12.5px; }
-    .wrap { padding-bottom: 88px; }
-    .acc-head { min-height: 48px; padding: 12px 14px; }
-    .acc-title { font-size: 14px; }
-    .acc-summary { font-size: 12.5px; }
+    .utaeru-bar { padding-left: 10px; padding-right: 10px; }
+    .utaeru-bar-inner {
+      min-height: 48px;
+      gap: 8px;
+      align-items: center;
+    }
+    .utaeru-brand { font-size: 15px; line-height: 1.2; }
+    .utaeru-bar-actions { gap: 8px; align-items: center; }
+    .utaeru-bar-actions .bar-btn-primary {
+      padding: 8px 12px;
+      font-size: 13px;
+      min-height: 40px;
+      line-height: 1.2;
+    }
+    .bar-menu-toggle {
+      min-width: 44px;
+      min-height: 44px;
+      flex-shrink: 0;
+    }
+    .bar-hint {
+      font-size: 12px;
+      line-height: 1.5;
+      padding-bottom: 8px;
+    }
+    .acc-head {
+      min-height: 50px;
+      padding: 13px 14px;
+      gap: 8px;
+      align-items: center;
+    }
+    .acc-title { font-size: 15px; line-height: 1.35; }
+    .acc-summary {
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: normal;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .acc-body {
+      padding: 6px 14px 18px;
+    }
+    .acc-body .hint {
+      margin-bottom: 14px;
+      line-height: 1.55;
+    }
+    label.field-label {
+      font-size: 13px;
+      margin: 14px 0 7px;
+      line-height: 1.45;
+    }
+    input[type="text"],
+    input[type="search"] {
+      min-height: 44px;
+      padding: 11px 12px;
+      line-height: 1.4;
+    }
+    .field-error,
+    .url-preview,
+    .auth-message {
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .acc-nav { margin-top: 18px; }
+    .preview-shell-label { font-size: 13px; line-height: 1.4; margin-bottom: 6px; }
+    .preview-shell-note {
+      line-height: 1.55;
+      margin-bottom: 14px;
+    }
+    .preview-frame-wrap { padding: 0 1px; }
+    .export-count {
+      white-space: normal;
+      line-height: 1.35;
+      min-width: 0;
+    }
     .nav-long { display: none; }
     .nav-short { display: inline; }
   }
@@ -2783,6 +2899,18 @@ function getPublishButtonLabel() {
   return '公開する';
 }
 
+function syncBuilderChromeInsets() {
+  const bar = document.getElementById('utaeruBar');
+  const exportBar = document.querySelector('.export-bar');
+  const barH = bar ? bar.getBoundingClientRect().height : 52;
+  const bottomH = exportBar ? exportBar.getBoundingClientRect().height : 68;
+  const gap = window.matchMedia('(max-width: 640px)').matches ? 16 : 14;
+  document.documentElement.style.setProperty('--builder-bar-h', `${Math.ceil(barH)}px`);
+  document.documentElement.style.setProperty('--builder-bottom-bar-h', `${Math.ceil(bottomH)}px`);
+  document.documentElement.style.setProperty('--builder-top-gap', `${gap}px`);
+  document.documentElement.style.setProperty('--builder-scroll-offset', `calc(${Math.ceil(barH)}px + ${gap}px)`);
+}
+
 function updateManagementBar() {
   const publishBtn = document.getElementById('publishBtn');
   const barStatus = document.getElementById('barStatus');
@@ -2833,6 +2961,7 @@ function updateManagementBar() {
     barCopy.style.display = 'none';
     if (accountQuick) accountQuick.style.display = 'none';
   }
+  syncBuilderChromeInsets();
 }
 
 function openAccountPanel() {
@@ -3498,6 +3627,15 @@ document.getElementById('logoutBtn').addEventListener('click', logoutUser);
 document.getElementById('claimBtn').addEventListener('click', claimStreamerIdAction);
 document.getElementById('publishBtn').addEventListener('click', publishOnline);
 
+window.addEventListener('resize', syncBuilderChromeInsets, { passive: true });
+if (typeof ResizeObserver !== 'undefined') {
+  const chromeObserver = new ResizeObserver(syncBuilderChromeInsets);
+  const barEl = document.getElementById('utaeruBar');
+  const exportEl = document.querySelector('.export-bar');
+  if (barEl) chromeObserver.observe(barEl);
+  if (exportEl) chromeObserver.observe(exportEl);
+}
+
 renderTagAdmin();
 initAccordion();
 selectPreset(0);
@@ -3505,6 +3643,7 @@ render();
 updateSelectedCount();
 updatePreviewPanel();
 updateStreamerIdPreview();
+syncBuilderChromeInsets();
 refreshAuthMe();
 bootGoogleAuth(25);
 </script>

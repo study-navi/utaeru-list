@@ -1,5 +1,5 @@
 {
-  "label": "Phase 6.2 追加UI調整（次へ導線・公開ページプレビュー）",
+  "label": "Phase 6.2 追加UI調整（スマホ余白・固定ヘッダー視認性）",
   "establishedAt": "2026-08-16",
   "gitCommit": null,
   "gitCommitShort": null,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 346727,
-      "sha256": "ac0bc406710f72aba90ea2e3412adb532d52a179f6a8d5564dc1829b645fe071"
+      "bytes": 350579,
+      "sha256": "2da9d42fedc704733939bcdfcec27dd3c88ab8ffd70fe3d18512ac196c6ca856"
     },
     "hiro.html": {
       "bytes": 25630,
