@@ -450,36 +450,25 @@
   }
   .acc-nav {
     display: flex;
-    gap: 10px;
     margin-top: 16px;
-    align-items: stretch;
-    flex-wrap: wrap;
+    justify-content: flex-end;
   }
-  .acc-nav-end { justify-content: flex-end; }
-  .acc-nav-start { justify-content: flex-start; }
-  .acc-prev,
   .acc-next {
-    flex: 1 1 140px;
+    flex: 0 1 auto;
+    min-width: 160px;
+    max-width: 100%;
     min-height: 44px;
     padding: 10px 14px;
     border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text-secondary);
+    border: 1px solid rgba(42, 120, 214, 0.25);
+    background: var(--accent-wash);
+    color: var(--accent);
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     text-align: center;
   }
-  .acc-next {
-    border-color: rgba(42, 120, 214, 0.25);
-    color: var(--accent);
-    background: var(--accent-wash);
-  }
-  .acc-prev:hover { background: var(--surface-2); color: var(--text-primary); }
   .acc-next:hover { filter: brightness(0.98); border-color: var(--accent); color: var(--accent); }
-  .acc-nav-end .acc-next { flex: 0 1 auto; min-width: 160px; }
-  .acc-nav-start .acc-prev { flex: 0 1 auto; min-width: 160px; }
   .nav-short { display: none; }
 
   .song-view-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
@@ -538,42 +527,265 @@
   details.artist-group[open] > summary.artist-head::after { transform: rotate(180deg); }
   details.artist-group .song-list { border-top: 1px solid var(--grid); }
 
-  .preview-panel {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    background: var(--surface);
-  }
-  .preview-accent {
-    height: 4px;
-    background: var(--accent);
-  }
-  .preview-body { padding: 14px 14px 12px; }
-  .preview-title {
-    font-size: 17px;
+  .preview-shell-label {
+    font-size: 13px;
     font-weight: 800;
     margin: 0 0 4px;
-    line-height: 1.35;
+    color: var(--text-primary);
   }
-  .preview-subtitle {
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin: 0 0 10px;
+  .preview-shell-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0 0 12px;
     line-height: 1.5;
   }
-  .preview-stats {
+  .preview-frame-wrap {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    overflow: hidden;
+  }
+  .preview-frame {
+    width: 100%;
+    max-width: 760px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    background: #f9f9f7;
+    color: #0b0b0b;
+    font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    --pv-page: #f9f9f7;
+    --pv-surface: #fcfcfb;
+    --pv-surface-2: #f2f1ee;
+    --pv-text-primary: #0b0b0b;
+    --pv-text-secondary: #52514e;
+    --pv-text-muted: #898781;
+    --pv-grid: #e1e0d9;
+    --pv-border: rgba(11, 11, 11, 0.10);
+    --pv-chip-bg: #f2f1ee;
+    --pv-shadow: 0 1px 2px rgba(11, 11, 11, 0.06), 0 4px 16px rgba(11, 11, 11, 0.05);
+    --pv-accent: #2a78d6;
+    --pv-accent-ink: #ffffff;
+    --pv-accent-wash: #eaf1fb;
+    padding: 18px 14px 16px;
+  }
+  .preview-frame .pv-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .preview-frame .pv-title {
+    font-size: 21px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    word-break: break-word;
+  }
+  .preview-frame .pv-subtitle {
+    font-size: 13.5px;
+    color: var(--pv-text-secondary);
+    margin: 0;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+  .preview-frame .pv-theme-toggle {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--pv-border);
+    background: var(--pv-surface);
+    color: var(--pv-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .preview-frame .pv-stats {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 14px;
+  }
+  .preview-frame .pv-stat {
+    flex: 1;
+    min-width: 0;
+    background: var(--pv-surface);
+    border: 1px solid var(--pv-border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    box-shadow: var(--pv-shadow);
+  }
+  .preview-frame .pv-stat-num {
+    font-size: 20px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    color: var(--pv-accent);
+  }
+  .preview-frame .pv-stat-label {
+    font-size: 11px;
+    color: var(--pv-text-muted);
+    margin-top: 2px;
+  }
+  .preview-frame .pv-search {
+    margin-bottom: 8px;
+  }
+  .preview-frame .pv-search input {
+    width: 100%;
+    font-size: 15px;
+    padding: 11px 36px 11px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--pv-border);
+    background: var(--pv-surface);
+    color: var(--pv-text-muted);
+    box-shadow: var(--pv-shadow);
+    pointer-events: none;
+  }
+  .preview-frame .pv-gyo,
+  .preview-frame .pv-filter-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 14px;
-    font-size: 13px;
-    color: var(--text-secondary);
+    gap: 6px;
+    margin: 8px 0 4px;
   }
-  .preview-stats strong { color: var(--text-primary); font-weight: 700; }
-  .preview-url {
-    margin-top: 10px;
+  .preview-frame .pv-filter-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+  }
+  .preview-frame .pv-chip {
+    font-size: 12px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--pv-border);
+    background: var(--pv-chip-bg);
+    color: var(--pv-text-secondary);
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+  .preview-frame .pv-chip.active {
+    background: var(--pv-accent);
+    border-color: var(--pv-accent);
+    color: var(--pv-accent-ink);
+    font-weight: 700;
+  }
+  .preview-frame .pv-random {
+    margin: 6px 0 8px;
+  }
+  .preview-frame .pv-random-btn {
+    font-size: 12.5px;
+    padding: 7px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--pv-border);
+    background: var(--pv-surface);
+    color: var(--pv-text-primary);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  .preview-frame .pv-meta {
+    font-size: 12px;
+    color: var(--pv-text-muted);
+    margin: 8px 2px;
+  }
+  .preview-frame .pv-more-note {
+    font-size: 12px;
+    color: var(--pv-text-secondary);
+    margin: 10px 2px 0;
+    padding: 10px 12px;
+    background: var(--pv-surface);
+    border: 1px dashed var(--pv-border);
+    border-radius: 10px;
+    line-height: 1.5;
+  }
+  .preview-frame .pv-artist-group {
+    margin-bottom: 12px;
+    background: var(--pv-surface);
+    border: 1px solid var(--pv-border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--pv-shadow);
+  }
+  .preview-frame .pv-artist-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 12px;
+    background: var(--pv-surface-2);
+    border-bottom: 1px solid var(--pv-border);
+  }
+  .preview-frame .pv-artist-name {
+    font-size: 14px;
+    font-weight: 800;
+    min-width: 0;
+    word-break: break-word;
+  }
+  .preview-frame .pv-artist-count {
+    font-size: 11.5px;
+    color: var(--pv-text-muted);
+    flex: 0 0 auto;
+  }
+  .preview-frame .pv-song-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .preview-frame .pv-song-list li {
+    padding: 9px 12px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--pv-grid);
+  }
+  .preview-frame .pv-song-list li:last-child { border-bottom: none; }
+  .preview-frame .pv-song-main {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .preview-frame .pv-song-title {
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+  }
+  .preview-frame .pv-badges {
+    display: inline-flex;
+    gap: 2px;
+    flex: 0 0 auto;
+    font-size: 12px;
+  }
+  .preview-frame .pv-tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 5px;
+  }
+  .preview-frame .pv-tag {
+    font-size: 10.5px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--pv-chip-bg);
+    color: var(--pv-text-secondary);
+    border: 1px solid var(--pv-border);
+  }
+  .preview-frame .pv-empty {
+    text-align: center;
+    padding: 28px 12px;
+    color: var(--pv-text-muted);
     font-size: 13px;
-    color: var(--text-secondary);
-    word-break: break-all;
+    line-height: 1.6;
+  }
+  @media (max-width: 420px) {
+    .preview-frame { padding: 14px 10px 12px; border-radius: 12px; }
+    .preview-frame .pv-title { font-size: 18px; }
+    .preview-frame .pv-stat-num { font-size: 17px; }
+    .preview-frame .pv-stats { gap: 6px; }
   }
 
   details.card-more {
@@ -1065,11 +1277,8 @@
     .utaeru-bar-actions .bar-btn-ghost { display: inline-flex; align-items: center; }
   }
   @media (max-width: 420px) {
-    .acc-prev { display: none !important; }
-    .acc-nav { flex-direction: column; }
-    .acc-nav .acc-next { flex: 1 1 100%; width: 100%; min-width: 0; }
-    .acc-nav-end .acc-next,
-    .acc-nav-start .acc-next { width: 100%; max-width: none; }
+    .acc-nav { justify-content: stretch; }
+    .acc-nav .acc-next { width: 100%; flex: 1 1 100%; min-width: 0; }
     .song-settings-btn { font-size: 11px; padding: 5px 9px; }
     .status-btn, .song-tag-chip { font-size: 12px; padding: 6px 10px; }
     .export-btn { font-size: 13px; padding: 9px 14px; }
@@ -1241,7 +1450,7 @@
         <p class="hint">半角英小文字・数字・ハイフンのみ（3〜32文字）。固定URL（/u/あなたのID）に使われます。HTML書き出しだけなら空欄でも構いません。</p>
         <p class="field-error" id="streamerIdError" style="display:none;"></p>
         <p class="url-preview" id="streamerIdPreview" style="display:none;">公開予定URL：<span class="path"></span></p>
-        <div class="acc-nav acc-nav-end">
+        <div class="acc-nav">
           <button type="button" class="acc-next" data-next="songs"><span class="nav-long">次へ：曲を選ぶ →</span><span class="nav-short">次へ →</span></button>
         </div>
       </div>
@@ -1273,7 +1482,6 @@
         <div class="result-meta" id="resultMeta"></div>
         <div id="results"></div>
         <div class="acc-nav">
-          <button type="button" class="acc-prev" data-prev="basic"><span class="nav-long">← 基本情報へ戻る</span><span class="nav-short">← 戻る</span></button>
           <button type="button" class="acc-next" data-next="design"><span class="nav-long">次へ：デザイン →</span><span class="nav-short">次へ →</span></button>
         </div>
       </div>
@@ -1302,7 +1510,6 @@
           </div>
         </div>
         <div class="acc-nav">
-          <button type="button" class="acc-prev" data-prev="songs"><span class="nav-long">← 曲を選ぶへ戻る</span><span class="nav-short">← 戻る</span></button>
           <button type="button" class="acc-next" data-next="preview"><span class="nav-long">次へ：プレビュー →</span><span class="nav-short">次へ →</span></button>
         </div>
       </div>
@@ -1316,20 +1523,10 @@
         <span class="acc-chevron" aria-hidden="true">▼</span>
       </button>
       <div class="acc-body" id="accPreviewBody">
-        <div class="preview-panel" id="previewPanel">
-          <div class="preview-accent" id="previewAccent"></div>
-          <div class="preview-body">
-            <p class="preview-title" id="previewTitle">配信者名を入力してください</p>
-            <p class="preview-subtitle" id="previewSubtitle">サブタイトル（任意）</p>
-            <div class="preview-stats">
-              <span><strong id="previewSongCount">0</strong>曲 選択中</span>
-              <span id="previewThemeLabel">テーマ: プリセット1</span>
-            </div>
-            <p class="preview-url" id="previewUrl"></p>
-          </div>
-        </div>
-        <div class="acc-nav acc-nav-start">
-          <button type="button" class="acc-prev" data-prev="design"><span class="nav-long">← デザインへ戻る</span><span class="nav-short">← 戻る</span></button>
+        <p class="preview-shell-label">公開ページ プレビュー</p>
+        <p class="preview-shell-note">実際の公開ページに近い表示です。編集中の内容がその場で反映されます（未公開でも確認できます）。</p>
+        <div class="preview-frame-wrap">
+          <div class="preview-frame" id="previewFrame" aria-live="polite"></div>
         </div>
       </div>
     </section>
@@ -1922,12 +2119,6 @@ function initAccordion() {
       if (next) setMainAccOpen(next);
     });
   });
-  document.querySelectorAll('.acc-prev').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const prev = btn.dataset.prev;
-      if (prev) setMainAccOpen(prev);
-    });
-  });
   document.querySelectorAll('.view-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       const view = tab.dataset.view;
@@ -2062,6 +2253,7 @@ function render() {
       : '🔍 該当する曲が見つかりませんでした';
     resultsEl.innerHTML = `<div class="empty-state">${emptyMsg}</div>`;
     updateAccSummaries();
+    updatePreviewPanel();
     return;
   }
 
@@ -2074,6 +2266,7 @@ function render() {
       : `選択中 ${filtered.length}曲`;
     resultsEl.innerHTML = renderFlatSongList(filtered, q, headLabel);
     updateAccSummaries();
+    updatePreviewPanel();
     return;
   }
 
@@ -2106,6 +2299,7 @@ function render() {
 
   applyIndeterminate();
   updateAccSummaries();
+  updatePreviewPanel();
 }
 
 function applyIndeterminate() {
@@ -2224,38 +2418,161 @@ function updateSelectedCount() {
   updatePreviewPanel();
   updateAccSummaries();
 }
+const PREVIEW_STATUS_LABELS = {
+  signature: { emoji: '⭐', label: 'おはこ' },
+  welcome: { emoji: '🎤', label: 'リクエストOK' },
+  learning: { emoji: '📖', label: '練習中' },
+};
+const PREVIEW_NEW_ARRIVAL_DAYS = 30;
+const PREVIEW_MAX_SONGS = 8;
+const PREVIEW_GYO_LABELS = ['あ', 'か', 'さ', 'た', 'な', 'は', 'ま', 'や', 'ら', 'わ'];
+
+function previewIsNewArrival(addedAt) {
+  if (!addedAt) return false;
+  const added = new Date(addedAt + 'T00:00:00');
+  if (isNaN(added.getTime())) return false;
+  const diffDays = (new Date() - added) / 86400000;
+  return diffDays >= 0 && diffDays <= PREVIEW_NEW_ARRIVAL_DAYS;
+}
+
+function previewSongRowHtml(s) {
+  const meta = songMeta[keyOf(s)] || {};
+  const statusOpt = PREVIEW_STATUS_LABELS[meta.status];
+  const badges = [];
+  if (statusOpt) badges.push(`<span class="pv-badge" title="${escapeHtml(statusOpt.label)}">${statusOpt.emoji}</span>`);
+  if (previewIsNewArrival(meta.addedAt)) badges.push('<span class="pv-badge" title="新着">🆕</span>');
+  const tagObjs = Array.isArray(meta.tags)
+    ? meta.tags.map(id => tagPresets.find(t => t.id === id)).filter(Boolean)
+    : [];
+  const shownTags = tagObjs.slice(0, 2);
+  const restCount = tagObjs.length - shownTags.length;
+  const tagsHtml = tagObjs.length
+    ? `<div class="pv-tag-row">${shownTags.map(t => `<span class="pv-tag">${escapeHtml(t.label)}</span>`).join('')}${restCount > 0 ? `<span class="pv-tag">+${restCount}</span>` : ''}</div>`
+    : '';
+  return `
+    <li>
+      <div class="pv-song-main">
+        <span class="pv-song-title">${escapeHtml(s.t)}</span>
+        ${badges.length ? `<span class="pv-badges">${badges.join('')}</span>` : ''}
+      </div>
+      ${tagsHtml}
+    </li>`;
+}
+
+function buildPreviewSongGroups(songs) {
+  const groups = [];
+  let cur = null;
+  for (const s of songs) {
+    if (!cur || cur.artist !== s.a) {
+      cur = { artist: s.a, songs: [] };
+      groups.push(cur);
+    }
+    cur.songs.push(s);
+  }
+  return groups;
+}
+
+function slicePreviewGroups(groups, maxSongs) {
+  let shownCount = 0;
+  const shown = [];
+  for (const g of groups) {
+    if (shownCount >= maxSongs) break;
+    const take = Math.min(g.songs.length, maxSongs - shownCount);
+    if (take > 0) {
+      shown.push({ artist: g.artist, songs: g.songs.slice(0, take), total: g.songs.length });
+      shownCount += take;
+    }
+  }
+  const hiddenSongs = songsTotal(groups) - shownCount;
+  return { shown, hiddenSongs };
+}
+
+function songsTotal(groups) {
+  return groups.reduce((sum, g) => sum + g.songs.length, 0);
+}
+
+function buildPreviewFrameHtml() {
+  const name = streamerNameInput.value.trim() || '配信者名を入力してください';
+  const sub = subtitleInput.value.trim() || '配信で歌える曲を検索できます。曲名・アーティスト名で絞り込めます。';
+  const songs = MASTER_SONGS.filter(s => selectedKeys.has(keyOf(s)));
+  const artistCount = new Set(songs.map(s => s.a)).size;
+  const groups = buildPreviewSongGroups(songs);
+  const { shown, hiddenSongs } = slicePreviewGroups(groups, PREVIEW_MAX_SONGS);
+
+  const usedTagIds = new Set();
+  songs.forEach(s => {
+    const m = songMeta[keyOf(s)];
+    if (m && Array.isArray(m.tags)) m.tags.forEach(id => usedTagIds.add(id));
+  });
+  const usedTags = tagPresets.filter(t => usedTagIds.has(t.id));
+  const hasNewArrival = songs.some(s => previewIsNewArrival((songMeta[keyOf(s)] || {}).addedAt));
+
+  const gyoChips = ['<span class="pv-chip active">すべて</span>']
+    .concat(PREVIEW_GYO_LABELS.map(label => `<span class="pv-chip">${label}行</span>`))
+    .join('');
+
+  const statusChips = ['<span class="pv-chip active">すべて</span>']
+    .concat(Object.values(PREVIEW_STATUS_LABELS).map(meta => `<span class="pv-chip">${meta.emoji} ${meta.label}</span>`))
+    .concat(hasNewArrival ? ['<span class="pv-chip">🆕 新着</span>'] : [])
+    .join('');
+
+  const tagChips = usedTags.length
+    ? usedTags.map(t => `<span class="pv-chip">${escapeHtml(t.label)}</span>`).join('')
+    : '';
+
+  let resultsHtml = '';
+  if (songs.length === 0) {
+    resultsHtml = '<div class="pv-empty"><div>🎤</div>まだ曲が選択されていません</div>';
+  } else {
+    resultsHtml = shown.map(g => `
+      <div class="pv-artist-group">
+        <div class="pv-artist-head">
+          <div class="pv-artist-name">${escapeHtml(g.artist)}</div>
+          <div class="pv-artist-count">${g.total.toLocaleString('ja-JP')}曲</div>
+        </div>
+        <ul class="pv-song-list">
+          ${g.songs.map(s => previewSongRowHtml(s)).join('')}
+        </ul>
+      </div>
+    `).join('');
+    if (hiddenSongs > 0) {
+      resultsHtml += `<p class="pv-more-note">ほか ${hiddenSongs.toLocaleString('ja-JP')} 曲（公開ページでは全 ${songs.length.toLocaleString('ja-JP')} 曲を確認できます）</p>`;
+    }
+  }
+
+  return `
+    <div class="pv-top">
+      <div>
+        <h2 class="pv-title">${escapeHtml(name)}</h2>
+        <p class="pv-subtitle">${escapeHtml(sub)}</p>
+      </div>
+      <div class="pv-theme-toggle" title="公開ページのテーマ切替">🌙</div>
+    </div>
+    <div class="pv-stats">
+      <div class="pv-stat"><div class="pv-stat-num">${songs.length.toLocaleString('ja-JP')}</div><div class="pv-stat-label">収録曲数</div></div>
+      <div class="pv-stat"><div class="pv-stat-num">${artistCount.toLocaleString('ja-JP')}</div><div class="pv-stat-label">アーティスト数</div></div>
+      <div class="pv-stat"><div class="pv-stat-num">${escapeHtml(CATALOG_UPDATED)}</div><div class="pv-stat-label">最終更新</div></div>
+    </div>
+    <div class="pv-search">
+      <input type="search" value="" placeholder="曲名・アーティスト名で検索" readonly tabindex="-1" aria-hidden="true" />
+    </div>
+    <div class="pv-gyo">${gyoChips}</div>
+    <div class="pv-filter-row">${statusChips}</div>
+    ${tagChips ? `<div class="pv-filter-row">${tagChips}</div>` : ''}
+    <div class="pv-random"><span class="pv-random-btn">🎲 表示中からランダム</span></div>
+    <div class="pv-meta">${songs.length.toLocaleString('ja-JP')}曲 / ${artistCount.toLocaleString('ja-JP')}組</div>
+    ${resultsHtml}
+  `;
+}
+
 function updatePreviewPanel() {
-  const titleEl = document.getElementById('previewTitle');
-  const subtitleEl = document.getElementById('previewSubtitle');
-  const countEl = document.getElementById('previewSongCount');
-  const themeEl = document.getElementById('previewThemeLabel');
-  const urlEl = document.getElementById('previewUrl');
-  const accentEl = document.getElementById('previewAccent');
-  if (!titleEl) return;
-
-  const name = streamerNameInput.value.trim();
-  const sub = subtitleInput.value.trim();
-  titleEl.textContent = name || '配信者名を入力してください';
-  subtitleEl.textContent = sub || 'サブタイトル（任意）';
-  countEl.textContent = selectedKeys.size.toLocaleString('ja-JP');
-
+  const frame = document.getElementById('previewFrame');
+  if (!frame) return;
   const theme = resolveTheme();
-  if (accentEl) accentEl.style.background = theme.light;
-
-  if (currentTheme.type === 'preset') {
-    const preset = PRESETS[currentTheme.presetIndex];
-    themeEl.textContent = 'テーマ: ' + (preset ? preset.name : 'プリセット');
-  } else {
-    themeEl.textContent = 'テーマ: カスタム';
-  }
-
-  const sid = streamerIdInput.value.trim();
-  const sidCheck = validateStreamerId(sid);
-  if (sidCheck.ok && !sidCheck.empty) {
-    urlEl.textContent = '公開URL: ' + getPublicPageUrl(sid);
-  } else {
-    urlEl.textContent = '';
-  }
+  frame.style.setProperty('--pv-accent', theme.light);
+  frame.style.setProperty('--pv-accent-ink', theme.lightInk);
+  frame.style.setProperty('--pv-accent-wash', theme.lightWash);
+  frame.innerHTML = buildPreviewFrameHtml();
 }
 streamerNameInput.addEventListener('input', updateSelectedCount);
 subtitleInput.addEventListener('input', updatePreviewPanel);

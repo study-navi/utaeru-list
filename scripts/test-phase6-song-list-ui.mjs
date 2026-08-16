@@ -73,7 +73,7 @@ for (const vp of cases) {
   await page.click('.song-check');
   const afterSelect = await page.evaluate(() => ({
     selected: document.getElementById('selectedCount')?.textContent,
-    preview: document.getElementById('previewSongCount')?.textContent,
+    preview: document.querySelector('#previewFrame .pv-stat-num')?.textContent,
     publishDisabled: document.getElementById('publishBtn')?.disabled,
     publishTitle: document.getElementById('publishBtn')?.title ?? '',
   }));

@@ -1,5 +1,5 @@
 {
-  "label": "Phase 6.2 追加UI調整（アカウントメニュー統一・アクセントカラーUI）",
+  "label": "Phase 6.2 追加UI調整（次へ導線・公開ページプレビュー）",
   "establishedAt": "2026-08-16",
   "gitCommit": null,
   "gitCommitShort": null,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 337399,
-      "sha256": "37580a868b04332f110e491bcbfbbd0c2c43a7152d4520bd95142b2ffd7183b3"
+      "bytes": 346727,
+      "sha256": "ac0bc406710f72aba90ea2e3412adb532d52a179f6a8d5564dc1829b645fe071"
     },
     "hiro.html": {
       "bytes": 25630,
