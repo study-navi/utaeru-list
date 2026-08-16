@@ -1,15 +1,15 @@
 {
-  "label": "v1.0 編集画面横タブUI",
+  "label": "v1.0 編集タブ固定化・管理タブ・フッター整理",
   "establishedAt": "2026-08-17",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "v1.0 若者向けビジュアル調整",
+    "label": "v1.0 編集画面横タブUI",
     "establishedAt": "2026-08-17",
     "files": {
       "index.html": {
-        "bytes": 370844,
-        "sha256": "abe87972c468c203b0e0a5ad2e680e7e9c093fb190bcafbd44070d28f60a2ae4"
+        "bytes": 368863,
+        "sha256": "25feeb36fc94f9f85274abb55b0471a491333ed6d36762dd8b3a2f43d40a92f1"
       },
       "hiro.html": {
         "bytes": 25170,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 368863,
-      "sha256": "25feeb36fc94f9f85274abb55b0471a491333ed6d36762dd8b3a2f43d40a92f1"
+      "bytes": 370360,
+      "sha256": "0ee878c5d88fb40cca6ba7fd147bfd9c5ba8328ccc679f38298245084bff73e8"
     },
     "hiro.html": {
       "bytes": 25170,

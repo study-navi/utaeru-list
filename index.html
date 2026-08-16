@@ -58,8 +58,10 @@
     --ui-btn-font: 14px;
     --builder-top-gap: 14px;
     --builder-bar-h: 52px;
+    --builder-tabs-h: 44px;
+    --builder-chrome-h: calc(var(--builder-bar-h) + var(--builder-tabs-h));
     --builder-bottom-bar-h: 68px;
-    --builder-scroll-offset: calc(var(--builder-bar-h) + var(--builder-top-gap));
+    --builder-scroll-offset: calc(var(--builder-chrome-h) + var(--builder-top-gap));
   }
   /* Phase 6.2: 編集画面は常にライトテーマ（OSダークモード・ユーザー切替なし） */
   html[data-utaeru-builder="light"],
@@ -90,8 +92,8 @@
     background: rgba(255, 255, 255, 0.94);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border);
-    box-shadow: 0 1px 0 rgba(23, 23, 23, 0.04);
+    border-bottom: none;
+    box-shadow: none;
     padding: 0 12px;
     padding-top: env(safe-area-inset-top, 0px);
   }
@@ -442,7 +444,14 @@
     letter-spacing: 0.02em;
   }
   .edit-nav {
-    margin: 0 0 14px;
+    position: sticky;
+    top: var(--builder-bar-h, calc(52px + env(safe-area-inset-top, 0px)));
+    z-index: 99;
+    margin: 0 -16px 14px;
+    padding: 0 16px;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--grid);
   }
   .edit-tabs {
@@ -481,8 +490,6 @@
   }
   .edit-tab-text { min-width: 0; }
   .edit-tab-label-short { display: none; }
-  .edit-tab-more { flex: 0 0 auto; min-width: 44px; padding-left: 6px; padding-right: 6px; }
-  .edit-tab-more .edit-tab-text { letter-spacing: 0.06em; font-weight: 700; }
   .edit-tab-badge {
     font-size: 11px;
     font-weight: 700;
@@ -542,14 +549,25 @@
     border-top: 1px solid var(--grid);
     font-size: 12px;
     color: var(--text-muted);
+    text-align: center;
   }
+  .site-footer-brand-line { margin: 0 0 8px; }
+  .site-footer-brand { font-weight: 800; color: var(--accent); letter-spacing: -0.03em; }
   .site-footer nav {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px 12px;
+    justify-content: center;
+    gap: 4px 0;
+    margin: 0 0 8px;
   }
-  .site-footer-brand { font-weight: 800; color: var(--accent); margin-right: 4px; letter-spacing: -0.03em; }
+  .site-footer-sep {
+    color: var(--text-muted);
+    opacity: 0.55;
+    padding: 0 6px;
+    user-select: none;
+  }
+  .site-footer-copy { margin: 0; font-size: 11px; color: var(--text-muted); }
   .site-footer a {
     color: var(--text-secondary);
     text-decoration: none;
@@ -1442,7 +1460,7 @@
   .tag-admin-add-row input[type="text"] { flex: 1; }
 
   @media (max-width: 640px) {
-    :root { --builder-top-gap: 16px; }
+    :root { --builder-top-gap: 12px; }
     body { padding-top: var(--builder-bar-h, calc(52px + env(safe-area-inset-top, 0px))); }
     .wrap {
       padding: 10px 14px calc(var(--builder-bottom-bar-h, 76px) + 14px);
@@ -1480,9 +1498,15 @@
       line-height: 1.5;
       padding-bottom: 8px;
     }
+    .edit-nav {
+      margin-left: -14px;
+      margin-right: -14px;
+      padding-left: 14px;
+      padding-right: 14px;
+    }
     .edit-tab-label-full { display: none; }
     .edit-tab-label-short { display: inline; }
-    .edit-tab { font-size: 13px; padding: 8px 2px; }
+    .edit-tab { font-size: 13px; padding: 6px 2px; min-height: 40px; }
     .edit-tab-badge { font-size: 11px; }
     label.field-label {
       font-size: 13px;
@@ -1737,8 +1761,8 @@
         <span class="edit-tab-text"><span class="edit-tab-label-full">プレビュー</span><span class="edit-tab-label-short">確認</span></span>
         <span class="edit-tab-badge" id="tabBadgePreview" hidden>✓</span>
       </button>
-      <button type="button" class="edit-tab edit-tab-more" role="tab" id="editTabMore" data-tab="more" aria-selected="false" aria-controls="panelMore" tabindex="-1" aria-label="その他・データ管理">
-        <span class="edit-tab-text">•••</span>
+      <button type="button" class="edit-tab" role="tab" id="editTabMore" data-tab="more" aria-selected="false" aria-controls="panelMore" tabindex="-1" aria-label="管理">
+        <span class="edit-tab-text">管理</span>
       </button>
     </div>
   </nav>
@@ -1807,7 +1831,7 @@
     </section>
 
     <section class="edit-panel" role="tabpanel" id="panelMore" data-tab-panel="more" aria-labelledby="editTabMore" hidden>
-      <h2 class="edit-panel-heading">その他・データ管理</h2>
+      <h2 class="edit-panel-heading">管理</h2>
       <div class="sub-block">
         <h3>以前のファイルから復元</h3>
         <p class="hint">前に書き出したページのHTMLファイルを読み込むと、選択していた曲やテーマカラーを復元して編集を続けられます。</p>
@@ -1830,12 +1854,15 @@
   </div>
 
   <footer class="site-footer">
-    <nav aria-label="Utalis">
-      <span class="site-footer-brand">Utalis</span>
+    <p class="site-footer-brand-line"><span class="site-footer-brand">Utalis</span></p>
+    <nav aria-label="法務・お問い合わせ">
       <a href="terms.html">利用規約</a>
+      <span class="site-footer-sep" aria-hidden="true">｜</span>
       <a href="privacy.html">プライバシー</a>
+      <span class="site-footer-sep" aria-hidden="true">｜</span>
       <a href="contact.html">お問い合わせ</a>
     </nav>
+    <p class="site-footer-copy">© Utalis</p>
   </footer>
 </div>
 
@@ -2155,7 +2182,7 @@ function songPanelHtml(s) {
     ? tagPresets.map(t => `
         <button type="button" class="song-tag-chip ${tags.includes(t.id) ? 'active' : ''}" data-key="${escapeHtml(key)}" data-tag-id="${escapeHtml(t.id)}">${escapeHtml(t.label)}</button>
       `).join('')
-    : `<span class="tag-empty-hint">タグ候補がまだありません。「その他・データ管理」から追加できます</span>`;
+    : `<span class="tag-empty-hint">タグ候補がまだありません。「管理」から追加できます</span>`;
 
   return `
     <div class="song-meta-panel">
@@ -2387,6 +2414,20 @@ function updateAccSummaries() {
   updateTabBadges();
 }
 
+function scrollActiveEditPanelIntoView(opts = {}) {
+  const panel = document.querySelector(`[data-tab-panel="${activeEditTab}"]`);
+  if (!panel) return;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      syncBuilderChromeInsets();
+      panel.scrollIntoView({
+        behavior: opts.smooth === false ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    });
+  });
+}
+
 function setEditTab(id, opts = {}) {
   if (!EDIT_TABS.includes(id)) return;
   activeEditTab = id;
@@ -2403,10 +2444,7 @@ function setEditTab(id, opts = {}) {
   });
   updateTabBadges();
   if (opts.scroll !== false) {
-    const nav = document.getElementById('editNav');
-    if (nav) {
-      requestAnimationFrame(() => nav.scrollIntoView({ behavior: opts.smooth === false ? 'auto' : 'smooth', block: 'start' }));
-    }
+    scrollActiveEditPanelIntoView({ smooth: opts.smooth });
   }
 }
 
@@ -3174,14 +3212,21 @@ function getPublishButtonLabel() {
 
 function syncBuilderChromeInsets() {
   const bar = document.getElementById('utaeruBar');
+  const editNav = document.getElementById('editNav');
   const exportBar = document.querySelector('.export-bar');
   const barH = bar ? bar.getBoundingClientRect().height : 52;
+  const tabsH = editNav ? editNav.getBoundingClientRect().height : 44;
   const bottomH = exportBar ? exportBar.getBoundingClientRect().height : 68;
-  const gap = window.matchMedia('(max-width: 640px)').matches ? 16 : 14;
-  document.documentElement.style.setProperty('--builder-bar-h', `${Math.ceil(barH)}px`);
+  const gap = window.matchMedia('(max-width: 640px)').matches ? 12 : 14;
+  const barCeil = Math.ceil(barH);
+  const tabsCeil = Math.ceil(tabsH);
+  const chromeCeil = barCeil + tabsCeil;
+  document.documentElement.style.setProperty('--builder-bar-h', `${barCeil}px`);
+  document.documentElement.style.setProperty('--builder-tabs-h', `${tabsCeil}px`);
+  document.documentElement.style.setProperty('--builder-chrome-h', `${chromeCeil}px`);
   document.documentElement.style.setProperty('--builder-bottom-bar-h', `${Math.ceil(bottomH)}px`);
   document.documentElement.style.setProperty('--builder-top-gap', `${gap}px`);
-  document.documentElement.style.setProperty('--builder-scroll-offset', `calc(${Math.ceil(barH)}px + ${gap}px)`);
+  document.documentElement.style.setProperty('--builder-scroll-offset', `calc(${chromeCeil}px + ${gap}px)`);
 }
 
 function updateManagementBar() {
@@ -4064,8 +4109,10 @@ window.addEventListener('resize', syncBuilderChromeInsets, { passive: true });
 if (typeof ResizeObserver !== 'undefined') {
   const chromeObserver = new ResizeObserver(syncBuilderChromeInsets);
   const barEl = document.getElementById('utaeruBar');
+  const editNavEl = document.getElementById('editNav');
   const exportEl = document.querySelector('.export-bar');
   if (barEl) chromeObserver.observe(barEl);
+  if (editNavEl) chromeObserver.observe(editNavEl);
   if (exportEl) chromeObserver.observe(exportEl);
 }
 
