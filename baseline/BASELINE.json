@@ -1,15 +1,15 @@
 {
-  "label": "サブタイトルplaceholder短文化・補足例追加",
+  "label": "Phase 7 運営基盤（soft delete・管理統計）",
   "establishedAt": "2026-08-17",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "文字切れ解消・サンプル表記汎用化",
-    "establishedAt": "2026-08-16",
+    "label": "サブタイトルplaceholder短文化・補足例追加",
+    "establishedAt": "2026-08-17",
     "files": {
       "index.html": {
-        "bytes": 348703,
-        "sha256": "d21bf7ab69bb9dd08080845586a85555aaa84a007d315d3206525d1e1616a2af"
+        "bytes": 349049,
+        "sha256": "943a273c6e525fbabf9be369079f410eec13ff00f49b114085fafd047f1e75d6"
       },
       "hiro.html": {
         "bytes": 24413,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 349049,
-      "sha256": "943a273c6e525fbabf9be369079f410eec13ff00f49b114085fafd047f1e75d6"
+      "bytes": 355306,
+      "sha256": "b30ce1731b11c746bc566b95db8280dbebe99cb537e68fef7e88855bc9eaf955"
     },
     "hiro.html": {
       "bytes": 24413,

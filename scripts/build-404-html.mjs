@@ -325,6 +325,11 @@ async function bootstrapPublicViewer() {
     showPageState('🔍', '公開ページが見つかりません。<br>URLを確認するか、配信者に最新のリンクを確認してください。');
     return;
   }
+  if (res.status === 410) {
+    document.title = '公開されていません';
+    showPageState('📭', 'この公開ページは現在公開されていません。<br><a href="' + SITE_BASE + '/">Utalisで歌える曲リストを作る</a>');
+    return;
+  }
   if (!res.ok) {
     document.title = '読み込みエラー';
     showPageState('⚠️', '公開データの取得に失敗しました（' + res.status + '）。');

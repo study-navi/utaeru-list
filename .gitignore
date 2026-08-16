@@ -2,3 +2,5 @@ node_modules/
 worker/node_modules/
 .npm/
 *.log
+.admin-token.local
+.env.admin.local

@@ -1,6 +1,6 @@
 /**
- * Utaeru API — Cloudflare Worker (Phase 5)
- * Public data, Google auth, anonymous edit keys, and streamer claims.
+ * Utaeru API — Cloudflare Worker (Phase 7)
+ * Public data, Google auth, anonymous edit keys, soft delete, admin stats.
  */
 
 const COOKIE_NAME = 'utaeru_session';
@@ -9,9 +9,18 @@ const MAX_BODY_BYTES = 2 * 1024 * 1024;
 const STREAMER_ID_RE = /^[a-z0-9-]{3,32}$/;
 const EDIT_KEY_RE = /^ut_[0-9a-f]{64}$/;
 const EDIT_KEY_HEADER = 'X-Utaeru-Edit-Key';
+const ADMIN_TOKEN_HEADER = 'X-Utaeru-Admin-Token';
 const GOOGLE_JWKS_URL = 'https://www.googleapis.com/oauth2/v3/certs';
 const GOOGLE_ISSUERS = new Set(['https://accounts.google.com', 'accounts.google.com']);
 const JWKS_CACHE_TTL_MS = 60 * 60 * 1000;
+
+const RESERVED_STREAMER_IDS = new Set([
+  'admin', 'api', 'auth', 'login', 'logout', 'account', 'settings', 'help', 'support',
+  'about', 'terms', 'privacy', 'contact', 'assets', 'static', 'favicon', 'www', 'utalis',
+  'u', 'public', 'streamer', 'streamers', 'users', 'owner', 'oauth', 'google', 'me',
+  'claim', 'create', 'delete', 'verify', 'link', 'worker', 'internal', 'dev', 'test',
+  '404', 'index', 'robots', 'sitemap',
+]);
 
 /** @type {{ keys: object[] | null, fetchedAt: number }} */
 const jwksCache = { keys: null, fetchedAt: 0 };
@@ -49,6 +58,10 @@ export default {
         response = await handleVerifyEditKey(request, path, env);
       } else if (path.startsWith('/api/streamer/') && path.endsWith('/link-google') && request.method === 'POST') {
         response = await handleLinkGoogle(request, path, env);
+      } else if (path.startsWith('/api/streamer/') && request.method === 'DELETE') {
+        response = await handleDeleteStreamer(request, path, env);
+      } else if (path === '/api/admin/stats' && request.method === 'GET') {
+        response = await handleAdminStats(request, env);
       } else {
         response = json({ error: 'not_found' }, 404);
       }
@@ -68,15 +81,19 @@ export default {
 async function handleGetPublic(path, env) {
   const streamerId = extractStreamerId(path, '/api/public/');
   if (!isValidStreamerId(streamerId)) {
-    return json({ error: 'invalid_streamer_id' }, 400);
+    return json({ error: streamerIdError(streamerId) }, 400);
   }
 
   const row = await env.DB.prepare(
-    'SELECT public_data FROM streamers WHERE streamer_id = ?',
+    'SELECT public_data, deleted_at FROM streamers WHERE streamer_id = ?',
   ).bind(streamerId).first();
 
   if (!row) {
     return json({ error: 'not_found' }, 404);
+  }
+
+  if (row.deleted_at) {
+    return json({ error: 'page_unpublished' }, 410);
   }
 
   try {
@@ -89,12 +106,20 @@ async function handleGetPublic(path, env) {
 async function handlePutPublic(request, path, env) {
   const streamerId = extractStreamerId(path, '/api/public/');
   if (!isValidStreamerId(streamerId)) {
-    return json({ error: 'invalid_streamer_id' }, 400);
+    return json({ error: streamerIdError(streamerId) }, 400);
   }
 
   const auth = await authorizeWrite(request, env, streamerId);
   if (!auth.ok) {
     return json({ error: auth.error }, auth.status);
+  }
+
+  const existing = await env.DB.prepare(
+    'SELECT deleted_at FROM streamers WHERE streamer_id = ?',
+  ).bind(streamerId).first();
+
+  if (existing && existing.deleted_at) {
+    return json({ error: 'page_unpublished' }, 403);
   }
 
   const rawBody = await readBodyWithLimit(request, MAX_BODY_BYTES);
@@ -129,6 +154,11 @@ async function handlePutPublic(request, path, env) {
 }
 
 async function handleAuthGoogle(request, env) {
+  const rl = await checkRateLimit(env, 'RL_WRITE_AUTH', rateLimitClientKey(request, 'auth-google'));
+  if (!rl.ok) {
+    return json({ error: 'rate_limited' }, 429);
+  }
+
   const rawBody = await readBodyWithLimit(request, 64 * 1024);
   if (rawBody.error) {
     return json({ error: rawBody.error }, rawBody.status);
@@ -225,7 +255,12 @@ async function handleClaim(request, path, env) {
 
   const streamerId = path.slice(prefix.length, -suffix.length);
   if (!isValidStreamerId(streamerId)) {
-    return json({ error: 'invalid_streamer_id' }, 400);
+    return json({ error: streamerIdError(streamerId) }, 400);
+  }
+
+  const rl = await checkRateLimit(env, 'RL_WRITE_AUTH', rateLimitClientKey(request, 'claim'));
+  if (!rl.ok) {
+    return json({ error: 'rate_limited' }, 429);
   }
 
   const session = await getSession(request, env.SESSION_SECRET);
@@ -260,6 +295,14 @@ async function handleClaim(request, path, env) {
     return json({ error: 'already_claimed' }, 409);
   }
 
+  const streamerRow = await env.DB.prepare(
+    'SELECT streamer_id FROM streamers WHERE streamer_id = ?',
+  ).bind(streamerId).first();
+
+  if (streamerRow) {
+    return json({ error: 'already_claimed' }, 409);
+  }
+
   const now = new Date().toISOString();
   try {
     await env.DB.prepare(
@@ -278,7 +321,12 @@ async function handleClaim(request, path, env) {
 async function handleCreateAnonymous(request, path, env) {
   const streamerId = extractStreamerPathId(path, '/create-anonymous');
   if (!isValidStreamerId(streamerId)) {
-    return json({ error: 'invalid_streamer_id' }, 400);
+    return json({ error: streamerIdError(streamerId) }, 400);
+  }
+
+  const rl = await checkRateLimit(env, 'RL_CREATE_ANON', rateLimitClientKey(request, 'create-anonymous'));
+  if (!rl.ok) {
+    return json({ error: 'rate_limited' }, 429);
   }
 
   const rawBody = await readBodyWithLimit(request, MAX_BODY_BYTES);
@@ -336,7 +384,12 @@ async function handleCreateAnonymous(request, path, env) {
 async function handleVerifyEditKey(request, path, env) {
   const streamerId = extractStreamerPathId(path, '/verify-edit-key');
   if (!isValidStreamerId(streamerId)) {
-    return json({ error: 'invalid_streamer_id' }, 400);
+    return json({ error: streamerIdError(streamerId) }, 400);
+  }
+
+  const rl = await checkRateLimit(env, 'RL_WRITE_AUTH', rateLimitClientKey(request, 'verify-edit-key'));
+  if (!rl.ok) {
+    return json({ error: 'rate_limited' }, 429);
   }
 
   const rawBody = await readBodyWithLimit(request, 16 * 1024);
@@ -362,7 +415,12 @@ async function handleVerifyEditKey(request, path, env) {
 async function handleLinkGoogle(request, path, env) {
   const streamerId = extractStreamerPathId(path, '/link-google');
   if (!isValidStreamerId(streamerId)) {
-    return json({ error: 'invalid_streamer_id' }, 400);
+    return json({ error: streamerIdError(streamerId) }, 400);
+  }
+
+  const rl = await checkRateLimit(env, 'RL_WRITE_AUTH', rateLimitClientKey(request, 'link-google'));
+  if (!rl.ok) {
+    return json({ error: 'rate_limited' }, 429);
   }
 
   const session = await getSession(request, env.SESSION_SECRET);
@@ -427,9 +485,156 @@ async function handleLinkGoogle(request, path, env) {
   return json({ streamerId, ok: true }, 200);
 }
 
+async function handleDeleteStreamer(request, path, env) {
+  const streamerId = extractStreamerIdFromStreamerPath(path);
+  if (!isValidStreamerId(streamerId)) {
+    return json({ error: streamerIdError(streamerId) }, 400);
+  }
+
+  const rl = await checkRateLimit(env, 'RL_WRITE_AUTH', rateLimitClientKey(request, 'delete'));
+  if (!rl.ok) {
+    return json({ error: 'rate_limited' }, 429);
+  }
+
+  const auth = await authorizeOwnerDelete(request, env, streamerId);
+  if (!auth.ok) {
+    return json({ error: auth.error }, auth.status);
+  }
+
+  const rawBody = await readBodyWithLimit(request, 16 * 1024);
+  if (rawBody.error) {
+    return json({ error: rawBody.error }, rawBody.status);
+  }
+
+  let body;
+  try {
+    body = rawBody.text ? JSON.parse(rawBody.text) : {};
+  } catch {
+    return json({ error: 'invalid_body' }, 400);
+  }
+
+  if (!body || body.confirmStreamerId !== streamerId) {
+    return json({ error: 'confirm_mismatch' }, 400);
+  }
+
+  const row = await env.DB.prepare(
+    'SELECT deleted_at FROM streamers WHERE streamer_id = ?',
+  ).bind(streamerId).first();
+
+  if (!row) {
+    return json({ error: 'not_found' }, 404);
+  }
+
+  if (row.deleted_at) {
+    return json({ error: 'page_unpublished' }, 410);
+  }
+
+  const now = new Date().toISOString();
+  await env.DB.batch([
+    env.DB.prepare(
+      'UPDATE streamers SET deleted_at = ?, updated_at = ? WHERE streamer_id = ?',
+    ).bind(now, now, streamerId),
+    env.DB.prepare(
+      'UPDATE streamer_edit_keys SET revoked_at = ? WHERE streamer_id = ? AND revoked_at IS NULL',
+    ).bind(now, streamerId),
+  ]);
+
+  return json({ streamerId, ok: true, deletedAt: now }, 200);
+}
+
+async function handleAdminStats(request, env) {
+  const token = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!env.ADMIN_STATS_TOKEN || token !== env.ADMIN_STATS_TOKEN) {
+    return json({ error: 'unauthorized' }, 401);
+  }
+
+  const [
+    activePages,
+    deletedPages,
+    googleManaged,
+    editKeyManaged,
+    users,
+    songsRow,
+    created7,
+    created30,
+  ] = await Promise.all([
+    env.DB.prepare('SELECT COUNT(*) AS c FROM streamers WHERE deleted_at IS NULL').first(),
+    env.DB.prepare('SELECT COUNT(*) AS c FROM streamers WHERE deleted_at IS NOT NULL').first(),
+    env.DB.prepare(`
+      SELECT COUNT(*) AS c FROM streamer_owners so
+      INNER JOIN streamers s ON s.streamer_id = so.streamer_id
+      WHERE s.deleted_at IS NULL
+    `).first(),
+    env.DB.prepare(`
+      SELECT COUNT(*) AS c FROM streamer_edit_keys ek
+      INNER JOIN streamers s ON s.streamer_id = ek.streamer_id
+      WHERE ek.revoked_at IS NULL AND s.deleted_at IS NULL
+    `).first(),
+    env.DB.prepare('SELECT COUNT(*) AS c FROM users').first(),
+    env.DB.prepare(`
+      SELECT COALESCE(SUM(json_array_length(json_extract(public_data, '$.songs'))), 0) AS c
+      FROM streamers WHERE deleted_at IS NULL
+    `).first(),
+    env.DB.prepare(`
+      SELECT COUNT(*) AS c FROM streamers
+      WHERE created_at >= datetime('now', '-7 days')
+    `).first(),
+    env.DB.prepare(`
+      SELECT COUNT(*) AS c FROM streamers
+      WHERE created_at >= datetime('now', '-30 days')
+    `).first(),
+  ]);
+
+  return json({
+    ok: true,
+    generatedAt: new Date().toISOString(),
+    publicPages: activePages?.c ?? 0,
+    deletedPages: deletedPages?.c ?? 0,
+    googleManagedPages: googleManaged?.c ?? 0,
+    editKeyManagedPages: editKeyManaged?.c ?? 0,
+    registeredUsers: users?.c ?? 0,
+    registeredSongs: songsRow?.c ?? 0,
+    createdLast7Days: created7?.c ?? 0,
+    createdLast30Days: created30?.c ?? 0,
+  }, 200);
+}
+
 // ---------------------------------------------------------------------------
 // Authorization
 // ---------------------------------------------------------------------------
+
+async function authorizeOwnerDelete(request, env, streamerId) {
+  const editKey = request.headers.get(EDIT_KEY_HEADER);
+  if (editKey) {
+    if (await verifyEditKey(env, streamerId, editKey)) {
+      return { ok: true };
+    }
+    return { ok: false, error: 'invalid_edit_key', status: 401 };
+  }
+
+  const session = await getSession(request, env.SESSION_SECRET);
+  if (!session) {
+    return { ok: false, error: 'unauthorized', status: 401 };
+  }
+
+  const user = await env.DB.prepare(
+    'SELECT user_id FROM users WHERE google_sub = ?',
+  ).bind(session.sub).first();
+
+  if (!user) {
+    return { ok: false, error: 'unauthorized', status: 401 };
+  }
+
+  const owner = await env.DB.prepare(
+    'SELECT streamer_id FROM streamer_owners WHERE streamer_id = ? AND user_id = ?',
+  ).bind(streamerId, user.user_id).first();
+
+  if (!owner) {
+    return { ok: false, error: 'forbidden', status: 403 };
+  }
+
+  return { ok: true };
+}
 
 async function authorizeWrite(request, env, streamerId) {
   const devToken = request.headers.get('X-Utaeru-Dev-Token');
@@ -477,7 +682,24 @@ async function authorizeWrite(request, env, streamerId) {
 // ---------------------------------------------------------------------------
 
 function isValidStreamerId(id) {
-  return typeof id === 'string' && STREAMER_ID_RE.test(id);
+  if (typeof id !== 'string' || !STREAMER_ID_RE.test(id)) return false;
+  if (RESERVED_STREAMER_IDS.has(id)) return false;
+  if (id.startsWith('-') || id.endsWith('-')) return false;
+  if (id.includes('--')) return false;
+  return true;
+}
+
+function streamerIdError(id) {
+  if (typeof id === 'string' && RESERVED_STREAMER_IDS.has(id)) return 'reserved_streamer_id';
+  return 'invalid_streamer_id';
+}
+
+function extractStreamerIdFromStreamerPath(path) {
+  const prefix = '/api/streamer/';
+  if (!path.startsWith(prefix)) return '';
+  const rest = path.slice(prefix.length);
+  if (!rest || rest.includes('/')) return '';
+  return rest;
 }
 
 function extractStreamerId(path, prefix) {
@@ -497,6 +719,11 @@ function extractStreamerPathId(path, suffix) {
 }
 
 async function getOwnershipConflict(env, streamerId) {
+  const streamerRow = await env.DB.prepare(
+    'SELECT streamer_id FROM streamers WHERE streamer_id = ?',
+  ).bind(streamerId).first();
+  if (streamerRow) return 'exists';
+
   const googleOwner = await env.DB.prepare(
     'SELECT streamer_id FROM streamer_owners WHERE streamer_id = ?',
   ).bind(streamerId).first();
@@ -508,6 +735,27 @@ async function getOwnershipConflict(env, streamerId) {
   if (anonOwner) return 'anonymous';
 
   return null;
+}
+
+async function checkRateLimit(env, bindingName, key) {
+  const limiter = env[bindingName];
+  if (!limiter || typeof limiter.limit !== 'function') {
+    return { ok: true };
+  }
+  try {
+    const { success } = await limiter.limit({ key });
+    return success ? { ok: true } : { ok: false };
+  } catch (err) {
+    console.error('rate_limit_error', bindingName, err);
+    return { ok: true };
+  }
+}
+
+function rateLimitClientKey(request, action) {
+  const ip = request.headers.get('CF-Connecting-IP')
+    || request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim()
+    || 'unknown';
+  return `${action}:${ip}`;
 }
 
 function generateEditKey() {
@@ -823,14 +1071,14 @@ function corsPreflight(request, cors) {
   const requestedHeaders = request.headers.get('Access-Control-Request-Headers');
   const headers = {
     ...cors,
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Max-Age': '86400',
   };
 
   if (requestedHeaders) {
     headers['Access-Control-Allow-Headers'] = requestedHeaders;
   } else {
-    headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Utaeru-Dev-Token, X-Utaeru-Edit-Key';
+    headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Utaeru-Dev-Token, X-Utaeru-Edit-Key, X-Utaeru-Admin-Token';
   }
 
   return new Response(null, { status: 204, headers });

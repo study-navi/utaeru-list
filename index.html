@@ -1549,6 +1549,13 @@
       <button type="button" class="ui-btn ui-btn-primary" id="linkGoogleBtn">Googleアカウントに連携</button>
     </div>
   </div>
+
+  <div id="deletePageBlock" class="account-block" style="display:none;">
+    <div class="account-divider"></div>
+    <p class="account-block-title">公開ページの削除</p>
+    <p class="hint">公開URLから曲リストを閲覧できなくなります。削除したIDは再取得できません。</p>
+    <button type="button" class="ui-btn ui-btn-danger" id="deletePageBtn">公開ページを削除</button>
+  </div>
 </aside>
 
 <div class="modal-backdrop" id="manageModeModal" hidden>
@@ -1573,6 +1580,20 @@
         <button type="button" class="ui-btn ui-btn-secondary" id="copyEditKeyBtn">編集キーをコピー</button>
         <button type="button" class="ui-btn ui-btn-tertiary" id="editKeyIssuedCloseBtn">閉じる</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="deletePageModal" hidden>
+  <div class="modal-card" role="dialog" aria-labelledby="deletePageTitle">
+    <h3 id="deletePageTitle">この公開ページを削除しますか？</h3>
+    <p>公開ページID：<strong id="deleteConfirmIdLabel"></strong></p>
+    <p class="hint">この操作を行うと、このURLから曲リストを閲覧できなくなります。削除したIDは別のユーザーが取得できません。</p>
+    <label class="field-label" for="deleteConfirmInput">確認のため、公開ページIDを入力</label>
+    <input type="text" id="deleteConfirmInput" autocomplete="off" spellcheck="false" />
+    <div class="modal-actions ui-stack" style="margin-top:14px;">
+      <button type="button" class="ui-btn ui-btn-secondary" id="deleteCancelBtn">キャンセル</button>
+      <button type="button" class="ui-btn ui-btn-danger" id="deleteConfirmBtn" disabled>削除する</button>
     </div>
   </div>
 </div>
@@ -1729,6 +1750,13 @@ const CONFIG_VERSION = 2;
 const STREAMER_ID_MIN_LEN = 3;
 const STREAMER_ID_MAX_LEN = 32;
 const STREAMER_ID_PATTERN = /^[a-z0-9-]+$/;
+const RESERVED_STREAMER_IDS = new Set([
+  'admin', 'api', 'auth', 'login', 'logout', 'account', 'settings', 'help', 'support',
+  'about', 'terms', 'privacy', 'contact', 'assets', 'static', 'favicon', 'www', 'utalis',
+  'u', 'public', 'streamer', 'streamers', 'users', 'owner', 'oauth', 'google', 'me',
+  'claim', 'create', 'delete', 'verify', 'link', 'worker', 'internal', 'dev', 'test',
+  '404', 'index', 'robots', 'sitemap',
+]);
 // ユーザー向けの正式公開URL（Utalis GitHub Pages）
 const PUBLIC_URL_BASE = 'https://utalis.github.io';
 const PUBLIC_URL_PATH_PREFIX = '/u/';
@@ -1750,6 +1778,15 @@ function validateStreamerId(id) {
   }
   if (!STREAMER_ID_PATTERN.test(id)) {
     return { ok: false, message: '公開ページIDに使えるのは半角英小文字・数字・ハイフン（-）のみです' };
+  }
+  if (RESERVED_STREAMER_IDS.has(id)) {
+    return { ok: false, message: 'この公開ページIDは予約されています。別のIDを選んでください。' };
+  }
+  if (id.startsWith('-') || id.endsWith('-')) {
+    return { ok: false, message: '公開ページIDの先頭・末尾にハイフンは使えません' };
+  }
+  if (id.includes('--')) {
+    return { ok: false, message: '公開ページIDに連続ハイフン（--）は使えません' };
   }
   return { ok: true, empty: false };
 }
@@ -2983,7 +3020,87 @@ function updateManagementBar() {
     barCopy.style.display = 'none';
     if (accountQuick) accountQuick.style.display = 'none';
   }
+  updateDeletePageBlock();
   syncBuilderChromeInsets();
+}
+
+function canDeletePublishedPage() {
+  const sid = streamerIdInput.value.trim();
+  const sidCheck = validateStreamerId(sid);
+  if (!sidCheck.ok) return false;
+  if (!(publishedSnapshot && publishedStreamerId === sid)) return false;
+  if (onlineMode === 'google') {
+    return !!(authUser && isStreamerIdOwned(sid));
+  }
+  if (onlineMode === 'edit-key') {
+    return editKeyVerified && editKeyVerifiedStreamerId === sid && !!getActiveEditKey();
+  }
+  return false;
+}
+
+function updateDeletePageBlock() {
+  const block = document.getElementById('deletePageBlock');
+  if (!block) return;
+  block.style.display = canDeletePublishedPage() ? 'block' : 'none';
+}
+
+function openDeletePageModal() {
+  const sid = streamerIdInput.value.trim();
+  if (!canDeletePublishedPage()) return;
+  document.getElementById('deleteConfirmIdLabel').textContent = sid;
+  document.getElementById('deleteConfirmInput').value = '';
+  document.getElementById('deleteConfirmBtn').disabled = true;
+  document.getElementById('deletePageModal').hidden = false;
+}
+
+function closeDeletePageModal() {
+  document.getElementById('deletePageModal').hidden = true;
+  document.getElementById('deleteConfirmInput').value = '';
+  document.getElementById('deleteConfirmBtn').disabled = true;
+}
+
+async function deletePublishedPageAction() {
+  const sid = streamerIdInput.value.trim();
+  if (!canDeletePublishedPage()) return;
+  const confirmVal = document.getElementById('deleteConfirmInput').value.trim();
+  if (confirmVal !== sid) {
+    showAuthMessage('確認用の公開ページIDが一致しません。', 'error');
+    return;
+  }
+
+  const deleteBtn = document.getElementById('deleteConfirmBtn');
+  deleteBtn.disabled = true;
+  showAuthMessage('削除中…', 'info');
+
+  try {
+    const options = {
+      method: 'DELETE',
+      body: JSON.stringify({ confirmStreamerId: sid }),
+    };
+    if (onlineMode === 'edit-key') {
+      options.editKey = getActiveEditKey();
+    }
+    const { res, data } = await apiFetch('/api/streamer/' + encodeURIComponent(sid), options);
+    if (!res.ok) {
+      showAuthMessage(apiErrorMessage(res.status, data), 'error');
+      deleteBtn.disabled = false;
+      return;
+    }
+
+    publishedSnapshot = null;
+    publishedStreamerId = null;
+    editKeyVerified = false;
+    editKeyVerifiedStreamerId = null;
+    setStoredEditKey(sid, null);
+    closeDeletePageModal();
+    closeAccountPanel();
+    showAuthMessage('公開ページを削除しました。', 'success');
+    updateManagementBar();
+    updateAccSummaries();
+  } catch (err) {
+    showAuthMessage('削除に失敗しました。ネットワークを確認してください。', 'error');
+    deleteBtn.disabled = false;
+  }
 }
 
 function openAccountPanel() {
@@ -3097,6 +3214,10 @@ function apiErrorMessage(status, data) {
   if (data && data.error === 'forbidden') return 'この公開ページIDを変更する権限がありません。';
   if (data && data.error === 'invalid_edit_key') return '編集キーが正しくないか、無効になっています。';
   if (data && data.error === 'invalid_streamer_id') return '公開ページIDの形式が正しくありません（半角英小文字・数字・ハイフン、3〜32文字）。';
+  if (data && data.error === 'reserved_streamer_id') return 'この公開ページIDは予約されています。別のIDを選んでください。';
+  if (data && data.error === 'page_unpublished') return 'この公開ページは現在公開されていません。';
+  if (data && data.error === 'confirm_mismatch') return '確認用の公開ページIDが一致しません。';
+  if (data && data.error === 'rate_limited') return '操作が多すぎます。しばらく待ってからもう一度お試しください。';
   if (data && data.error === 'invalid_token') return 'Googleログインに失敗しました。もう一度お試しください。';
   if (data && typeof data.message === 'string') return data.message;
   const map = {
@@ -3648,6 +3769,17 @@ document.getElementById('manageModeModal').addEventListener('click', (e) => {
 document.getElementById('logoutBtn').addEventListener('click', logoutUser);
 document.getElementById('claimBtn').addEventListener('click', claimStreamerIdAction);
 document.getElementById('publishBtn').addEventListener('click', publishOnline);
+document.getElementById('deletePageBtn')?.addEventListener('click', openDeletePageModal);
+document.getElementById('deleteCancelBtn')?.addEventListener('click', closeDeletePageModal);
+document.getElementById('deleteConfirmBtn')?.addEventListener('click', deletePublishedPageAction);
+document.getElementById('deleteConfirmInput')?.addEventListener('input', () => {
+  const sid = streamerIdInput.value.trim();
+  const val = document.getElementById('deleteConfirmInput').value.trim();
+  document.getElementById('deleteConfirmBtn').disabled = val !== sid;
+});
+document.getElementById('deletePageModal')?.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('deletePageModal')) closeDeletePageModal();
+});
 
 window.addEventListener('resize', syncBuilderChromeInsets, { passive: true });
 if (typeof ResizeObserver !== 'undefined') {

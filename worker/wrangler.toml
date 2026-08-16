@@ -10,3 +10,20 @@ GOOGLE_CLIENT_ID = "580845367374-ep76c8sqpo5g57lsjc63n08p92s99prd.apps.googleuse
 binding = "DB"
 database_name = "utaeru-db"
 database_id = "4f45db09-b1f8-4df4-9b16-01359fe7f9cd"
+
+# Phase 7: Workers Rate Limiting API (Free plan, 60s window per PoP)
+[[ratelimits]]
+name = "RL_CREATE_ANON"
+namespace_id = "2101"
+
+  [ratelimits.simple]
+  limit = 5
+  period = 60
+
+[[ratelimits]]
+name = "RL_WRITE_AUTH"
+namespace_id = "2102"
+
+  [ratelimits.simple]
+  limit = 30
+  period = 60

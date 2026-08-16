@@ -2,12 +2,13 @@
 -- These tables already exist in production utaeru-db. This file documents the live schema only.
 -- Do NOT run destructive migrations against production.
 
--- streamers (Phase 4B)
+-- streamers (Phase 4B + Phase 7 soft delete)
 -- CREATE TABLE streamers (
 --   streamer_id TEXT PRIMARY KEY,
 --   public_data  TEXT NOT NULL,
 --   created_at   TEXT NOT NULL,
---   updated_at   TEXT NOT NULL
+--   updated_at   TEXT NOT NULL,
+--   deleted_at   TEXT
 -- );
 
 -- users (Phase 4C-2)
