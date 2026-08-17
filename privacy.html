@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
-<meta name="description" content="うたエモ（UTAEMO）プライバシーポリシー">
+<meta name="description" content="うたエモ（UTAEMO）のプライバシーポリシー。取得・保存する情報と利用目的を説明します。">
+<meta name="robots" content="index, follow">
 <title>プライバシーポリシー — うたエモ</title>
 <link rel="canonical" href="https://utalis.github.io/privacy.html">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -18,74 +19,134 @@
   </header>
 
   <h1>プライバシーポリシー</h1>
-  <p class="lead">最終更新: 2026年8月17日</p>
+  <p class="lead">最終更新: 2026年8月18日</p>
 
-  <p class="notice">本ページは、2026年8月時点の うたエモ の実装（GitHub Pages + Cloudflare Workers + D1）に基づいて記載しています。公開前に必要に応じて法務専門家のレビューを受けてください。</p>
+  <nav class="legal-nav" aria-label="関連ページ">
+    <a href="index.html">トップ</a>
+    <a href="guide.html">使い方</a>
+    <a href="terms.html">利用規約</a>
+    <a href="privacy.html" aria-current="page">プライバシー</a>
+    <a href="contact.html">お問い合わせ</a>
+  </nav>
 
-  <h2>1. 概要</h2>
-  <p>うたエモ（UTAEMO）は、歌える曲リストの作成・公開サービスです。本ポリシーは、本サービスで取り扱う情報について説明します。</p>
+  <p>うたエモ（UTAEMO）（以下「本サービス」）は、利用者のプライバシーを尊重します。本ポリシーは、2026年8月時点の実装（GitHub Pages + Cloudflare Workers + D1）に基づき、本サービスで取り扱う情報を説明するものです。</p>
+  <p>本ポリシーは、Google 社のプライバシーポリシーとは別のものです。Google ログインを利用する場合は、Google 側の取り扱いについても<a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google プライバシーポリシー</a>をご確認ください。</p>
 
-  <h2>2. サーバー（D1）に保存する情報</h2>
-  <p>Cloudflare D1 データベースに、以下を保存します。</p>
+  <h2>1. 取得・保存する情報の概要</h2>
+  <div class="ui-box">
+    <ul style="margin:0">
+      <li><strong>サーバー（D1）</strong> — 公開データ、Google アカウント情報、所有関係、編集キーのハッシュ等</li>
+      <li><strong>端末内（localStorage）</strong> — 下書き、スタート画面の選択、Google 編集対象 ID 等（Google クラウド下書きではありません）</li>
+      <li><strong>端末内（sessionStorage）</strong> — ログイントークン、編集キー、一時的な Undo 情報等</li>
+      <li><strong>Cookie</strong> — ログインセッション用（HttpOnly）</li>
+    </ul>
+  </div>
+  <p>本サービスでは、Google Analytics 等のアクセス解析ツールは利用していません。</p>
+
+  <h2>2. Google ログインで取得する情報</h2>
+  <p>Google 管理を選んだ場合、Google Identity Services（OAuth）により認証します。スコープは <code>openid email profile</code> です。</p>
+  <p>本サービスの API サーバーは、Google から次の情報を受け取り、D1 データベースの <code>users</code> テーブル等に保存します。</p>
   <ul>
-    <li><strong>公開ページデータ（<code>streamers.public_data</code>）</strong>: 配信者名、サブタイトル、選択した曲情報、曲ごとのタグ・状態・新着設定、タグプリセット、テーマ設定、公開ページ ID、設定バージョン、更新日時等（JSON 形式）</li>
-    <li><strong>公開ページのメタ情報</strong>: 公開ページ ID、作成日時、更新日時</li>
-    <li><strong>Google ログイン利用時（<code>users</code>）</strong>: 内部ユーザー ID、Google アカウント ID（sub）、メールアドレス、表示名、作成日時、最終ログイン日時</li>
-    <li><strong>Google 管理の紐付け（<code>streamer_owners</code>）</strong>: どの Google アカウントがどの公開ページ ID を管理しているか</li>
-    <li><strong>匿名作成・編集キー管理（<code>streamer_edit_keys</code>）</strong>: 編集キーの SHA-256 ハッシュ値（サーバー側の秘密値と組み合わせて計算）。平文の編集キーは保存しません。Google 連携後は無効化（<code>revoked_at</code>）されます</li>
-    <li><strong>削除済みページ</strong>: 公開ページ ID、削除日時（<code>deleted_at</code>）。ソフト削除のため ID 再取得防止のために保持します</li>
+    <li><strong>Google アカウント ID（sub）</strong> — 同一 Google アカウントの識別に使用</li>
+    <li><strong>メールアドレス（email）</strong> — ログイン確認・管理画面表示に使用</li>
+    <li><strong>表示名（display_name）</strong> — Google から取得できる場合に保存</li>
+    <li><strong>内部ユーザー ID（user_id）</strong> — 本サービス内で発行する UUID</li>
+    <li><strong>作成日時・最終ログイン日時</strong></li>
   </ul>
+  <p>どの Google アカウントがどの公開ページ ID を管理しているかは、<code>streamer_owners</code> テーブルに保存します。</p>
+  <p>Google ログインは、公開ページの編集権限の確認に使用します。リスナー（公開ページの閲覧者）の Google 情報は取得しません。</p>
 
-  <h2>3. ブラウザに保存する情報</h2>
-  <p>うたエモ のビルダー画面（<code>index.html</code>）では、利便性のため以下をブラウザに保存することがあります。</p>
-  <h3>sessionStorage（タブを閉じると消える一時保存）</h3>
-  <ul>
-    <li>Google ログイン後に発行されるセッショントークン（API 認証用）</li>
-    <li>編集キー（匿名作成・編集キー管理を選んだ場合。端末内にのみ保持）</li>
-  </ul>
-  <h3>localStorage（端末内の下書き）</h3>
-  <ul>
-    <li>編集中の曲リスト・配信者名・デザイン設定など（下書き自動保存）。認証情報（Google トークン・編集キー等）は含みません</li>
-  </ul>
-  <p>これらは うたエモ のサーバー（D1）へ平文で送信されるのは API 利用時のみであり、編集キーの平文は D1 に保存されません。下書きは端末内のみで、別端末へ自動同期されません。</p>
+  <h2>3. 認証情報（Cookie・トークン）</h2>
+  <h3>3-1. セッショントークン（JWT）</h3>
+  <p>Google ログイン成功時、API サーバーは署名付き JWT を発行します。有効期限はコード上 30 日間（2,592,000 秒）です。</p>
+  <p>GitHub Pages（<code>utalis.github.io</code>）から API（<code>utaeru-api.manabit.workers.dev</code>）へはクロスサイト通信となるため、ブラウザの <code>sessionStorage</code>（キー: <code>utaeru_access_token</code>）にもトークンを保持し、API リクエスト時に <code>Authorization: Bearer</code> ヘッダーで送信します。</p>
 
-  <h2>4. 保存しない情報</h2>
-  <p>以下は、運営統計や分析目的で D1 に恒久保存しません。</p>
+  <h3>3-2. Cookie（<code>utaeru_session</code>）</h3>
+  <p>API サーバーは、ログイン時に <code>utaeru_session</code> Cookie も設定します（<code>HttpOnly</code>、<code>Secure</code>、<code>SameSite=None</code>、<code>Max-Age=2592000</code>）。クロスサイト環境では Cookie だけでは認証が不安定な場合があるため、上記 sessionStorage 方式を併用しています。</p>
+  <p>ログアウト時、API の <code>POST /api/auth/logout</code> により Cookie は削除され、端末内の <code>utaeru_access_token</code> も削除されます。</p>
+
+  <h3>3-3. 編集キー（sessionStorage）</h3>
+  <p>匿名作成・編集キー管理を選んだ場合、発行された編集キーの平文は <code>sessionStorage</code>（キー: <code>utaeru_edit_key:{公開ページID}</code>）に保存されます。タブを閉じると消える一時保存です。サーバーにはハッシュ値のみ保存します。</p>
+
+  <h2>4. 端末内保存（localStorage）</h2>
+  <p>ビルダー画面（<code>index.html</code>）では、次を <strong>localStorage</strong> に保存します。いずれも<strong>端末内のみ</strong>で、Google アカウントのクラウド下書きではありません。</p>
+  <ul>
+    <li><strong><code>utalis_draft_v1</code></strong> — 編集中の下書き（配信者名、サブタイトル、選択曲 ID 一覧、曲ごとのタグ・状態・追加日、タグプリセット、テーマ設定等）。認証情報は含みません。</li>
+    <li><strong><code>utalis_start_choice_v1</code></strong> — スタート画面で「ログインせずにはじめる」を選んだ記録（値: <code>guest</code>）</li>
+    <li><strong><code>utalis_active_streamer_v1</code></strong> — Google ログイン中に最後に編集していた公開ページ ID</li>
+  </ul>
+  <p>下書きは別端末へ自動同期されません。ブラウザのデータ削除、端末変更、プライベートブラウズ終了等により失われる場合があります。</p>
+
+  <h2>5. 端末内保存（sessionStorage）</h2>
+  <ul>
+    <li><strong><code>utaeru_access_token</code></strong> — Google ログイン後の API 認証トークン（上記 3-1）</li>
+    <li><strong><code>utaeru_edit_key:{公開ページID}</code></strong> — 編集キーの平文（上記 3-3）</li>
+    <li><strong><code>utalis_song_removal_undo_v1</code></strong> — 曲をまとめて外した直後の「元に戻す」用データ。5 曲以上の解除時のみ、最大約 10 秒間保持</li>
+  </ul>
+  <p>sessionStorage はタブを閉じると消えます（Undo データも同様）。</p>
+
+  <h2>6. サーバー（D1）に保存する情報</h2>
+  <h3>6-1. 公開データ（<code>streamers</code> テーブル）</h3>
+  <p>オンライン公開時、次を JSON 形式で <code>public_data</code> 列に保存します。</p>
+  <ul>
+    <li>配信者名、サブタイトル、公開ページ ID</li>
+    <li>選択した曲（五十音・読み・アーティスト・曲名）</li>
+    <li>曲ごとのメタ情報（⭐ / ❤️ / 🔰 等の状態、自由タグ ID、追加日）</li>
+    <li>タグプリセット（ラベル等）</li>
+    <li>テーマ設定（プリセットまたはカスタム色）</li>
+    <li>設定バージョン、更新日時</li>
+  </ul>
+  <p>あわせて、公開ページ ID、作成日時、更新日時を保存します。削除時は <code>deleted_at</code> を記録します（ソフト削除）。</p>
+
+  <h3>6-2. Google 利用者（<code>users</code> / <code>streamer_owners</code>）</h3>
+  <p>第 2 章のとおり。Google アカウント削除の専用 API は現時点では提供していません。</p>
+
+  <h3>6-3. 編集キー（<code>streamer_edit_keys</code>）</h3>
+  <p>編集キーの SHA-256 ハッシュ（サーバー秘密値と組み合わせて計算）。平文は保存しません。Google 連携後は無効化（<code>revoked_at</code>）されます。</p>
+
+  <h2>7. 保存しない情報</h2>
   <ul>
     <li>リスナー（公開ページ閲覧者）の Google アカウント情報</li>
-    <li>リスナーの閲覧履歴・行動履歴</li>
-    <li>端末情報のプロファイリング</li>
+    <li>リスナーの閲覧履歴・行動履歴のプロファイリング</li>
     <li>編集キーの平文（サーバー側）</li>
+    <li>広告配信や行動ターゲティングのための Cookie</li>
   </ul>
-  <p>スパム防止のため、書き込み系 API では Cloudflare Workers のレート制限機能により、短時間のリクエスト元 IP が一時的に利用される場合があります（D1 への恒久保存ではありません）。</p>
+  <p>書き込み系 API のレート制限では、Cloudflare Workers 上で短時間のリクエスト元 IP（<code>CF-Connecting-IP</code>）を判定に利用しますが、D1 へ恒久保存はしません。</p>
 
-  <h2>5. Google ログイン</h2>
-  <p>Google アカウントで管理する場合、Google OAuth（Google Identity Services）により認証します。うたエモ は Google からアカウント ID（sub）、メールアドレス、表示名等を受け取り、ログイン状態の管理と公開ページの所有者確認に利用します。</p>
-  <p>セッションは署名付きトークンで管理されます。GitHub Pages（<code>utalis.github.io</code>）から API（<code>utaeru-api.manabit.workers.dev</code>）へはクロスサイトとなるため、ブラウザの <code>sessionStorage</code> にトークンを保持し、API リクエスト時に送信する方式を用いています。</p>
-  <p>Google 側の取り扱いについては、<a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google プライバシーポリシー</a>もご確認ください。</p>
-
-  <h2>6. 公開データ</h2>
-  <p>公開した曲リストは、固定 URL から誰でも閲覧できる状態になります。リスナーのログインは不要です。公開する内容（配信者名・曲名等）に個人情報や機密情報を含めないようご注意ください。</p>
-
-  <h2>7. 利用目的</h2>
+  <h2>8. 利用目的</h2>
   <ul>
     <li>歌える曲リストの作成・公開・更新・削除機能の提供</li>
     <li>Google 管理・編集キー認証によるページ管理</li>
     <li>不正利用・大量作成の防止（レート制限）</li>
-    <li>サービス運営に必要な最小限の集計（公開ページ数、曲数等。個人を特定しない形式）</li>
+    <li>サービス運営に必要な最小限の集計（公開ページ数、曲数等。個人を特定しない形式。管理者向け API）</li>
   </ul>
 
-  <h2>8. 第三者サービス</h2>
+  <h2>9. 第三者への提供</h2>
+  <p>法令に基づく場合を除き、利用者の個人情報を第三者へ販売または提供することはありません。</p>
+  <p>公開した曲リストは、公開 URL から誰でも閲覧できる状態になります。公開内容に個人情報を含めないようご注意ください。</p>
+
+  <h2>10. 外部サービス</h2>
   <ul>
-    <li><strong>GitHub Pages</strong>: ビルダー画面・公開ページ viewer の配信</li>
-    <li><strong>Cloudflare Workers / D1</strong>: API とデータ保存</li>
-    <li><strong>Google</strong>: OAuth 認証（Google 管理を選んだ場合）</li>
+    <li><strong>GitHub Pages</strong>（<code>utalis.github.io</code>）— ビルダー画面・公開 viewer の配信</li>
+    <li><strong>Cloudflare Workers / D1</strong>（<code>utaeru-api.manabit.workers.dev</code>）— API とデータ保存</li>
+    <li><strong>Google</strong> — OAuth 認証（Google 管理を選んだ場合）。Google 側 API（tokeninfo、userinfo、証明書取得等）をサーバーが利用します</li>
+    <li><strong>GitHub Issues</strong> — お問い合わせ受付（<a href="contact.html">お問い合わせ</a>参照）。GitHub の利用規約・プライバシーポリシーが適用されます</li>
   </ul>
 
-  <h2>9. 削除</h2>
-  <p>利用者は公開ページを削除できます。削除後も公開ページ ID の予約のため、識別子と削除日時等は保持されます。詳細は<a href="terms.html">利用規約</a>を参照してください。</p>
+  <h2>11. データの削除</h2>
+  <p>利用者は、Google 管理または編集キー認証により公開ページを削除できます。削除後も、公開ページ ID の予約等のため、識別子・削除日時・サーバー上の JSON 等が保持される場合があります。詳細は<a href="terms.html">利用規約</a>を参照してください。</p>
+  <p>端末内の下書きは、ブラウザの設定から利用者自身が削除できます。Google ログアウトにより、端末内のセッショントークンと Google 編集対象 ID の記録は削除されます（下書き localStorage 自体は残る場合があります）。</p>
 
-  <h2>10. お問い合わせ</h2>
+  <h2>12. セキュリティ</h2>
+  <p>通信は HTTPS を利用します。編集キーはサーバー側でハッシュ化して保存します。ただし、完全な安全性を保証するものではありません。編集キーは第三者に知られないよう厳重に管理してください。</p>
+
+  <h2>13. 未成年者</h2>
+  <p>未成年者が本サービスを利用する場合は、保護者の同意を得たうえで利用してください。</p>
+
+  <h2>14. 本ポリシーの変更</h2>
+  <p>必要に応じて本ポリシーを変更できます。変更後の内容は、本ページに掲載した時点から適用されます。</p>
+
+  <h2>15. お問い合わせ</h2>
   <p>本ポリシーに関するお問い合わせは、<a href="contact.html">お問い合わせ</a>ページをご覧ください。</p>
 
   <footer class="site-footer">
