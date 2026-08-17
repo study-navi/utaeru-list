@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Utalis v1.0: 曲マーク仕様（おはこ / お気に入り ❤️ / 練習中）
+ * Utalis v1.0: 曲マーク仕様（⭐ おはこ / ❤️ お気に入り / 🔰 練習中）
  */
 import { chromium } from 'playwright-core';
 import path from 'node:path';
@@ -163,17 +163,17 @@ async function runViewport(label, width, height) {
   await page.waitForTimeout(150);
   const previewA = await readPreviewMarks(page, songA);
   const previewB = await readPreviewMarks(page, songB);
-  if (JSON.stringify(previewA) !== JSON.stringify(['おはこ', '練習中'])) fail(`${label}: プレビュー Story`, JSON.stringify(previewA));
+  if (JSON.stringify(previewA) !== JSON.stringify(['⭐ おはこ', '🔰 練習中'])) fail(`${label}: プレビュー Story`, JSON.stringify(previewA));
   else ok(`${label}: プレビュー Story`);
-  if (JSON.stringify(previewB) !== JSON.stringify(['おはこ', 'お気に入り ❤️', '練習中'])) fail(`${label}: プレビュー カブトムシ`, JSON.stringify(previewB));
+  if (JSON.stringify(previewB) !== JSON.stringify(['⭐ おはこ', '❤️ お気に入り', '🔰 練習中'])) fail(`${label}: プレビュー カブトムシ`, JSON.stringify(previewB));
   else ok(`${label}: プレビュー カブトムシ`);
 
   const favText = await page.evaluate(() => {
     const el = [...document.querySelectorAll('#previewFrame .pv-mark')].find((n) => n.textContent.includes('❤️'));
     return el?.textContent?.trim() || '';
   });
-  if (favText !== 'お気に入り ❤️') fail(`${label}: お気に入り表記`, favText);
-  else ok(`${label}: お気に入り ❤️ 表記`);
+  if (favText !== '❤️ お気に入り') fail(`${label}: お気に入り表記`, favText);
+  else ok(`${label}: ❤️ お気に入り 表記`);
 
   await page.click('#editTabSongs');
   await page.waitForTimeout(80);
@@ -204,6 +204,48 @@ for (const [label, width] of [
 ]) {
   await runViewport(label, width, 844);
 }
+
+async function runStorageAndDraftCase() {
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForFunction(() => typeof MASTER_SONGS !== 'undefined' && draftBootComplete === true, { timeout: 15000 });
+  await page.fill('#streamerName', 'マーク保存値テスト');
+  await selectSong(page, 'カブトムシ');
+  await setMarks(page, 'カブトムシ', ['signature', 'favorite', 'learning']);
+  const internal = await page.evaluate(() => {
+    const song = MASTER_SONGS.find((s) => s.t === 'カブトムシ');
+    const key = song.a + '\u0001' + song.t;
+    return {
+      marks: songMeta[key]?.marks || [],
+      draftRaw: localStorage.getItem('utalis_draft_v1'),
+    };
+  });
+  if (JSON.stringify(internal.marks) !== JSON.stringify(['signature', 'favorite', 'learning'])) {
+    fail('内部保存値', JSON.stringify(internal.marks));
+  } else ok('内部保存値: signature / favorite / learning のまま');
+  if (internal.draftRaw && (internal.draftRaw.includes('⭐') || internal.draftRaw.includes('🔰'))) {
+    fail('draft JSON に表示用絵文字ラベルが混入');
+  } else ok('draft JSON: 表示ラベル非保存');
+
+  await page.evaluate(() => saveDraftToStorage());
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => draftBootComplete === true, { timeout: 15000 });
+  await page.waitForTimeout(200);
+  const marksAfter = await readMarks(page, 'カブトムシ');
+  if (JSON.stringify(marksAfter) !== JSON.stringify(['signature', 'favorite', 'learning'])) {
+    fail('リロード後の内部マーク', JSON.stringify(marksAfter));
+  } else ok('リロード後: 3マーク維持');
+  await page.click('#editTabPreview');
+  await page.waitForTimeout(150);
+  const preview = await readPreviewMarks(page, 'カブトムシ');
+  if (JSON.stringify(preview) !== JSON.stringify(['⭐ おはこ', '❤️ お気に入り', '🔰 練習中'])) {
+    fail('リロード後プレビュー', JSON.stringify(preview));
+  } else ok('リロード後プレビュー: 3マーク表示');
+  await browser.close();
+}
+
+await runStorageAndDraftCase();
 
 if (failed) {
   console.error(`\n${failed} failure(s)`);
