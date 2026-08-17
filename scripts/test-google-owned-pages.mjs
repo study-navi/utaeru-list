@@ -136,8 +136,8 @@ async function testA() {
   }
   if (after.draftModal) ok('A: 編集中データあり → 下書き選択モーダル');
   else fail('A: 編集中データあり → 下書き選択モーダル');
-  if (pub.getPublicGetCount() === 0) ok('A/J: ログインだけでは GET /api/public なし');
-  else fail('A/J: ログインだけでは GET /api/public なし', String(pub.getPublicGetCount()));
+  if (pub.getPublicGetCount() === 1) ok('A/J: モーダル表示用 GET /api/public のみ（上書きなし）');
+  else fail('A/J: モーダル表示用 GET /api/public のみ', String(pub.getPublicGetCount()));
   await browser.close();
 }
 
@@ -212,9 +212,31 @@ async function testE() {
   await page.evaluate(() => scheduleDraftSave(true));
   await page.waitForTimeout(600);
   await loginGoogle(page);
+  await page.waitForFunction(() => {
+    const m = document.getElementById('googleDraftChoicePublishedMeta');
+    return !document.getElementById('googleDraftChoiceModal').hidden
+      && m && !m.hidden && m.textContent.includes('最終公開');
+  }, { timeout: 5000 });
   const modalVisible = await page.evaluate(() => !document.getElementById('googleDraftChoiceModal').hidden);
   if (modalVisible) ok('E: 下書きあり → 下書き選択モーダル（自動上書きなし）');
   else fail('E: 下書きあり → 下書き選択モーダル');
+  const modalCopy = await page.evaluate(() => ({
+    title: document.getElementById('googleDraftChoiceTitle')?.textContent?.trim(),
+    draftBtn: document.getElementById('googleDraftContinueBtn')?.textContent?.trim(),
+    pubBtn: document.getElementById('googleDraftLoadPublishedBtn')?.textContent?.trim(),
+    draftMeta: document.getElementById('googleDraftChoiceDraftMeta')?.textContent?.trim(),
+    pubMeta: document.getElementById('googleDraftChoicePublishedMeta')?.textContent?.trim(),
+  }));
+  if (modalCopy.title === '編集中のデータが2つあります') ok('E: 新タイトル表示');
+  else fail('E: 新タイトル表示', modalCopy.title);
+  if (modalCopy.draftBtn === 'この端末の下書きから編集') ok('E: 下書きボタン文言');
+  else fail('E: 下書きボタン文言', modalCopy.draftBtn);
+  if (modalCopy.pubBtn === '現在の公開データから編集') ok('E: 公開データボタン文言');
+  else fail('E: 公開データボタン文言', modalCopy.pubBtn);
+  if (modalCopy.draftMeta?.includes('最終保存') && modalCopy.draftMeta?.includes('曲')) ok('E: 下書きメタ表示');
+  else fail('E: 下書きメタ表示', modalCopy.draftMeta);
+  if (modalCopy.pubMeta?.includes('最終公開') && modalCopy.pubMeta?.includes('13曲')) ok('E: 公開メタ表示');
+  else fail('E: 公開メタ表示', modalCopy.pubMeta);
   await page.click('#googleDraftContinueBtn');
   await page.waitForTimeout(200);
   const state = await page.evaluate(() => ({

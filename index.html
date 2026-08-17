@@ -1705,6 +1705,60 @@
     overflow-wrap: anywhere;
     word-break: break-word;
   }
+
+  .draft-choice-modal .draft-choice-lead {
+    margin: 0 0 14px;
+    line-height: 1.55;
+  }
+  .draft-choice-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .draft-choice-option {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+  .draft-choice-option-device {
+    background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+  }
+  .draft-choice-option-published {
+    background: color-mix(in srgb, var(--text-secondary) 4%, var(--surface));
+  }
+  .draft-choice-option-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .draft-choice-option-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .draft-choice-new-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .draft-choice-btn {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+    text-align: center;
+  }
+  .draft-choice-meta {
+    margin: 8px 0 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-secondary);
+  }
+
   .owned-page-actions .ui-btn {
     flex: 1 1 calc(50% - 4px);
     min-height: 44px;
@@ -2238,12 +2292,26 @@
 </div>
 
 <div class="modal-backdrop" id="googleDraftChoiceModal" hidden aria-modal="true">
-  <div class="modal-card" role="dialog" aria-labelledby="googleDraftChoiceTitle">
-    <h3 id="googleDraftChoiceTitle">編集中の下書きがあります</h3>
-    <p class="hint">この端末に保存された編集中データがあります。続けるか、公開済みデータを読み込むか選んでください。</p>
-    <div class="modal-actions ui-stack" style="margin-top:14px;">
-      <button type="button" class="ui-btn ui-btn-primary" id="googleDraftContinueBtn">この下書きを続ける</button>
-      <button type="button" class="ui-btn ui-btn-secondary" id="googleDraftLoadPublishedBtn">公開済みデータを読み込む</button>
+  <div class="modal-card draft-choice-modal" role="dialog" aria-labelledby="googleDraftChoiceTitle">
+    <h3 id="googleDraftChoiceTitle">編集中のデータが2つあります</h3>
+    <p class="hint draft-choice-lead">この端末に保存した下書きと、現在公開されているデータがあります。<br>どちらから編集を始めるか選んでください。</p>
+    <div class="draft-choice-options">
+      <div class="draft-choice-option draft-choice-option-device">
+        <div class="draft-choice-option-head">
+          <span class="draft-choice-option-label">この端末の下書き</span>
+          <span class="draft-choice-new-badge" id="googleDraftChoiceDraftNew" hidden>新しい</span>
+        </div>
+        <button type="button" class="draft-choice-btn ui-btn ui-btn-primary" id="googleDraftContinueBtn">この端末の下書きから編集</button>
+        <p class="draft-choice-meta" id="googleDraftChoiceDraftMeta" hidden></p>
+      </div>
+      <div class="draft-choice-option draft-choice-option-published">
+        <div class="draft-choice-option-head">
+          <span class="draft-choice-option-label">現在の公開データ</span>
+          <span class="draft-choice-new-badge" id="googleDraftChoicePublishedNew" hidden>新しい</span>
+        </div>
+        <button type="button" class="draft-choice-btn ui-btn ui-btn-secondary" id="googleDraftLoadPublishedBtn">現在の公開データから編集</button>
+        <p class="draft-choice-meta" id="googleDraftChoicePublishedMeta" hidden></p>
+      </div>
     </div>
   </div>
 </div>
@@ -4688,6 +4756,106 @@ function closeGoogleDraftChoiceModal() {
   pendingGoogleDraftChoiceStreamerId = null;
 }
 
+function parseChoiceDateTime(isoString) {
+  if (!isoString || typeof isoString !== 'string') return null;
+  const ts = Date.parse(isoString);
+  if (Number.isNaN(ts)) return null;
+  return ts;
+}
+
+function formatChoiceDateTime(isoString) {
+  const ts = parseChoiceDateTime(isoString);
+  if (ts === null) return null;
+  const d = new Date(ts);
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const hours = d.getHours();
+  const mins = String(d.getMinutes()).padStart(2, '0');
+  return `${month}月${day}日 ${hours}:${mins}`;
+}
+
+function getDraftChoiceMetadata() {
+  const envelope = readDraftEnvelope();
+  const savedAt = (envelope && envelope.savedAt) ? envelope.savedAt : null;
+  let songCount = 0;
+  if (envelope?.data && Array.isArray(envelope.data.selectedSongIds)) {
+    songCount = envelope.data.selectedSongIds.length;
+  }
+  if (!songCount) {
+    const payload = buildDraftDataPayload();
+    songCount = payload.selectedSongIds.length;
+    if (!songCount) songCount = selectedKeys.size;
+  }
+  return { savedAt, songCount };
+}
+
+function buildDraftChoiceMetaLine(label, isoString, songCount) {
+  const chunks = [];
+  const when = formatChoiceDateTime(isoString);
+  if (when) chunks.push(`${label}：${when}`);
+  if (Number.isInteger(songCount) && songCount >= 0) {
+    if (chunks.length) chunks.push('・');
+    chunks.push(`${songCount}曲`);
+  }
+  return chunks.join('');
+}
+
+function setDraftChoiceMetaElement(el, text) {
+  if (!el) return;
+  if (text) {
+    el.textContent = text;
+    el.hidden = false;
+  } else {
+    el.textContent = '';
+    el.hidden = true;
+  }
+}
+
+async function showGoogleDraftChoiceModal(streamerId) {
+  pendingGoogleDraftChoiceStreamerId = streamerId;
+  const modal = document.getElementById('googleDraftChoiceModal');
+  const draftMetaEl = document.getElementById('googleDraftChoiceDraftMeta');
+  const publishedMetaEl = document.getElementById('googleDraftChoicePublishedMeta');
+  const draftNewEl = document.getElementById('googleDraftChoiceDraftNew');
+  const publishedNewEl = document.getElementById('googleDraftChoicePublishedNew');
+  if (!modal) return;
+
+  const draftMeta = getDraftChoiceMetadata();
+  setDraftChoiceMetaElement(
+    draftMetaEl,
+    buildDraftChoiceMetaLine('最終保存', draftMeta.savedAt, draftMeta.songCount),
+  );
+
+  if (draftNewEl) draftNewEl.hidden = true;
+  if (publishedNewEl) publishedNewEl.hidden = true;
+  setDraftChoiceMetaElement(publishedMetaEl, '');
+
+  let publishedUpdatedAt = null;
+  let publishedSongCount = null;
+  try {
+    const { res, data } = await apiFetch('/api/public/' + encodeURIComponent(streamerId));
+    if (res.ok && data) {
+      publishedUpdatedAt = data.updatedAt || null;
+      publishedSongCount = Array.isArray(data.songs) ? data.songs.length : 0;
+      setDraftChoiceMetaElement(
+        publishedMetaEl,
+        buildDraftChoiceMetaLine('最終公開', publishedUpdatedAt, publishedSongCount),
+      );
+    }
+  } catch (err) {
+    /* metadata only; choice actions unchanged */
+  }
+
+  const draftTs = parseChoiceDateTime(draftMeta.savedAt);
+  const publishedTs = parseChoiceDateTime(publishedUpdatedAt);
+  if (draftTs !== null && publishedTs !== null && draftNewEl && publishedNewEl) {
+    if (draftTs > publishedTs) draftNewEl.hidden = false;
+    else if (publishedTs > draftTs) publishedNewEl.hidden = false;
+  }
+
+  modal.hidden = false;
+}
+
 function closeGooglePagePickModal() {
   const modal = document.getElementById('googlePagePickModal');
   if (modal) modal.hidden = true;
@@ -4785,8 +4953,7 @@ async function activateOwnedPageForEdit(streamerId, opts = {}) {
   }
 
   if (shouldConfirmBeforeLoadPublicData()) {
-    pendingGoogleDraftChoiceStreamerId = streamerId;
-    document.getElementById('googleDraftChoiceModal').hidden = false;
+    await showGoogleDraftChoiceModal(streamerId);
     return false;
   }
 
