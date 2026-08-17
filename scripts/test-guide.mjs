@@ -48,7 +48,7 @@ async function runGuideViewport(width) {
   const label = `guide ${width}px`;
   if (errors.length) fail(`${label}: JSエラー`, errors.join('; '));
   else ok(`${label}: JSエラーなし`);
-  if (data.h1 !== 'Utalis 使い方ガイド') fail(`${label}: タイトル`, data.h1);
+  if (data.h1 !== 'うたエモ 使い方ガイド') fail(`${label}: タイトル`, data.h1);
   else ok(`${label}: タイトル`);
   if (!data.cssLoaded) fail(`${label}: guide.css`);
   else ok(`${label}: guide.css`);

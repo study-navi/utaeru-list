@@ -37,10 +37,10 @@ async function run(label, width, height, colorScheme = 'light') {
     brand: document.querySelector('.utaeru-brand')?.textContent?.trim() || '',
     canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href') || '',
   }));
-  if (!branding.title.includes('Utalis')) fail(`${label}: ページタイトル Utalis`, branding.title);
-  else ok(`${label}: ページタイトル Utalis`);
-  if (branding.brand !== 'Utalis') fail(`${label}: ブランド表記`, branding.brand);
-  else ok(`${label}: ブランド表記 Utalis`);
+  if (!branding.title.includes('うたエモ')) fail(`${label}: ページタイトル うたエモ`, branding.title);
+  else ok(`${label}: ページタイトル うたエモ`);
+  if (branding.brand !== 'UTAEMO') fail(`${label}: ブランド表記`, branding.brand);
+  else ok(`${label}: ブランド表記 UTAEMO`);
   if (branding.canonical !== 'https://utalis.github.io/') fail(`${label}: canonical`, branding.canonical);
   else ok(`${label}: canonical https://utalis.github.io/`);
 

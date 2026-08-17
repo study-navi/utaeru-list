@@ -30,7 +30,7 @@ async function runLocalFileChecks() {
   const robots = fs.readFileSync(path.join(ROOT, 'robots.txt'), 'utf8');
   const sitemap = fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8');
 
-  if (!index.includes('<title>Utalis（うたりす）｜配信者向け 歌える曲リスト作成</title>')) fail('index title');
+  if (!index.includes('<title>うたエモ（UTAEMO）｜配信者向け 歌える曲リスト作成</title>')) fail('index title');
   else ok('index title');
 
   if (!index.includes('VTuber')) fail('index description に VTuber');

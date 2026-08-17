@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
-<meta name="description" content="Utalis（うたりす）プライバシーポリシー">
-<title>プライバシーポリシー — Utalis</title>
+<meta name="description" content="うたエモ（UTAEMO）プライバシーポリシー">
+<title>プライバシーポリシー — うたエモ</title>
 <link rel="canonical" href="https://utalis.github.io/privacy.html">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/legal.css">
@@ -13,17 +13,17 @@
 <body>
 <div class="wrap">
   <header class="site-header">
-    <p class="brand">Utalis <span class="brand-sub">うたりす</span></p>
+    <p class="brand">UTAEMO <span class="brand-sub">うたエモ</span></p>
     <a href="index.html">← 曲リストを作る</a>
   </header>
 
   <h1>プライバシーポリシー</h1>
   <p class="lead">最終更新: 2026年8月17日</p>
 
-  <p class="notice">本ページは、2026年8月時点の Utalis の実装（GitHub Pages + Cloudflare Workers + D1）に基づいて記載しています。公開前に必要に応じて法務専門家のレビューを受けてください。</p>
+  <p class="notice">本ページは、2026年8月時点の うたエモ の実装（GitHub Pages + Cloudflare Workers + D1）に基づいて記載しています。公開前に必要に応じて法務専門家のレビューを受けてください。</p>
 
   <h2>1. 概要</h2>
-  <p>Utalis（うたりす）は、歌える曲リストの作成・公開サービスです。本ポリシーは、本サービスで取り扱う情報について説明します。</p>
+  <p>うたエモ（UTAEMO）は、歌える曲リストの作成・公開サービスです。本ポリシーは、本サービスで取り扱う情報について説明します。</p>
 
   <h2>2. サーバー（D1）に保存する情報</h2>
   <p>Cloudflare D1 データベースに、以下を保存します。</p>
@@ -37,7 +37,7 @@
   </ul>
 
   <h2>3. ブラウザに保存する情報</h2>
-  <p>Utalis のビルダー画面（<code>index.html</code>）では、利便性のため以下をブラウザに保存することがあります。</p>
+  <p>うたエモ のビルダー画面（<code>index.html</code>）では、利便性のため以下をブラウザに保存することがあります。</p>
   <h3>sessionStorage（タブを閉じると消える一時保存）</h3>
   <ul>
     <li>Google ログイン後に発行されるセッショントークン（API 認証用）</li>
@@ -47,7 +47,7 @@
   <ul>
     <li>編集中の曲リスト・配信者名・デザイン設定など（下書き自動保存）。認証情報（Google トークン・編集キー等）は含みません</li>
   </ul>
-  <p>これらは Utalis のサーバー（D1）へ平文で送信されるのは API 利用時のみであり、編集キーの平文は D1 に保存されません。下書きは端末内のみで、別端末へ自動同期されません。</p>
+  <p>これらは うたエモ のサーバー（D1）へ平文で送信されるのは API 利用時のみであり、編集キーの平文は D1 に保存されません。下書きは端末内のみで、別端末へ自動同期されません。</p>
 
   <h2>4. 保存しない情報</h2>
   <p>以下は、運営統計や分析目的で D1 に恒久保存しません。</p>
@@ -60,7 +60,7 @@
   <p>スパム防止のため、書き込み系 API では Cloudflare Workers のレート制限機能により、短時間のリクエスト元 IP が一時的に利用される場合があります（D1 への恒久保存ではありません）。</p>
 
   <h2>5. Google ログイン</h2>
-  <p>Google アカウントで管理する場合、Google OAuth（Google Identity Services）により認証します。Utalis は Google からアカウント ID（sub）、メールアドレス、表示名等を受け取り、ログイン状態の管理と公開ページの所有者確認に利用します。</p>
+  <p>Google アカウントで管理する場合、Google OAuth（Google Identity Services）により認証します。うたエモ は Google からアカウント ID（sub）、メールアドレス、表示名等を受け取り、ログイン状態の管理と公開ページの所有者確認に利用します。</p>
   <p>セッションは署名付きトークンで管理されます。GitHub Pages（<code>utalis.github.io</code>）から API（<code>utaeru-api.manabit.workers.dev</code>）へはクロスサイトとなるため、ブラウザの <code>sessionStorage</code> にトークンを保持し、API リクエスト時に送信する方式を用いています。</p>
   <p>Google 側の取り扱いについては、<a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google プライバシーポリシー</a>もご確認ください。</p>
 
@@ -89,7 +89,7 @@
   <p>本ポリシーに関するお問い合わせは、<a href="contact.html">お問い合わせ</a>ページをご覧ください。</p>
 
   <footer class="site-footer">
-    <a href="index.html">Utalis</a>
+    <a href="index.html">うたエモ</a>
     <a href="guide.html">使い方</a>
     <a href="terms.html">利用規約</a>
     <a href="privacy.html">プライバシー</a>

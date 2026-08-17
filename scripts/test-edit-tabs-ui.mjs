@@ -102,8 +102,8 @@ async function runViewport(label, width, height) {
   if (!init.footerLinks.includes('terms.html') || !init.footerLinks.includes('privacy.html') || !init.footerLinks.includes('contact.html')) {
     fail(`${label}: 法務3リンク`, JSON.stringify(init.footerLinks));
   } else ok(`${label}: 法務3リンク`);
-  if (init.footerCopy !== '© Utalis') fail(`${label}: © Utalis`, init.footerCopy);
-  else ok(`${label}: © Utalis`);
+  if (init.footerCopy !== '© うたエモ') fail(`${label}: © うたエモ`, init.footerCopy);
+  else ok(`${label}: © うたエモ`);
   if (!init.chromeH || !init.scrollOffset) fail(`${label}: chrome inset`, `${init.chromeH} / ${init.scrollOffset}`);
   else ok(`${label}: chrome inset`);
 

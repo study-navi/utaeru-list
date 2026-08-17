@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
-<title>Utalis</title>
+<title>UTAEMO</title>
 <style>
 
   :root {
@@ -405,7 +405,7 @@
         <span>更新 <strong id="statUpdated">-</strong></span>
       </div>
     </div>
-    <span class="utalis-mark" aria-hidden="true">Utalis</span>
+    <span class="utalis-mark" aria-hidden="true">UTAEMO</span>
   </header>
 
   <div class="search-bar">
@@ -432,8 +432,8 @@
 
   <div id="results"></div>
 
-  <nav class="site-footer-nav" aria-label="Utalis">
-    <span class="site-footer-brand">Utalis</span>
+  <nav class="site-footer-nav" aria-label="うたエモ">
+    <span class="site-footer-brand">UTAEMO</span>
     <a data-legal="terms.html" href="terms.html">利用規約</a>
     <a data-legal="privacy.html" href="privacy.html">プライバシー</a>
     <a data-legal="contact.html" href="contact.html">お問い合わせ</a>
@@ -639,7 +639,7 @@ async function bootstrapPublicViewer() {
   const streamerId = parseStreamerIdFromPath();
   if (!streamerId || !STREAMER_ID_RE.test(streamerId)) {
     document.title = 'ページが見つかりません';
-    showPageState('🔍', 'ページが見つかりません。<br><a href="' + SITE_BASE + '/">Utalis ビルダー</a>');
+    showPageState('🔍', 'ページが見つかりません。<br><a href="' + SITE_BASE + '/">うたエモ ビルダー</a>');
     return;
   }
 
@@ -653,7 +653,7 @@ async function bootstrapPublicViewer() {
     });
   } catch (e) {
     document.title = '読み込みエラー';
-    showPageState('⚠️', 'うまく読み込めませんでした。<br>もう一度お試しください。<br><a href="' + SITE_BASE + '/">Utalisトップ</a>');
+    showPageState('⚠️', 'うまく読み込めませんでした。<br>もう一度お試しください。<br><a href="' + SITE_BASE + '/">うたエモトップ</a>');
     return;
   }
 
@@ -664,12 +664,12 @@ async function bootstrapPublicViewer() {
   }
   if (res.status === 410) {
     document.title = '公開されていません';
-    showPageState('📭', 'この公開ページは現在公開されていません。<br><a href="' + SITE_BASE + '/">Utalisで歌える曲リストを作る</a>');
+    showPageState('📭', 'この公開ページは現在公開されていません。<br><a href="' + SITE_BASE + '/">うたエモで歌える曲リストを作る</a>');
     return;
   }
   if (!res.ok) {
     document.title = '読み込みエラー';
-    showPageState('⚠️', 'うまく読み込めませんでした。<br>もう一度お試しください。<br><a href="' + SITE_BASE + '/">Utalisトップ</a>');
+    showPageState('⚠️', 'うまく読み込めませんでした。<br>もう一度お試しください。<br><a href="' + SITE_BASE + '/">うたエモトップ</a>');
     return;
   }
 
@@ -678,13 +678,13 @@ async function bootstrapPublicViewer() {
     api = await res.json();
   } catch (e) {
     document.title = '読み込みエラー';
-    showPageState('⚠️', 'うまく読み込めませんでした。<br>もう一度お試しください。<br><a href="' + SITE_BASE + '/">Utalisトップ</a>');
+    showPageState('⚠️', 'うまく読み込めませんでした。<br>もう一度お試しください。<br><a href="' + SITE_BASE + '/">うたエモトップ</a>');
     return;
   }
 
   const publicData = normalizePublicData(api);
   const name = publicData.streamer.name || streamerId;
-  document.title = name + ' - Utalis';
+  document.title = name + ' - UTAEMO';
   document.getElementById('streamerName').textContent = name;
   document.getElementById('subtitle').textContent = publicData.streamer.subtitle || '';
   applyAccentTheme(api.themeType, api.presetIndex, api.customHex);
