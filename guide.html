@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<meta name="description" content="Utalis（うたりす）の使い方ガイド。歌える曲リストの作り方・公開・編集を、初めての方でも迷わず進められる説明です。">
+<title>Utalis 使い方ガイド — 歌える曲リストの作り方・公開・編集</title>
+<link rel="canonical" href="https://utalis.github.io/guide.html">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/guide.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="site-header">
+    <div class="site-header-top">
+      <div>
+        <p class="brand-wordmark">Utalis</p>
+        <span class="brand-sub">うたりす</span>
+      </div>
+      <div class="header-actions">
+        <a class="header-link header-link-primary" href="index.html">曲リストを作る</a>
+        <a class="header-link" href="#faq">困ったとき</a>
+      </div>
+    </div>
+    <h1 class="page-title">Utalis 使い方ガイド</h1>
+    <p class="page-lead">歌える曲リストの作り方・公開・編集</p>
+  </header>
+
+  <nav class="guide-toc" aria-label="目次">
+    <p class="guide-toc-title">目次</p>
+    <ul class="guide-toc-list">
+      <li><a href="#about">Utalisとは</a></li>
+      <li><a href="#start">はじめ方</a></li>
+      <li><a href="#basic">基本</a></li>
+      <li><a href="#songs">曲を選ぶ</a></li>
+      <li><a href="#publish">公開</a></li>
+      <li><a href="#manage">管理方法</a></li>
+      <li><a href="#re-edit">あとから編集</a></li>
+      <li><a href="#listener">リスナー向け</a></li>
+      <li><a href="#faq">困ったとき</a></li>
+      <li><a href="#save">保存について</a></li>
+    </ul>
+  </nav>
+
+  <section class="guide-section" id="about">
+    <h2>1. Utalisとは</h2>
+    <p>Utalis（うたりす）は、配信で歌える曲をまとめて、リスナーに見せられるリストを作れる無料サービスです。</p>
+    <p>作ったリストは固定URL（例：<code>https://utalis.github.io/u/あなたのID</code>）で公開でき、配信の概要欄やSNSに貼って共有できます。リスナーはログイン不要で、曲名検索やランダム選曲などが使えます。</p>
+  </section>
+
+  <section class="guide-section" id="start">
+    <h2>2. まずは曲リストを作る</h2>
+    <p><a href="index.html">Utalis</a> を開くと、上部に5つのタブがあります。スマホでは短い名前で表示されます。</p>
+    <div class="ui-box ui-box-soft">
+      <p><strong>PC：</strong>基本情報 ｜ 曲を選ぶ ｜ デザイン ｜ プレビュー ｜ 管理</p>
+      <p style="margin-bottom:0"><strong>スマホ：</strong>基本 ｜ 曲 ｜ デザイン ｜ 確認 ｜ 管理</p>
+    </div>
+    <p>おすすめの流れは次のとおりです。順番は固定ではありません。必要なタブを行き来しながら進めて大丈夫です。</p>
+    <ol class="flow-steps">
+      <li><strong>基本</strong> — 配信者名・サブタイトル・公開ページID</li>
+      <li><strong>曲</strong> — 歌える曲を選ぶ</li>
+      <li><strong>デザイン</strong> — テーマカラーを選ぶ</li>
+      <li><strong>確認</strong> — リスナーから見える見え方をチェック</li>
+      <li><strong>公開する</strong> — 画面上部のボタンでオンライン公開</li>
+      <li><strong>管理</strong> — 必要ならHTMLの復元やタグ候補の編集</li>
+    </ol>
+    <p>画面上部には常に <kbd>公開する</kbd> ボタンと <kbd>アカウント</kbd>（スマホでは ☰）があります。</p>
+  </section>
+
+  <section class="guide-section" id="basic">
+    <h2>3. 基本</h2>
+    <p><strong>基本情報</strong> タブで、公開ページの土台を入力します。</p>
+
+    <h3>配信者名・ページタイトル</h3>
+    <p>公開ページのタイトルとして表示されます。必須です。</p>
+
+    <h3>一言・サブタイトル（任意）</h3>
+    <p>配信者名の下に表示される短い説明です。空欄でも構いません。</p>
+
+    <h3>公開ページID</h3>
+    <p>公開URLの末尾になります。</p>
+    <div class="ui-box">
+      <p style="margin:0"><strong>例：</strong> IDが <code>sample</code> なら<br>
+      <code>https://utalis.github.io/u/sample</code></p>
+    </div>
+    <ul>
+      <li>半角英小文字・数字・ハイフン（<code>-</code>）のみ</li>
+      <li>3〜32文字</li>
+      <li>先頭・末尾にハイフンは不可。連続ハイフン（<code>--</code>）も不可</li>
+      <li><code>terms</code> や <code>admin</code> など、サービス用に予約されたIDは使えません</li>
+    </ul>
+    <p>入力すると、正しい形式のとき公開予定URLがプレビュー表示されます。</p>
+    <p class="ui-box ui-box-soft" style="margin-top:12px">オンライン公開しない場合（HTMLファイルだけ書き出す場合）は、公開ページIDは空欄でも構いません。</p>
+  </section>
+
+  <section class="guide-section" id="songs">
+    <h2>4. 曲を選ぶ</h2>
+    <p><strong>曲を選ぶ</strong> タブで、カラオケアプリ「エモカラ」の曲リスト（2026/7/28 時点・約1,950曲）から選びます。</p>
+
+    <h3>すべて / 選択中</h3>
+    <ul>
+      <li><strong>すべて</strong> — 曲マスター全体から探して選ぶ</li>
+      <li><strong>選択中</strong> — すでに選んだ曲だけを一覧。各行の <kbd>外す</kbd> で解除できます</li>
+    </ul>
+
+    <h3>曲名検索 / アーティスト検索</h3>
+    <p>検索欄の上で <kbd>曲名</kbd> と <kbd>アーティスト</kbd> を切り替えられます。</p>
+    <ul>
+      <li><strong>曲名</strong> — 曲名で絞り込み</li>
+      <li><strong>アーティスト</strong> — アーティスト名や読み（ひらがな）で絞り込み。五十音フィルターと組み合わせ可能</li>
+    </ul>
+    <p>検索欄右の ✕ で検索をクリアできます。</p>
+
+    <h3>五十音・かな1文字（アーティスト検索時）</h3>
+    <p>アーティスト検索モードの <strong>すべて</strong> タブでは、あ行〜わ行のチップで絞り込めます。行を選ぶと、さらに「あ」「い」「う…」など1文字単位のフィルターが表示されます。</p>
+    <p><strong>選択中</strong> タブでは五十音フィルターは表示されません（選んだ曲だけを見るため）。</p>
+
+    <h3>曲の選び方</h3>
+    <ul>
+      <li>アーティスト名をタップすると、そのアーティストの曲一覧が開きます</li>
+      <li>曲名横のチェックで1曲ずつ選択</li>
+      <li>アーティスト行のチェックで、そのアーティストの表示中の曲をまとめて選択</li>
+    </ul>
+
+    <h3>一括操作</h3>
+    <ul>
+      <li><kbd>表示中をすべて選択</kbd> — 今の検索・フィルター結果をすべて選択</li>
+      <li><kbd>表示中の選択を解除</kbd> — 表示中の曲だけ選択解除</li>
+      <li><kbd>全曲を選択</kbd> / <kbd>すべて解除</kbd> — マスター全体に対する操作（解除時は確認ダイアログあり）</li>
+    </ul>
+
+    <h3>たくさんの曲から探すコツ</h3>
+    <ol>
+      <li>アーティスト検索に切り替える</li>
+      <li>五十音で行を絞る（必要なら1文字まで）</li>
+      <li>アーティスト名の一部を検索欄に入力</li>
+      <li>見つかったアーティストを開いてチェック</li>
+      <li><kbd>選択中</kbd> タブで選んだ曲を確認</li>
+    </ol>
+  </section>
+
+  <section class="guide-section" id="song-settings">
+    <h2>5. 曲ごとの設定</h2>
+    <p>各曲の <kbd>設定</kbd> を押すと、その曲専用の設定が開きます。</p>
+
+    <h3>この曲につけるマーク</h3>
+    <p>複数選べます。公開ページでもリスナー向けの目印として表示されます。</p>
+    <ul>
+      <li><strong>おはこ</strong></li>
+      <li><strong>お気に入り ❤️</strong></li>
+      <li><strong>練習中</strong></li>
+    </ul>
+
+    <h3>自由タグ（複数選べます）</h3>
+    <p>あらかじめ登録したタグ候補から、その曲に付けたいタグを選びます。候補の追加・削除は <strong>管理</strong> タブから行えます。</p>
+
+    <h3>追加日</h3>
+    <p>「新着」表示に使えます。日付を入れるか <kbd>今日にする</kbd> を押してください。<kbd>クリア</kbd> で削除できます。</p>
+  </section>
+
+  <section class="guide-section" id="design">
+    <h2>6. デザイン</h2>
+    <p><strong>デザイン</strong> タブで、公開ページのアクセントカラーを選びます。</p>
+    <ul>
+      <li>8色のプリセットから選ぶ</li>
+      <li><kbd>＋ 好きな色</kbd> から自由な色を指定</li>
+      <li><strong>選択中のカラー</strong> に、今選んでいる色が表示されます</li>
+      <li><strong>テーマ見本</strong> で、ボタンや選択状態のイメージを確認できます</li>
+    </ul>
+    <p>選んだ色は <strong>確認</strong> タブのプレビューにも反映されます。</p>
+  </section>
+
+  <section class="guide-section" id="preview">
+    <h2>7. 確認</h2>
+    <p><strong>プレビュー</strong>（スマホでは <strong>確認</strong>）タブで、リスナーから見える公開ページに近い表示を確認できます。</p>
+    <p>未公開の状態でも、今編集中の配信者名・曲数・テーマカラーなどが反映されます。公開前にここで見た目をチェックするのがおすすめです。</p>
+  </section>
+
+  <section class="guide-section" id="publish">
+    <h2>8. 公開する</h2>
+    <p>画面上部の <kbd>公開する</kbd> ボタンで、インターネット上に公開します。</p>
+
+    <h3>公開の流れ</h3>
+    <ol class="flow-steps">
+      <li>配信者名・曲（1曲以上）・公開ページIDを入力</li>
+      <li>初めて公開するとき、管理方法を選ぶ画面が出ます（Google / ログインなし / 編集キー）</li>
+      <li><kbd>公開する</kbd> を押す</li>
+      <li>成功すると公開URLが表示されます</li>
+    </ol>
+
+    <h3>公開URL</h3>
+    <div class="ui-box">
+      <p style="margin:0"><code>https://utalis.github.io/u/あなたのID</code></p>
+    </div>
+    <p>公開成功画面では、次の操作ができます。</p>
+    <ul>
+      <li><kbd>公開ページを見る</kbd></li>
+      <li><kbd>URLをコピー</kbd></li>
+      <li><kbd>共有</kbd>（対応ブラウザでは共有シートが開きます。非対応の場合はURLコピー）</li>
+    </ul>
+    <p>公開後、画面上部に <kbd>公開ページを見る</kbd> <kbd>URLをコピー</kbd> <kbd>共有</kbd> も表示されます。</p>
+
+    <h3>ボタンの表示が変わるとき</h3>
+    <ul>
+      <li><strong>公開する</strong> — まだ公開していない</li>
+      <li><strong>変更を公開</strong> — 公開済みで、内容に変更がある</li>
+      <li><strong>公開済み</strong> — 公開済みで、変更がない（押せません）</li>
+    </ul>
+    <div class="ui-box ui-box-warn">
+      <p style="margin:0"><strong>重要：</strong> 編集しただけでは公開ページは更新されません。<strong>変更を反映するには、もう一度「公開する」（または「変更を公開」）を押してください。</strong></p>
+    </div>
+  </section>
+
+  <section class="guide-section" id="manage">
+    <h2>9. 管理方法</h2>
+    <p><kbd>アカウント</kbd>（スマホは ☰）を開くと、公開後の更新方法を選べます。</p>
+
+    <h3>Googleで管理する</h3>
+    <ul>
+      <li>Googleアカウントでログインして管理</li>
+      <li>初回はログイン後、公開ページIDを <kbd>この公開ページIDを取得する</kbd> で予約してから公開</li>
+      <li>パソコン・スマホを変えても、Googleログインで同じページを更新しやすい</li>
+    </ul>
+
+    <h3>ログインせずに作る（編集キー）</h3>
+    <ul>
+      <li>Googleアカウント不要</li>
+      <li>初回公開後に <strong>編集キー</strong> が表示されます。必ずコピーして保管してください</li>
+      <li>次回からは公開ページIDと編集キーで再編集</li>
+    </ul>
+
+    <h3>編集キーを使う</h3>
+    <p>すでに編集キーを持っている場合。公開ページIDと編集キーを入力し <kbd>編集を開始</kbd> します。</p>
+
+    <h3>どちらを選べばいい？</h3>
+    <div class="ui-box ui-box-soft">
+      <ul style="margin:0">
+        <li><strong>Googleアカウントを普段使っている</strong> → Googleで管理</li>
+        <li><strong>とにかく手早く1回公開したい</strong> → ログインせずに作る</li>
+        <li><strong>以前作ったページを編集したい</strong> → 編集キーを使う / Googleでログイン</li>
+      </ul>
+    </div>
+    <p>匿名で作ったページは、あとから <kbd>Googleアカウントに連携</kbd> することもできます（連携後は旧編集キーは使えなくなります）。</p>
+  </section>
+
+  <section class="guide-section" id="edit-key">
+    <h2>10. 編集キー</h2>
+    <p>編集キーは、Googleログインなしでページを更新するための合言葉のようなものです。</p>
+    <ul>
+      <li><strong>いつもらう？</strong> — 「ログインせずに作る」で初回公開した直後</li>
+      <li><strong>どこで使う？</strong> — アカウント → 編集キーを使う → IDとキーを入力 → <kbd>編集を開始</kbd></li>
+      <li><strong>保管</strong> — メモ帳など安全な場所にコピーして保存。再表示はできません</li>
+      <li><strong>なくした場合</strong> — その編集キーでは更新できません。Google連携済みならGoogleログイン、未連携の場合は運営に相談が必要になることがあります</li>
+    </ul>
+  </section>
+
+  <section class="guide-section" id="re-edit">
+    <h2>11. 公開後に編集する</h2>
+
+    <h3>Googleで管理している場合</h3>
+    <ol>
+      <li>Utalis を開き、アカウント → <kbd>Googleでログイン</kbd></li>
+      <li>基本情報で公開ページIDを入力（すでに取得済みのID）</li>
+      <li>曲やデザインを変更</li>
+      <li><kbd>変更を公開</kbd> を押す</li>
+    </ol>
+
+    <h3>編集キーで管理している場合</h3>
+    <ol>
+      <li>アカウント → <kbd>編集キーを使う</kbd></li>
+      <li>公開ページIDと編集キーを入力 → <kbd>編集を開始</kbd></li>
+      <li>サーバー上の最新の公開内容が読み込まれます</li>
+      <li>変更後、<kbd>変更を公開</kbd> を押す</li>
+    </ol>
+
+    <div class="ui-box ui-box-warn">
+      <p style="margin:0">編集キーで <kbd>編集を開始</kbd> すると、端末に残っていた未公開の編集内容は、サーバー上の公開済みデータで置き換わります。ローカルで試し書きしていた内容がある場合は注意してください。</p>
+    </div>
+  </section>
+
+  <section class="guide-section" id="delete">
+    <h2>12. 公開ページを削除する</h2>
+    <p>Google管理または編集キー認証済みの状態で、アカウント内の <kbd>公開ページを削除</kbd> から削除できます。</p>
+    <ul>
+      <li>削除すると、そのURLから曲リストは見られなくなります</li>
+      <li>確認のため、同じ公開ページIDの入力が求められます</li>
+      <li>削除した公開ページIDは、他の人も含めて再取得できません</li>
+    </ul>
+  </section>
+
+  <section class="guide-section" id="manage-tab">
+    <h2>13. 管理タブ</h2>
+    <p>上部タブの <strong>管理</strong> には、次の機能があります。</p>
+
+    <h3>以前のファイルから復元</h3>
+    <p>過去に <kbd>HTMLファイルを書き出す</kbd> で保存したファイルを選ぶと、曲・テーマ・タグなどを読み込んで編集を続けられます。</p>
+
+    <h3>タグの候補（任意）</h3>
+    <p>曲に付けられるタグの候補リストを編集できます。追加・削除が可能です。</p>
+
+    <h3>HTMLファイルを書き出す</h3>
+    <p>画面下部の <kbd>HTMLファイルを書き出す</kbd> で、オフライン用のHTMLをダウンロードできます。オンライン公開とは別の保存方法です。書き出したファイルは <strong>管理</strong> タブから復元できます。</p>
+  </section>
+
+  <section class="guide-section" id="listener">
+    <h2>14. リスナー側の使い方</h2>
+    <p>公開ページ（<code>/u/ID</code>）を開いた人向けの機能です。ログインは不要です。</p>
+    <ul>
+      <li><strong>曲名・アーティスト名で検索</strong> — 1つの検索欄から曲名・アーティスト名・読みを横断検索</li>
+      <li><strong>五十音（あ行〜わ行）</strong> — アーティストの頭文字で絞り込み</li>
+      <li><strong>マークで絞り込み</strong> — おはこ / お気に入り ❤️ / 練習中</li>
+      <li><strong>🆕 新着</strong> — 追加日が新しい曲だけ表示（配信者が追加日を設定している場合）</li>
+      <li><strong>タグで絞り込み</strong> — 配信者がタグを設定している場合</li>
+      <li><strong>🎲 表示中からランダム</strong> — 今表示されている曲の中から1曲をランダム表示</li>
+    </ul>
+    <p>各曲には、配信者が設定したマークやタグが表示されます。</p>
+  </section>
+
+  <section class="guide-section" id="faq">
+    <h2>15. 困ったとき</h2>
+
+    <div class="faq-item">
+      <h3>Q. 曲が見つからない</h3>
+      <p>曲名検索とアーティスト検索を切り替えてみてください。アーティスト検索では五十音フィルターも使えます。マスターにない曲は選べません。</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Q. 公開ページIDが使えない</h3>
+      <p>3〜32文字、半角英小文字・数字・ハイフンのみか確認してください。すでに誰かが使っているID、予約語（<code>terms</code> など）、削除済みのIDも使えません。別のIDを試してください。</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Q. 編集キーをなくした</h3>
+      <p>編集キーは再表示できません。Google連携済みならGoogleログインで更新できます。未連携の場合は、<a href="contact.html">お問い合わせ</a> から相談してください。</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Q. Googleログインできない</h3>
+      <p>ブラウザのポップアップブロックを確認し、もう一度 <kbd>Googleでログイン</kbd> を試してください。ログイン後も <kbd>公開する</kbd> は別操作です。ログインだけでは公開されません。</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Q. 公開ページが表示されない</h3>
+      <p>URLが正しいか、公開が成功しているか確認してください。削除されたページは表示されません。</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Q. 変更が公開ページに反映されない</h3>
+      <p>編集後に <kbd>変更を公開</kbd> を押しましたか？ 入力しただけでは更新されません。ボタンが「公開済み」のときは、内容に変更を加えてから再度公開してください。</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Q. 曲を間違えて外した</h3>
+      <p><strong>すべて</strong> タブで再度検索して選び直せます。公開前ならそのまま選び直し、公開後なら選び直して <kbd>変更を公開</kbd> してください。ページを再読み込みすると、未公開の変更は失われることがあります。</p>
+    </div>
+
+    <div class="faq-item">
+      <h3>Q. 公開ページを削除したい</h3>
+      <p>Google管理または編集キーで認証したうえで、アカウント内の <kbd>公開ページを削除</kbd> から行えます。削除後は同じIDを取り戻せません。</p>
+    </div>
+  </section>
+
+  <section class="guide-section" id="save">
+    <h2>16. 保存について</h2>
+    <p>Utalis では、<strong>入力した内容が自動的にクラウドに保存される仕組みはありません。</strong></p>
+
+    <h3>入力しただけのとき</h3>
+    <p>配信者名・曲の選択・デザインなどは、<strong>今開いているブラウザの中だけ</strong> に保持されます。「下書き保存済み」の表示は出ません。</p>
+
+    <h3>「公開する」を押したとき</h3>
+    <p>オンライン公開に成功すると、内容がサーバーに保存され、リスナーが <code>/u/ID</code> で見られるようになります。ここが公開データの保存タイミングです。</p>
+
+    <h3>ページを再読み込みしたとき</h3>
+    <div class="ui-box ui-box-warn">
+      <p style="margin:0"><strong>公開前に入力・選択していた内容は、通常の再読み込みで消えます。</strong> 公開前の作業中は、リロードやタブを閉じないよう注意してください。</p>
+    </div>
+
+    <h3>ブラウザを閉じたとき</h3>
+    <p>公開前の編集内容は保持されません。Googleログイン状態（同じタブセッション内）も、タブを閉じると消えることがあります。</p>
+
+    <h3>Googleログインしたとき</h3>
+    <ul>
+      <li>ログイン前に入力していた内容は、<strong>同じタブのままログインした場合、画面上はそのまま残ります</strong>（ログイン操作自体で消えません）</li>
+      <li>ログインしただけでは、編集内容がサーバーに保存されるわけではありません</li>
+      <li>公開するには、引き続き <kbd>公開する</kbd> を押す必要があります</li>
+    </ul>
+
+    <h3>自分でバックアップする方法</h3>
+    <ul>
+      <li><kbd>HTMLファイルを書き出す</kbd> — 端末にファイル保存。後から <strong>管理</strong> タブで復元可能</li>
+      <li><kbd>公開する</kbd> — オンライン公開（本番の保存方法）</li>
+    </ul>
+  </section>
+
+  <section class="guide-section" id="legal">
+    <h2>17. 関連リンク</h2>
+    <ul>
+      <li><a href="index.html">Utalis — 曲リストを作る</a></li>
+      <li><a href="terms.html">利用規約</a></li>
+      <li><a href="privacy.html">プライバシーポリシー</a></li>
+      <li><a href="contact.html">お問い合わせ</a></li>
+    </ul>
+  </section>
+
+  <footer class="site-footer">
+    <nav aria-label="フッターナビ">
+      <a href="index.html">Utalis</a>
+      <span class="site-footer-sep" aria-hidden="true">｜</span>
+      <a href="guide.html">使い方</a>
+      <span class="site-footer-sep" aria-hidden="true">｜</span>
+      <a href="terms.html">利用規約</a>
+      <span class="site-footer-sep" aria-hidden="true">｜</span>
+      <a href="privacy.html">プライバシー</a>
+      <span class="site-footer-sep" aria-hidden="true">｜</span>
+      <a href="contact.html">お問い合わせ</a>
+    </nav>
+    <p class="site-footer-copy">© Utalis</p>
+  </footer>
+</div>
+</body>
+</html>
