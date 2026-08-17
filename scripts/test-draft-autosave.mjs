@@ -6,6 +6,7 @@ import { chromium } from 'playwright-core';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { addBypassStart } from './lib/test-bypass-start.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const indexUrl = 'file://' + path.join(ROOT, 'index.html');
@@ -46,7 +47,9 @@ function assertDraftSecurity(raw) {
 }
 
 async function waitReady(page) {
+  await addBypassStart(page);
   await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForFunction(() => document.documentElement.dataset.utalisEntryReady === '1', { timeout: 15000 });
   await page.waitForFunction(() => typeof MASTER_SONGS !== 'undefined' && draftBootComplete === true, { timeout: 15000 });
   await page.waitForTimeout(350);
 }

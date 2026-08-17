@@ -5,6 +5,7 @@
 import { chromium } from 'playwright';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { addBypassStart } from './lib/test-bypass-start.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const indexUrl = 'file://' + path.join(ROOT, 'index.html');
@@ -26,7 +27,9 @@ async function run(label, width, height, colorScheme = 'light') {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
 
+  await addBypassStart(page);
   await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForFunction(() => document.documentElement.dataset.utalisEntryReady === '1', { timeout: 15000 });
   await page.waitForFunction(() => typeof MASTER_SONGS !== 'undefined', { timeout: 15000 });
 
   if (errors.length) fail(`${label}: JS エラーなし`, errors.join('; '));

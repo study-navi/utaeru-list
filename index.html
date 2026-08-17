@@ -1677,6 +1677,79 @@
     text-align: center;
   }
 
+  /* Start screen (first visit / not logged in) */
+  .start-screen {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px 32px;
+    background: var(--page);
+  }
+  .start-screen[hidden] { display: none !important; }
+  body.start-screen-active .utaeru-bar,
+  body.start-screen-active .panel-backdrop,
+  body.start-screen-active .account-panel,
+  body.start-screen-active .wrap,
+  body.start-screen-active .export-bar {
+    display: none !important;
+  }
+  .start-screen-inner {
+    width: 100%;
+    max-width: 720px;
+    text-align: center;
+  }
+  .start-brand-lockup { margin-bottom: 8px; }
+  .start-wordmark {
+    margin: 0;
+    font-size: clamp(28px, 7vw, 36px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    color: var(--accent);
+    line-height: 1.1;
+  }
+  .start-wordmark-sub {
+    margin: 4px 0 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+  }
+  .start-tagline {
+    margin: 0 0 20px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+  .start-draft-hint {
+    margin: 0 0 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .start-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    max-width: 360px;
+    margin: 0 auto;
+  }
+  .start-actions .ui-btn { min-height: 44px; width: 100%; }
+  .start-note {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+  }
+  .start-note-muted { font-size: 12px; }
+  .start-auth-message {
+    max-width: 360px;
+    margin: 0 auto 12px;
+    text-align: left;
+  }
+
   /* Phase 4A: 公開ページID（streamerId）入力 */
   .field-error {
     font-size: 13px; color: var(--error-text); background: var(--error-bg);
@@ -1943,6 +2016,24 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
+
+<div id="startScreen" class="start-screen" hidden aria-label="スタート">
+  <div class="start-screen-inner">
+    <div class="start-brand-lockup">
+      <p class="start-wordmark">UTAEMO</p>
+      <p class="start-wordmark-sub">うたエモ</p>
+    </div>
+    <p class="start-tagline">歌える曲リストを作る</p>
+    <p id="startDraftHint" class="start-draft-hint" hidden>この端末に前回の下書きがあります</p>
+    <p class="auth-message start-auth-message" id="startAuthMessage" style="display:none;"></p>
+    <div class="start-actions">
+      <button type="button" class="ui-btn ui-btn-primary" id="startGoogleLoginBtn">Googleでログイン</button>
+      <p class="start-note">別の端末でも、公開したリストを呼び出して編集できます</p>
+      <button type="button" class="ui-btn ui-btn-secondary" id="startGuestBtn">ログインせずにはじめる</button>
+      <p class="start-note start-note-muted">この端末に下書きを保存しながら作成できます</p>
+    </div>
+  </div>
+</div>
 
 <header class="utaeru-bar" id="utaeruBar" aria-label="うたエモ">
   <div class="utaeru-bar-inner">
@@ -2591,6 +2682,8 @@ let lastFiltered = [];
 
 // ---- browser draft auto-save (localStorage only; publish still uses Worker → D1) ----
 const DRAFT_STORAGE_KEY = 'utalis_draft_v1';
+const START_CHOICE_KEY = 'utalis_start_choice_v1';
+const START_CHOICE_GUEST = 'guest';
 const DRAFT_VERSION = 1;
 const DRAFT_DEBOUNCE_MS = 500;
 let draftSaveTimer = null;
@@ -4320,10 +4413,119 @@ function apiErrorMessage(status, data) {
 
 function showAuthMessage(text, type) {
   const el = document.getElementById('authMessage');
-  if (!text) { el.style.display = 'none'; el.textContent = ''; return; }
-  el.textContent = text;
-  el.className = 'auth-message auth-message--' + (type || 'info');
-  el.style.display = 'block';
+  const startEl = document.getElementById('startAuthMessage');
+  const onStart = document.body.classList.contains('start-screen-active');
+  const targets = onStart && startEl ? [startEl] : el ? [el] : [];
+  if (onStart && el) {
+    el.style.display = 'none';
+    el.textContent = '';
+  }
+  if (!onStart && startEl) {
+    startEl.style.display = 'none';
+    startEl.textContent = '';
+  }
+  if (!text) {
+    targets.forEach((t) => { t.style.display = 'none'; t.textContent = ''; });
+    return;
+  }
+  targets.forEach((t) => {
+    t.textContent = text;
+    t.className = (t.id === 'startAuthMessage' ? 'auth-message start-auth-message ' : 'auth-message ') + 'auth-message--' + (type || 'info');
+    t.style.display = 'block';
+  });
+}
+
+function getStartChoice() {
+  try { return localStorage.getItem(START_CHOICE_KEY); } catch (err) { return null; }
+}
+
+function setStartChoiceGuest() {
+  try { localStorage.setItem(START_CHOICE_KEY, START_CHOICE_GUEST); } catch (err) { /* ignore */ }
+}
+
+function hasStoredDraftEnvelope() {
+  return !!readDraftEnvelope();
+}
+
+function showStartScreen() {
+  document.body.classList.add('start-screen-active');
+  const screen = document.getElementById('startScreen');
+  if (screen) screen.hidden = false;
+  const draftHint = document.getElementById('startDraftHint');
+  if (draftHint) draftHint.hidden = !hasStoredDraftEnvelope();
+}
+
+function dismissStartScreen() {
+  document.body.classList.remove('start-screen-active');
+  const screen = document.getElementById('startScreen');
+  if (screen) screen.hidden = true;
+  const startAuth = document.getElementById('startAuthMessage');
+  if (startAuth) {
+    startAuth.style.display = 'none';
+    startAuth.textContent = '';
+  }
+}
+
+function finishEditorBootWithDraft() {
+  const draftRestored = tryRestoreDraftOnBoot();
+  if (!draftRestored) {
+    selectPreset(0);
+    render();
+    updateSelectedCount();
+  }
+  updatePreviewPanel();
+  updateStreamerIdPreview();
+  syncBuilderChromeInsets();
+  draftBootComplete = true;
+}
+
+function enterEditorFromStart(opts = {}) {
+  const restoreDraft = opts.restoreDraft !== false;
+  dismissStartScreen();
+  if (restoreDraft) {
+    finishEditorBootWithDraft();
+    return;
+  }
+  if (!draftBootComplete) {
+    selectPreset(0);
+    render();
+    updateSelectedCount();
+    updatePreviewPanel();
+    updateStreamerIdPreview();
+    syncBuilderChromeInsets();
+    draftBootComplete = true;
+  }
+}
+
+async function initAppEntry() {
+  const token = getStoredAccessToken();
+  if (token) {
+    await refreshAuthMe(token);
+  } else {
+    await refreshAuthMe();
+  }
+
+  if (authUser) {
+    dismissStartScreen();
+    finishEditorBootWithDraft();
+    document.documentElement.dataset.utalisEntryReady = '1';
+    return;
+  }
+
+  if (getStartChoice() === START_CHOICE_GUEST) {
+    dismissStartScreen();
+    finishEditorBootWithDraft();
+    document.documentElement.dataset.utalisEntryReady = '1';
+    return;
+  }
+
+  showStartScreen();
+  selectPreset(0);
+  render();
+  updateSelectedCount();
+  updatePreviewPanel();
+  updateStreamerIdPreview();
+  document.documentElement.dataset.utalisEntryReady = '1';
 }
 
 function normalizeOwnedIds(data) {
@@ -4557,6 +4759,10 @@ async function completeUtaeruLogin(authBody) {
     await refreshAuthMe(accessToken);
     if (authUser) {
       showAuthMessage('ログインしました。', 'success');
+      if (document.body.classList.contains('start-screen-active')) {
+        setOnlineMode('google', { openPanel: false });
+        enterEditorFromStart({ restoreDraft: false });
+      }
     } else {
       showAuthMessage('Googleログインは完了しましたが、セッションを確認できませんでした。一度ページを再読み込みしてから、もう一度Googleログインをお試しください。', 'error');
     }
@@ -4613,6 +4819,7 @@ function startGoogleLogin() {
 function bootGoogleAuth(attemptsLeft) {
   if (initGoogleAuth()) {
     document.getElementById('googleLoginBtn').addEventListener('click', startGoogleLogin);
+    document.getElementById('startGoogleLoginBtn')?.addEventListener('click', startGoogleLogin);
     return;
   }
   if (attemptsLeft <= 0) {
@@ -5027,18 +5234,13 @@ if (typeof ResizeObserver !== 'undefined') {
 renderTagAdmin();
 initEditTabs();
 initSearchTargetTabs();
-const draftRestored = tryRestoreDraftOnBoot();
-if (!draftRestored) {
-  selectPreset(0);
-  render();
-  updateSelectedCount();
-}
-updatePreviewPanel();
-updateStreamerIdPreview();
-syncBuilderChromeInsets();
-draftBootComplete = true;
-refreshAuthMe();
-bootGoogleAuth(25);
+document.getElementById('startGuestBtn')?.addEventListener('click', () => {
+  setStartChoiceGuest();
+  enterEditorFromStart({ restoreDraft: true });
+});
+initAppEntry().then(() => {
+  bootGoogleAuth(25);
+});
 </script>
 </body>
 </html>

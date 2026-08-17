@@ -5,6 +5,7 @@
 import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { addBypassStart } from './lib/test-bypass-start.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const indexUrl = 'file://' + path.join(ROOT, 'index.html');
@@ -44,9 +45,11 @@ function snapshotFromPage(page) {
 }
 
 async function setupEditorState(page, suffix) {
+  await addBypassStart(page);
   await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.waitForFunction(() => typeof MASTER_SONGS !== 'undefined', { timeout: 15000 });
-  await page.waitForTimeout(300);
+  await page.waitForFunction(() => document.documentElement.dataset.utalisEntryReady === '1', { timeout: 15000 });
+  await page.waitForTimeout(100);
 
   await page.fill('#streamerName', 'ログイン保持テスト');
   await page.fill('#subtitle', 'ログイン前に入力した文章です');

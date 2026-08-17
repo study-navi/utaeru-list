@@ -6,6 +6,7 @@ import { chromium } from 'playwright-core';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { addBypassStart } from './lib/test-bypass-start.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const guideUrl = 'file://' + path.join(ROOT, 'guide.html');
@@ -68,7 +69,9 @@ async function runGuideViewport(width) {
 async function runIndexLink() {
   const browser = await chromium.launch();
   const page = await browser.newPage();
+  await addBypassStart(page);
   await page.goto(indexUrl, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => document.documentElement.dataset.utalisEntryReady === '1', { timeout: 15000 });
   const href = await page.evaluate(() => {
     const a = [...document.querySelectorAll('.site-footer a')].find((el) => el.textContent?.trim() === '使い方');
     return a?.getAttribute('href') || null;

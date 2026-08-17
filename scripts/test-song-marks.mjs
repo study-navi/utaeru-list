@@ -5,6 +5,7 @@
 import { chromium } from 'playwright-core';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { addBypassStart } from './lib/test-bypass-start.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const indexUrl = 'file://' + path.join(ROOT, 'index.html');
@@ -91,7 +92,9 @@ async function runViewport(label, width, height) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
 
+  await addBypassStart(page);
   await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForFunction(() => document.documentElement.dataset.utalisEntryReady === '1', { timeout: 15000 });
   await page.waitForFunction(() => typeof MARK_ORDER !== 'undefined', { timeout: 15000 });
 
   const ui = await page.evaluate(() => ({
@@ -208,7 +211,9 @@ for (const [label, width] of [
 async function runStorageAndDraftCase() {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await addBypassStart(page);
   await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForFunction(() => document.documentElement.dataset.utalisEntryReady === '1', { timeout: 15000 });
   await page.waitForFunction(() => typeof MASTER_SONGS !== 'undefined' && draftBootComplete === true, { timeout: 15000 });
   await page.fill('#streamerName', 'マーク保存値テスト');
   await selectSong(page, 'カブトムシ');

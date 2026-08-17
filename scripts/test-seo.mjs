@@ -6,6 +6,7 @@ import { chromium } from 'playwright-core';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { addBypassStart } from './lib/test-bypass-start.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SITE = process.env.UTALIS_SITE || 'https://utalis.github.io';
@@ -57,6 +58,9 @@ async function runLocalFileChecks() {
   if (!index.includes('brand-summary')) fail('brand-summary');
   else ok('brand-summary 追加');
 
+  if (!index.includes('id="startScreen"')) fail('startScreen 要素');
+  else ok('startScreen 追加（SEO本文は wrap 内維持）');
+
   if (!guide.includes('link rel="canonical" href="https://utalis.github.io/guide.html"')) fail('guide canonical');
   else ok('guide canonical');
 
@@ -105,7 +109,9 @@ async function runIndexViewport(width) {
   const page = await browser.newPage({ viewport: { width, height: 800 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
+  await addBypassStart(page);
   await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForFunction(() => document.documentElement.dataset.utalisEntryReady === '1', { timeout: 15000 });
   await page.waitForFunction(() => typeof MASTER_SONGS !== 'undefined', { timeout: 15000 });
 
   const layout = await page.evaluate(() => ({
