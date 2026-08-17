@@ -1493,6 +1493,16 @@
     word-break: break-word;
   }
   .export-count .n { font-variant-numeric: tabular-nums; color: var(--accent); }
+  .draft-save-status {
+    flex: 1 1 100%;
+    width: 100%;
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--text-secondary);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
   .export-btn {
     font-size: 14px; font-weight: 700;
     padding: 10px 18px; border-radius: 10px;
@@ -2205,6 +2215,7 @@
   <div class="export-bar-inner">
     <div class="export-count"><span class="n" id="selectedCount">0</span>曲 選択中</div>
     <button class="export-btn" id="exportBtn" disabled>HTMLファイルを書き出す</button>
+    <p class="draft-save-status" id="draftSaveStatus" hidden aria-live="polite"></p>
   </div>
 </div>
 
@@ -2456,6 +2467,7 @@ function selectPreset(i) {
   refreshSwatchSelection();
   updatePublishButtonState();
   updatePreviewPanel();
+  scheduleDraftSave(true);
 }
 function selectCustom(hex) {
   customColorConfigured = true;
@@ -2463,6 +2475,7 @@ function selectCustom(hex) {
   refreshSwatchSelection();
   updatePublishButtonState();
   updatePreviewPanel();
+  scheduleDraftSave(true);
 }
 
 function resolveTheme() {
@@ -2477,6 +2490,186 @@ function resolveTheme() {
 function keyOf(s) { return s.a + '\u0001' + s.t; }
 let selectedKeys = new Set();
 let lastFiltered = [];
+
+// ---- browser draft auto-save (localStorage only; publish still uses Worker → D1) ----
+const DRAFT_STORAGE_KEY = 'utalis_draft_v1';
+const DRAFT_VERSION = 1;
+const DRAFT_DEBOUNCE_MS = 500;
+let draftSaveTimer = null;
+let draftBootComplete = false;
+let draftSaveSuppressed = false;
+
+function buildDraftDataPayload() {
+  const selectedSongIds = [];
+  for (const key of selectedKeys) {
+    const song = MASTER_SONGS.find(s => keyOf(s) === key);
+    if (song && Number.isInteger(song.id)) selectedSongIds.push(song.id);
+  }
+  const metaOut = {};
+  for (const key of Object.keys(songMeta)) {
+    if (!selectedKeys.has(key)) continue;
+    const cleaned = cleanMeta(songMeta[key]);
+    if (Object.keys(cleaned).length) metaOut[key] = cleaned;
+  }
+  return {
+    streamerName: streamerNameInput.value,
+    subtitle: subtitleInput.value,
+    streamerId: streamerIdInput.value.trim(),
+    selectedSongIds,
+    songMeta: metaOut,
+    tagPresets: tagPresets.map(t => ({
+      id: t.id,
+      label: t.label,
+      ...(t.color != null ? { color: t.color } : {}),
+    })),
+    themeType: currentTheme.type,
+    presetIndex: currentTheme.presetIndex,
+    customHex: currentTheme.customHex,
+    customColorConfigured,
+  };
+}
+
+function readDraftEnvelope() {
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || parsed.version !== DRAFT_VERSION) return null;
+    if (!parsed.data || typeof parsed.data !== 'object') return null;
+    return parsed;
+  } catch (err) {
+    return null;
+  }
+}
+
+function writeDraftEnvelope(envelope) {
+  try {
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(envelope));
+    showDraftSaveStatus();
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+function saveDraftToStorage() {
+  if (draftSaveSuppressed || !draftBootComplete) return;
+  const payload = buildDraftDataPayload();
+  const isEmpty = !payload.streamerName.trim()
+    && !payload.streamerId
+    && !payload.subtitle.trim()
+    && payload.selectedSongIds.length === 0
+    && Object.keys(payload.songMeta).length === 0;
+  if (isEmpty) {
+    try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch (err) { /* ignore */ }
+    hideDraftSaveStatus();
+    return;
+  }
+  writeDraftEnvelope({
+    version: DRAFT_VERSION,
+    savedAt: new Date().toISOString(),
+    streamerId: payload.streamerId,
+    data: payload,
+  });
+}
+
+function scheduleDraftSave(immediate) {
+  if (draftSaveSuppressed || !draftBootComplete) return;
+  clearTimeout(draftSaveTimer);
+  if (immediate) {
+    draftSaveTimer = null;
+    saveDraftToStorage();
+    return;
+  }
+  draftSaveTimer = setTimeout(saveDraftToStorage, DRAFT_DEBOUNCE_MS);
+}
+
+function showDraftSaveStatus() {
+  const el = document.getElementById('draftSaveStatus');
+  if (!el) return;
+  el.textContent = 'この端末に下書き保存済み';
+  el.hidden = false;
+}
+
+function hideDraftSaveStatus() {
+  const el = document.getElementById('draftSaveStatus');
+  if (!el) return;
+  el.textContent = '';
+  el.hidden = true;
+}
+
+function applyDraftData(data) {
+  streamerNameInput.value = typeof data.streamerName === 'string' ? data.streamerName : '';
+  subtitleInput.value = typeof data.subtitle === 'string' ? data.subtitle : '';
+  streamerIdInput.value = typeof data.streamerId === 'string' ? data.streamerId : '';
+  updateStreamerIdPreview();
+
+  if (data.themeType === 'preset' && Number.isInteger(data.presetIndex)) {
+    customColorConfigured = !!data.customColorConfigured;
+    if (typeof data.customHex === 'string') {
+      currentTheme.customHex = data.customHex;
+      customColorInput.value = data.customHex;
+    }
+    selectPreset(data.presetIndex);
+  } else if (typeof data.customHex === 'string' && data.customHex) {
+    customColorInput.value = data.customHex;
+    selectCustom(data.customHex);
+  } else {
+    customColorConfigured = false;
+    selectPreset(0);
+  }
+
+  selectedKeys = new Set();
+  const idMap = new Map();
+  for (const s of MASTER_SONGS) {
+    if (Number.isInteger(s.id)) idMap.set(s.id, keyOf(s));
+  }
+  if (Array.isArray(data.selectedSongIds)) {
+    for (const id of data.selectedSongIds) {
+      const key = idMap.get(id);
+      if (key) selectedKeys.add(key);
+    }
+  }
+
+  songMeta = {};
+  if (data.songMeta && typeof data.songMeta === 'object') {
+    for (const [key, meta] of Object.entries(data.songMeta)) {
+      if (!selectedKeys.has(key)) continue;
+      const cleaned = cleanMeta(meta);
+      if (Object.keys(cleaned).length) songMeta[key] = cleaned;
+    }
+  }
+
+  if (Array.isArray(data.tagPresets) && data.tagPresets.length) {
+    tagPresets = data.tagPresets.map(t => ({
+      id: t.id,
+      label: t.label,
+      ...(t.color != null ? { color: t.color } : {}),
+    }));
+  } else {
+    tagPresets = DEFAULT_TAG_PRESETS.map(t => ({ ...t }));
+  }
+
+  expandedKeys.clear();
+  renderTagAdmin();
+  render();
+  updateSelectedCount();
+  updatePreviewPanel();
+}
+
+function tryRestoreDraftOnBoot() {
+  const envelope = readDraftEnvelope();
+  if (!envelope) return false;
+  applyDraftData(envelope.data);
+  showAuthMessage('前回の編集中データを復元しました。', 'info');
+  showDraftSaveStatus();
+  return true;
+}
+
+function finishExplicitEditorLoad() {
+  draftSaveSuppressed = false;
+  if (draftBootComplete) scheduleDraftSave(true);
+}
 
 // ---- Phase 2: 曲マーク・タグ・追加日（songMeta）編集 UI ----
 const MARK_OPTIONS = [
@@ -2531,6 +2724,7 @@ function updateSongMeta(key, mutator) {
   if (Object.keys(cleaned).length === 0) delete songMeta[key];
   else songMeta[key] = cleaned;
   render();
+  scheduleDraftSave(true);
 }
 
 function badgesHtml(meta) {
@@ -2695,6 +2889,7 @@ function addTagPreset(label) {
   tagPresets.push({ id: makeTagId(), label: trimmed });
   renderTagAdmin();
   render();
+  scheduleDraftSave(true);
 }
 
 function removeTagPreset(id) {
@@ -2710,6 +2905,7 @@ function removeTagPreset(id) {
   }
   renderTagAdmin();
   render();
+  scheduleDraftSave(true);
 }
 
 if (tagAdminAddBtn) {
@@ -2955,7 +3151,10 @@ function updateStreamerIdPreview() {
   updateAccSummaries();
   return result;
 }
-streamerIdInput.addEventListener('input', updateStreamerIdPreview);
+streamerIdInput.addEventListener('input', () => {
+  updateStreamerIdPreview();
+  scheduleDraftSave();
+});
 
 let activeGyo = null;
 let activeKana = null;
@@ -3294,6 +3493,7 @@ function updateSelectedCount() {
   updatePublishButtonState();
   updatePreviewPanel();
   updateAccSummaries();
+  scheduleDraftSave(true);
 }
 const PREVIEW_MARK_LABELS = {
   signature: 'おはこ',
@@ -3459,7 +3659,10 @@ function updatePreviewPanel() {
   updateThemePickerUi();
 }
 streamerNameInput.addEventListener('input', updateSelectedCount);
-subtitleInput.addEventListener('input', updatePreviewPanel);
+subtitleInput.addEventListener('input', () => {
+  updatePreviewPanel();
+  scheduleDraftSave();
+});
 
 // ---- export ----
 document.getElementById('exportBtn').addEventListener('click', () => {
@@ -3525,11 +3728,21 @@ document.getElementById('exportBtn').addEventListener('click', () => {
 document.getElementById('importFile').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
+  draftSaveSuppressed = true;
+  clearTimeout(draftSaveTimer);
   const text = await file.text();
   const match = text.match(/<script type="application\/json" id="builder-config">([\s\S]*?)<\/script>/);
-  if (!match) { alert('このファイルには対応する設定データが見つかりませんでした。このビルダーで書き出したファイルを選択してください。'); return; }
+  if (!match) {
+    draftSaveSuppressed = false;
+    alert('このファイルには対応する設定データが見つかりませんでした。このビルダーで書き出したファイルを選択してください。');
+    return;
+  }
   let config;
-  try { config = JSON.parse(match[1]); } catch (err) { alert('設定データの読み込みに失敗しました。'); return; }
+  try { config = JSON.parse(match[1]); } catch (err) {
+    draftSaveSuppressed = false;
+    alert('設定データの読み込みに失敗しました。');
+    return;
+  }
 
   streamerNameInput.value = config.streamerName || '';
   subtitleInput.value = config.subtitle || '';
@@ -3562,6 +3775,7 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
   document.getElementById('loadedName').textContent = `「${config.streamerName || file.name}」を読み込みました（${selectedKeys.size}曲 / 設定形式 v${importedConfigVersion}）`;
   render();
   updateSelectedCount();
+  finishExplicitEditorLoad();
 });
 
 // ---- Phase 4C-3/4C-4 + Phase 5: Googleログイン・匿名編集キー・オンライン公開 ----
@@ -4336,6 +4550,7 @@ async function publishAnonymousCreate(sid) {
     editKeyVerified = true;
     editKeyVerifiedStreamerId = sid;
     markPublishedSnapshot();
+    scheduleDraftSave(true);
     const publicUrl = PUBLIC_URL_BASE + PUBLIC_URL_PATH_PREFIX + sid;
     showAuthMessage('公開しました。', 'success');
     queuePublishSuccessModal(publicUrl);
@@ -4369,6 +4584,7 @@ async function publishWithEditKey(sid) {
     }
     setStoredEditKey(sid, editKey);
     markPublishedSnapshot();
+    scheduleDraftSave(true);
     const publicUrl = PUBLIC_URL_BASE + PUBLIC_URL_PATH_PREFIX + sid;
     showAuthMessage('更新しました。', 'success');
     showPublishSuccessModal(publicUrl);
@@ -4400,6 +4616,7 @@ async function publishWithGoogle(sid) {
       return;
     }
     markPublishedSnapshot();
+    scheduleDraftSave(true);
     const publicUrl = PUBLIC_URL_BASE + PUBLIC_URL_PATH_PREFIX + sid;
     showAuthMessage('公開しました。', 'success');
     showPublishSuccessModal(publicUrl);
@@ -4412,6 +4629,8 @@ async function publishWithGoogle(sid) {
 }
 
 function applyPublicDataToBuilder(data, streamerId) {
+  draftSaveSuppressed = true;
+  clearTimeout(draftSaveTimer);
   streamerNameInput.value = data.streamerName || '';
   subtitleInput.value = data.subtitle || '';
   streamerIdInput.value = streamerId;
@@ -4435,6 +4654,7 @@ function applyPublicDataToBuilder(data, streamerId) {
   render();
   updateSelectedCount();
   markPublishedSnapshot();
+  finishExplicitEditorLoad();
 }
 
 async function verifyEditKeyAction() {
@@ -4605,12 +4825,16 @@ if (typeof ResizeObserver !== 'undefined') {
 renderTagAdmin();
 initEditTabs();
 initSearchTargetTabs();
-selectPreset(0);
-render();
-updateSelectedCount();
+const draftRestored = tryRestoreDraftOnBoot();
+if (!draftRestored) {
+  selectPreset(0);
+  render();
+  updateSelectedCount();
+}
 updatePreviewPanel();
 updateStreamerIdPreview();
 syncBuilderChromeInsets();
+draftBootComplete = true;
 refreshAuthMe();
 bootGoogleAuth(25);
 </script>

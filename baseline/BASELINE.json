@@ -1,15 +1,15 @@
 {
-  "label": "v1.0 使い方ガイド追加",
+  "label": "v1.0 ブラウザ内下書き自動保存",
   "establishedAt": "2026-08-17",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "v1.0 曲マーク仕様整理（おはこ/お気に入り/練習中）",
+    "label": "v1.0 使い方ガイド追加",
     "establishedAt": "2026-08-17",
     "files": {
       "index.html": {
-        "bytes": 386334,
-        "sha256": "e43ca70deb45626a6102c9cb30dae69a50bb412a4cb187a6dc3a053af3b8df44"
+        "bytes": 386441,
+        "sha256": "27eb6f82bfaf0f18fb900236478311e70e32983d934907902f0d38a75609b212"
       },
       "hiro.html": {
         "bytes": 26212,
@@ -19,8 +19,8 @@
   },
   "files": {
     "index.html": {
-      "bytes": 386441,
-      "sha256": "27eb6f82bfaf0f18fb900236478311e70e32983d934907902f0d38a75609b212"
+      "bytes": 392739,
+      "sha256": "9e99d4abef099fb747629aaffb52c571e83a45f92c3e47e5c43bef6d805b5caf"
     },
     "hiro.html": {
       "bytes": 26212,

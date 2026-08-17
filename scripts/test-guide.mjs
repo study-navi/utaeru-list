@@ -80,8 +80,10 @@ async function runIndexLink() {
 
 async function runFileChecks() {
   const guide = fs.readFileSync(path.join(ROOT, 'guide.html'), 'utf8');
-  if (!guide.includes('自動的にクラウドに保存される仕組みはありません')) fail('guide: 保存説明');
-  else ok('guide: 保存説明（自動クラウド保存なし）');
+  if (!guide.includes('クラウドへの自動保存はありません')) fail('guide: 保存説明');
+  else ok('guide: 保存説明（クラウド自動保存なし）');
+  if (!guide.includes('この端末に下書き保存済み')) fail('guide: 下書き説明');
+  else ok('guide: 下書き説明');
   if (!guide.includes('おはこ') || !guide.includes('お気に入り')) fail('guide: 曲マーク');
   else ok('guide: 曲マーク');
   if (guide.includes('localStorage') && guide.includes('自動保存されます')) fail('guide: 誤った自動保存表現');
