@@ -1636,6 +1636,47 @@
   .edit-key-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
   .link-google-row { margin-top: 12px; }
 
+  .owned-pages-section { margin: 14px 0 16px; }
+  .owned-pages-heading {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 10px;
+  }
+  .owned-pages-list { display: flex; flex-direction: column; gap: 10px; }
+  .owned-pages-empty { margin: 0; }
+  .owned-page-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+  .owned-page-id {
+    font-weight: 700;
+    font-size: 14px;
+    flex: 1 1 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .owned-page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+  .owned-page-actions .ui-btn {
+    flex: 1 1 calc(50% - 4px);
+    min-height: 44px;
+    min-width: 120px;
+    justify-content: center;
+    text-align: center;
+  }
+
   /* Phase 4A: 公開ページID（streamerId）入力 */
   .field-error {
     font-size: 13px; color: var(--error-text); background: var(--error-bg);
@@ -1992,7 +2033,11 @@
         <a class="ui-btn ui-btn-secondary" id="accountViewPage" href="#" target="_blank" rel="noopener noreferrer">公開ページを見る</a>
         <button type="button" class="ui-btn ui-btn-secondary" id="accountCopyUrl">URLをコピー</button>
       </div>
-      <p class="hint" id="ownedIdsHint"></p>
+      <div id="ownedPagesSection" class="owned-pages-section">
+        <p class="owned-pages-heading">あなたの公開ページ</p>
+        <div id="ownedPagesList" class="owned-pages-list" hidden></div>
+        <p id="ownedPagesEmpty" class="owned-pages-empty hint" hidden>まだ公開ページはありません</p>
+      </div>
       <div class="ui-stack">
         <button type="button" class="ui-btn ui-btn-primary" id="claimBtn" disabled>この公開ページIDを取得する</button>
         <p class="claim-status" id="claimStatus">基本情報で公開ページIDを入力し、Googleでログインしてください。</p>
@@ -2057,6 +2102,17 @@
         <button type="button" class="ui-btn ui-btn-secondary" id="copyEditKeyBtn">編集キーをコピー</button>
         <button type="button" class="ui-btn ui-btn-tertiary" id="editKeyIssuedCloseBtn">閉じる</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="loadPublicDataModal" hidden aria-modal="true">
+  <div class="modal-card" role="dialog" aria-labelledby="loadPublicDataTitle">
+    <h3 id="loadPublicDataTitle">公開済みデータを読み込みますか？</h3>
+    <p class="hint">現在の編集中データは、公開済みデータに置き換わります。</p>
+    <div class="modal-actions ui-stack" style="margin-top:14px;">
+      <button type="button" class="ui-btn ui-btn-secondary" id="loadPublicDataCancel">キャンセル</button>
+      <button type="button" class="ui-btn ui-btn-primary" id="loadPublicDataConfirm">読み込む</button>
     </div>
   </div>
 </div>
@@ -4317,6 +4373,92 @@ function updateLinkGooglePanel() {
   panel.style.display = show ? 'block' : 'none';
 }
 
+function renderOwnedPagesList(owned) {
+  const list = document.getElementById('ownedPagesList');
+  const empty = document.getElementById('ownedPagesEmpty');
+  if (!list || !empty) return;
+
+  if (!owned.length) {
+    list.innerHTML = '';
+    list.hidden = true;
+    empty.hidden = false;
+    empty.textContent = 'まだ公開ページはありません';
+    return;
+  }
+
+  empty.hidden = true;
+  list.hidden = false;
+  list.innerHTML = owned.map((sid) => {
+    const url = getPublicPageUrl(sid);
+    return `<div class="owned-page-item">
+      <span class="owned-page-id">${escapeHtml(sid)}</span>
+      <div class="owned-page-actions">
+        <a class="ui-btn ui-btn-secondary owned-page-view" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">見る</a>
+        <button type="button" class="ui-btn ui-btn-primary owned-page-edit" data-streamer-id="${escapeHtml(sid)}">編集する</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function shouldConfirmBeforeLoadPublicData() {
+  if (readDraftEnvelope()) return true;
+  const payload = buildDraftDataPayload();
+  return !(
+    !payload.streamerName.trim()
+    && !payload.streamerId
+    && !payload.subtitle.trim()
+    && payload.selectedSongIds.length === 0
+    && Object.keys(payload.songMeta).length === 0
+  );
+}
+
+let pendingLoadStreamerId = null;
+
+function closeLoadPublicDataModal() {
+  const modal = document.getElementById('loadPublicDataModal');
+  if (modal) modal.hidden = true;
+  pendingLoadStreamerId = null;
+}
+
+async function executeLoadOwnedPageForEdit(streamerId) {
+  if (!authUser || !isStreamerIdOwned(streamerId)) {
+    showAuthMessage('この公開ページを編集する権限がありません。', 'error');
+    return;
+  }
+  authLoading = true;
+  updateAuthUI();
+  showAuthMessage('公開データを読み込み中…', 'info');
+  try {
+    const { res, data } = await apiFetch('/api/public/' + encodeURIComponent(streamerId));
+    if (!res.ok || !data) {
+      showAuthMessage(apiErrorMessage(res.status, data), 'error');
+      return;
+    }
+    setOnlineMode('google', { openPanel: false });
+    applyPublicDataToBuilder(data, streamerId);
+    showAuthMessage('公開済みデータを読み込みました。', 'success');
+    closeAccountPanel();
+  } catch (err) {
+    showAuthMessage('読み込みに失敗しました。ネットワークを確認してください。', 'error');
+  } finally {
+    authLoading = false;
+    updateAuthUI();
+  }
+}
+
+async function requestLoadOwnedPageForEdit(streamerId) {
+  if (!authUser || !isStreamerIdOwned(streamerId)) {
+    showAuthMessage('この公開ページを編集する権限がありません。', 'error');
+    return;
+  }
+  if (shouldConfirmBeforeLoadPublicData()) {
+    pendingLoadStreamerId = streamerId;
+    document.getElementById('loadPublicDataModal').hidden = false;
+    return;
+  }
+  await executeLoadOwnedPageForEdit(streamerId);
+}
+
 function updateAuthUI() {
   const signedOut = document.getElementById('authSignedOut');
   const signedIn = document.getElementById('authSignedIn');
@@ -4339,12 +4481,11 @@ function updateAuthUI() {
     signedIn.style.display = 'block';
     document.getElementById('authUserEmail').textContent = authUser.email || authUser.name || 'ログイン中';
     const owned = authUser.ownedStreamerIds;
-    document.getElementById('ownedIdsHint').textContent = owned.length
-      ? `取得済みの公開ページID: ${owned.join(', ')}`
-      : 'まだ公開ページIDを取得していません。基本情報でIDを入力し、下のボタンから取得してください。';
+    renderOwnedPagesList(owned);
   } else {
     signedOut.style.display = 'block';
     signedIn.style.display = 'none';
+    renderOwnedPagesList([]);
   }
   const sid = streamerIdInput.value.trim();
   const sidCheck = validateStreamerId(sid);
@@ -4369,9 +4510,16 @@ function updateAuthUI() {
 }
 
 async function refreshAuthMe(explicitToken) {
+  const tokenAtStart = explicitToken || getStoredAccessToken();
   try {
     const { res, data } = await fetchAuthMe(explicitToken);
     if (res.status === 401 || !res.ok) {
+      const currentToken = getStoredAccessToken();
+      if (explicitToken) {
+        if (currentToken !== explicitToken) return;
+      } else if (tokenAtStart !== currentToken) {
+        return;
+      }
       if (getStoredAccessToken()) setStoredAccessToken(null);
       authUser = null;
       updateAuthUI();
@@ -4827,6 +4975,21 @@ document.getElementById('manageModeModal').addEventListener('click', (e) => {
 
 document.getElementById('logoutBtn').addEventListener('click', logoutUser);
 document.getElementById('claimBtn').addEventListener('click', claimStreamerIdAction);
+document.getElementById('ownedPagesList')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.owned-page-edit');
+  if (!btn) return;
+  const sid = btn.getAttribute('data-streamer-id');
+  if (sid) requestLoadOwnedPageForEdit(sid);
+});
+document.getElementById('loadPublicDataCancel')?.addEventListener('click', closeLoadPublicDataModal);
+document.getElementById('loadPublicDataConfirm')?.addEventListener('click', async () => {
+  const sid = pendingLoadStreamerId;
+  closeLoadPublicDataModal();
+  if (sid) await executeLoadOwnedPageForEdit(sid);
+});
+document.getElementById('loadPublicDataModal')?.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('loadPublicDataModal')) closeLoadPublicDataModal();
+});
 document.getElementById('publishBtn').addEventListener('click', publishOnline);
 document.getElementById('deletePageBtn')?.addEventListener('click', openDeletePageModal);
 document.getElementById('deleteCancelBtn')?.addEventListener('click', closeDeletePageModal);
@@ -4842,7 +5005,8 @@ document.getElementById('deletePageModal')?.addEventListener('click', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
-  if (!document.getElementById('deletePageModal')?.hidden) closeDeletePageModal();
+  if (!document.getElementById('loadPublicDataModal')?.hidden) closeLoadPublicDataModal();
+  else if (!document.getElementById('deletePageModal')?.hidden) closeDeletePageModal();
   else if (!document.getElementById('publishSuccessModal')?.hidden) closePublishSuccessModal();
   else if (!document.getElementById('editKeyIssuedModal')?.hidden) clearIssuedEditKeyDisplay();
   else if (!document.getElementById('manageModeModal')?.hidden) closeManageModeModal();
