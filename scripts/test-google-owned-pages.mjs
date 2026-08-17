@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Google所有公開ページの「編集する」フロー回帰テスト（OAuth/APIはモック）
+ * Google所有公開ページの編集セッション自動復元フロー回帰テスト（OAuth/APIはモック）
  */
 import { chromium } from 'playwright';
 import path from 'node:path';
@@ -47,11 +47,21 @@ async function mockAuth(page, ownedIds = []) {
     body: JSON.stringify({ email: 'owned-test@example.com', accessToken: 'mock.token' }),
   }));
 
-  await page.route('**/api/auth/me', (route) => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({ email: 'owned-test@example.com', ownedStreamerIds: ownedIds }),
-  }));
+  await page.route('**/api/auth/me', (route) => {
+    const auth = route.request().headers()['authorization'];
+    if (!auth) {
+      return route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'unauthorized' }),
+      });
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ email: 'owned-test@example.com', ownedStreamerIds: ownedIds }),
+    });
+  });
 
   await page.route('**/api/public/**', async (route) => {
     if (route.request().method() !== 'GET') {
@@ -80,11 +90,17 @@ async function loginGoogle(page) {
     setOnlineMode('google', { openPanel: true });
     await completeUtaeruLogin({ googleAccessToken: 'mock' });
   });
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(500);
 }
 
-async function setupEditor(page) {
+async function setupEditor(page, opts = {}) {
   await addBypassStart(page);
+  if (opts.clearDraft !== false) {
+    await page.addInitScript(() => {
+      localStorage.removeItem('utalis_draft_v1');
+      localStorage.removeItem('utalis_active_streamer_v1');
+    });
+  }
   await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.waitForFunction(() => typeof MASTER_SONGS !== 'undefined', { timeout: 15000 });
   await page.waitForFunction(() => document.documentElement.dataset.utalisEntryReady === '1', { timeout: 15000 });
@@ -111,9 +127,15 @@ async function testA() {
   const after = await page.evaluate(() => ({
     name: streamerNameInput.value,
     count: selectedKeys.size,
+    draftModal: !document.getElementById('googleDraftChoiceModal').hidden,
   }));
-  if (JSON.stringify(before) === JSON.stringify(after)) ok('A: ログイン後も編集内容維持');
-  else fail('A: ログイン後も編集内容維持', `${JSON.stringify(before)} → ${JSON.stringify(after)}`);
+  if (JSON.stringify(before) === JSON.stringify({ name: after.name, count: after.count })) {
+    ok('A: ログイン後も編集内容維持');
+  } else {
+    fail('A: ログイン後も編集内容維持', `${JSON.stringify(before)} → ${JSON.stringify(after)}`);
+  }
+  if (after.draftModal) ok('A: 編集中データあり → 下書き選択モーダル');
+  else fail('A: 編集中データあり → 下書き選択モーダル');
   if (pub.getPublicGetCount() === 0) ok('A/J: ログインだけでは GET /api/public なし');
   else fail('A/J: ログインだけでは GET /api/public なし', String(pub.getPublicGetCount()));
   await browser.close();
@@ -122,41 +144,43 @@ async function testA() {
 async function testB() {
   const browser = await chromium.launch();
   const page = await browser.newPage();
-  await mockAuth(page, ['hiro']);
+  const pub = await mockAuth(page, ['hiro']);
   await setupEditor(page);
   await loginGoogle(page);
   const heading = await page.textContent('.owned-pages-heading');
   if (heading?.includes('あなたの公開ページ')) ok('B: あなたの公開ページ 見出し');
   else fail('B: あなたの公開ページ 見出し', heading);
-  const idText = await page.textContent('.owned-page-id');
-  if (idText === 'hiro') ok('B: 1件所有 hiro 表示');
-  else fail('B: 1件所有 hiro 表示', idText);
-  await page.click('.owned-page-edit');
-  await page.waitForTimeout(400);
   const after = await page.evaluate(() => ({
     name: streamerNameInput.value,
     sid: streamerIdInput.value,
     count: selectedKeys.size,
+    active: activeOwnedStreamerId,
   }));
   if (after.name === 'サーバー上の配信者名' && after.sid === 'hiro' && after.count === 13) {
-    ok('B: 編集する → 公開データ反映');
+    ok('B: 1件所有 → 自動で公開データ反映');
   } else {
-    fail('B: 編集する → 公開データ反映', JSON.stringify(after));
+    fail('B: 1件所有 → 自動で公開データ反映', JSON.stringify(after));
   }
+  if (after.active === 'hiro') ok('B: activeOwnedStreamerId = hiro');
+  else fail('B: activeOwnedStreamerId = hiro', after.active);
+  if (pub.getPublicGetCount() === 1) ok('B: GET /api/public/hiro 1回');
+  else fail('B: GET /api/public/hiro 1回', String(pub.getPublicGetCount()));
   await browser.close();
 }
 
 async function testC() {
   const browser = await chromium.launch();
   const page = await browser.newPage();
-  await mockAuth(page, ['alpha', 'beta']);
+  const pub = await mockAuth(page, ['alpha', 'beta']);
   await setupEditor(page);
   await loginGoogle(page);
-  const items = await page.$$('.owned-page-item');
-  if (items.length === 2) ok('C: 複数所有 2件表示');
-  else fail('C: 複数所有 2件表示', String(items.length));
-  await page.locator('.owned-page-edit[data-streamer-id="beta"]').click();
-  await page.waitForTimeout(400);
+  const pickVisible = await page.evaluate(() => !document.getElementById('googlePagePickModal').hidden);
+  if (pickVisible) ok('C: 複数所有 → 自動選択せず選択UI');
+  else fail('C: 複数所有 → 自動選択せず選択UI');
+  if (pub.getPublicGetCount() === 0) ok('C: 複数所有 → ログイン時 GET なし');
+  else fail('C: 複数所有 → ログイン時 GET なし', String(pub.getPublicGetCount()));
+  await page.click('.google-page-pick-edit[data-streamer-id="beta"]');
+  await page.waitForTimeout(600);
   const sid = await page.inputValue('#streamerIdInput');
   if (sid === 'beta') ok('C: beta を選択して編集可能');
   else fail('C: beta を選択して編集可能', sid);
@@ -172,9 +196,9 @@ async function testD() {
   const empty = await page.textContent('#ownedPagesEmpty');
   if (empty?.includes('まだ公開ページはありません')) ok('D: 0件 空表示');
   else fail('D: 0件 空表示', empty);
-  const claimDisabled = await page.isDisabled('#claimBtn');
-  if (!claimDisabled) ok('D: 新規 claim 可能（ID入力時）');
-  else ok('D: claim は ID未入力時 disabled（現仕様）');
+  const active = await page.evaluate(() => activeOwnedStreamerId);
+  if (!active) ok('D: 0件 → activeStreamerId なし');
+  else fail('D: 0件 → activeStreamerId なし', active);
   await browser.close();
 }
 
@@ -182,21 +206,25 @@ async function testE() {
   const browser = await chromium.launch();
   const page = await browser.newPage();
   await mockAuth(page, ['hiro']);
-  await setupEditor(page);
+  await setupEditor(page, { clearDraft: true });
   await page.fill('#streamerName', '下書き保持テスト');
+  await page.fill('#streamerIdInput', 'hiro');
   await page.evaluate(() => scheduleDraftSave(true));
   await page.waitForTimeout(600);
   await loginGoogle(page);
-  await page.click('.owned-page-edit');
+  const modalVisible = await page.evaluate(() => !document.getElementById('googleDraftChoiceModal').hidden);
+  if (modalVisible) ok('E: 下書きあり → 下書き選択モーダル（自動上書きなし）');
+  else fail('E: 下書きあり → 下書き選択モーダル');
+  await page.click('#googleDraftContinueBtn');
   await page.waitForTimeout(200);
-  const modalVisible = await page.evaluate(() => !document.getElementById('loadPublicDataModal').hidden);
-  if (modalVisible) ok('E: 下書きあり → 確認モーダル');
-  else fail('E: 下書きあり → 確認モーダル');
-  await page.click('#loadPublicDataCancel');
-  await page.waitForTimeout(200);
-  const name = await page.inputValue('#streamerName');
-  if (name === '下書き保持テスト') ok('E: キャンセル → 下書き維持');
-  else fail('E: キャンセル → 下書き維持', name);
+  const state = await page.evaluate(() => ({
+    name: streamerNameInput.value,
+    active: activeOwnedStreamerId,
+  }));
+  if (state.name === '下書き保持テスト') ok('E: 下書きを続ける → 内容維持');
+  else fail('E: 下書きを続ける → 内容維持', state.name);
+  if (state.active === 'hiro') ok('E: 下書きID一致 → 更新対象 hiro');
+  else fail('E: 下書きID一致 → 更新対象 hiro', state.active);
   await browser.close();
 }
 
@@ -204,22 +232,20 @@ async function testF() {
   const browser = await chromium.launch();
   const page = await browser.newPage();
   await mockAuth(page, ['hiro']);
-  await setupEditor(page);
+  await setupEditor(page, { clearDraft: true });
   await page.fill('#streamerName', '置換前');
   await page.evaluate(() => scheduleDraftSave(true));
   await page.waitForTimeout(600);
   await loginGoogle(page);
-  await page.click('.owned-page-edit');
-  await page.waitForTimeout(200);
-  await page.click('#loadPublicDataConfirm');
+  await page.click('#googleDraftLoadPublishedBtn');
   await page.waitForTimeout(400);
   const name = await page.inputValue('#streamerName');
   const draft = await page.evaluate(() => {
     const raw = localStorage.getItem('utalis_draft_v1');
     return raw ? JSON.parse(raw).data.streamerName : null;
   });
-  if (name === 'サーバー上の配信者名') ok('F: 読み込む → サーバーデータ適用');
-  else fail('F: 読み込む → サーバーデータ適用', name);
+  if (name === 'サーバー上の配信者名') ok('F: 公開済み読込 → サーバーデータ適用');
+  else fail('F: 公開済み読込 → サーバーデータ適用', name);
   if (draft === 'サーバー上の配信者名') ok('F: draft もサーバー内容へ更新');
   else fail('F: draft もサーバー内容へ更新', draft);
   await browser.close();
@@ -227,17 +253,13 @@ async function testF() {
 
 async function testG() {
   const browser = await chromium.launch();
-  const ctx = await browser.newContext();
-  const page = await ctx.newPage();
+  const page = await browser.newPage();
   await mockAuth(page, ['hiro']);
   await setupEditor(page);
-  await page.evaluate(() => localStorage.removeItem('utalis_draft_v1'));
   await loginGoogle(page);
-  await page.click('.owned-page-edit');
-  await page.waitForTimeout(400);
   const count = await page.evaluate(() => selectedKeys.size);
-  if (count === 13) ok('G: localStorageなし → hiro 13曲復元');
-  else fail('G: localStorageなし → hiro 13曲復元', String(count));
+  if (count === 13) ok('G: 下書きなし → hiro 13曲自動復元');
+  else fail('G: 下書きなし → hiro 13曲自動復元', String(count));
   await browser.close();
 }
 
@@ -250,11 +272,21 @@ async function testH() {
     contentType: 'application/json',
     body: JSON.stringify({ email: 'owned-test@example.com', accessToken: 'mock.token' }),
   }));
-  await page.route('**/api/auth/me', (route) => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({ email: 'owned-test@example.com', ownedStreamerIds: ['hiro'] }),
-  }));
+  await page.route('**/api/auth/me', (route) => {
+    const auth = route.request().headers()['authorization'];
+    if (!auth) {
+      return route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'unauthorized' }),
+      });
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ email: 'owned-test@example.com', ownedStreamerIds: ['hiro'] }),
+    });
+  });
   await page.route('**/api/public/**', async (route) => {
     if (route.request().method() === 'PUT') {
       putUrl = route.request().url();
@@ -274,21 +306,25 @@ async function testH() {
   });
   await setupEditor(page);
   await loginGoogle(page);
-  await page.click('.owned-page-edit');
-  await page.waitForTimeout(400);
   await page.evaluate(() => {
-    selectedKeys.clear();
-    for (const s of MASTER_SONGS.slice(0, 13)) selectedKeys.add(keyOf(s));
     streamerNameInput.value = '更新後の配信者名';
     render();
     updateSelectedCount();
   });
-  await page.evaluate(async () => {
-    await publishOnline();
-  });
+  await page.evaluate(async () => { await publishOnline(); });
   await page.waitForTimeout(400);
-  if (putUrl && putUrl.includes('/api/public/hiro')) ok('H: 読み込み後の公開は PUT /api/public/hiro');
-  else fail('H: 読み込み後の公開は PUT /api/public/hiro', putUrl);
+  if (putUrl && putUrl.includes('/api/public/hiro')) ok('H: 自動読込後の公開は PUT /api/public/hiro');
+  else fail('H: 自動読込後の公開は PUT /api/public/hiro', putUrl);
+  const afterPub = await page.evaluate(() => ({
+    active: activeOwnedStreamerId,
+    sid: streamerIdInput.value,
+    auth: !!authUser,
+  }));
+  if (afterPub.active === 'hiro' && afterPub.sid === 'hiro' && afterPub.auth) {
+    ok('H: 公開後も編集セッション維持');
+  } else {
+    fail('H: 公開後も編集セッション維持', JSON.stringify(afterPub));
+  }
   await browser.close();
 }
 
@@ -296,17 +332,23 @@ async function testI() {
   const browser = await chromium.launch();
   const page = await browser.newPage();
   await mockAuth(page, ['hiro']);
-  await setupEditor(page);
+  await setupEditor(page, { clearDraft: true });
   await page.fill('#streamerName', 'ログアウト後も残る');
   await page.evaluate(() => scheduleDraftSave(true));
   await page.waitForTimeout(600);
   await loginGoogle(page);
   await page.evaluate(async () => { await logoutUser(); });
   await page.waitForTimeout(300);
-  const draft = await page.evaluate(() => localStorage.getItem('utalis_draft_v1'));
-  const name = await page.inputValue('#streamerName');
-  if (draft && name === 'ログアウト後も残る') ok('I: ログアウト後も下書き・編集内容維持');
+  const state = await page.evaluate(() => ({
+    draft: localStorage.getItem('utalis_draft_v1'),
+    active: localStorage.getItem('utalis_active_streamer_v1'),
+    name: streamerNameInput.value,
+    auth: authUser,
+  }));
+  if (state.draft && state.name === 'ログアウト後も残る') ok('I: ログアウト後も下書き・編集内容維持');
   else fail('I: ログアウト後も下書き・編集内容維持');
+  if (!state.active && !state.auth) ok('I: ログアウト → activeStreamerId・auth 解除');
+  else fail('I: ログアウト → activeStreamerId・auth 解除', JSON.stringify(state));
   await browser.close();
 }
 
@@ -320,11 +362,11 @@ async function testMobileLayout() {
     await setupEditor(page);
     await loginGoogle(page);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
-    const btnBox = await page.locator('.owned-page-edit').boundingBox();
+    const activeLine = await page.textContent('#activeEditorPageLine');
     if (!overflow) ok(`${width}px: 横スクロールなし`);
     else fail(`${width}px: 横スクロールなし`);
-    if (btnBox && btnBox.height >= 40) ok(`${width}px: 編集するボタン十分な高さ`);
-    else fail(`${width}px: 編集するボタン十分な高さ`, JSON.stringify(btnBox));
+    if (activeLine?.includes('hiro')) ok(`${width}px: 現在編集中表示`);
+    else fail(`${width}px: 現在編集中表示`, activeLine);
     if (!errors.length) ok(`${width}px: JSエラーなし`);
     else fail(`${width}px: JSエラーなし`, errors.join('; '));
     await browser.close();

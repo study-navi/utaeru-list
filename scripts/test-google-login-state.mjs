@@ -107,6 +107,11 @@ async function mockAuthRoutes(page, opts = {}) {
 
   await page.route('**/api/auth/me', async (route) => {
     meCalls += 1;
+    const auth = route.request().headers()['authorization'];
+    if (!auth) {
+      await route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: 'unauthorized' }) });
+      return;
+    }
     if (delayMeMs > 0) await new Promise((r) => setTimeout(r, delayMeMs));
     if (!meOk) {
       await route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: 'unauthorized' }) });

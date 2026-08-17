@@ -1669,6 +1669,42 @@
     gap: 8px;
     width: 100%;
   }
+  .owned-page-item.is-active {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  }
+  .owned-page-active-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-left: 6px;
+  }
+  .account-active-page {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .account-active-page strong {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+  .google-page-pick-list { display: flex; flex-direction: column; gap: 10px; }
+  .google-page-pick-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+  .google-page-pick-id {
+    font-weight: 700;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
   .owned-page-actions .ui-btn {
     flex: 1 1 calc(50% - 4px);
     min-height: 44px;
@@ -2118,7 +2154,11 @@
     <div id="authSignedIn" style="display:none;">
       <div class="ui-status">
         <p class="account-email" id="authUserEmail"></p>
-        <p class="account-status-line">Googleアカウントで管理中</p>
+        <p class="account-status-line">Googleでログイン中</p>
+        <p class="account-active-page" id="activeEditorPageLine" hidden>現在編集中：<strong id="activeEditorPageId"></strong></p>
+      </div>
+      <div class="ui-stack" id="switchOwnedPageWrap" style="display:none; margin-bottom: 8px;">
+        <button type="button" class="ui-btn ui-btn-secondary" id="switchOwnedPageBtn">ページを切り替える</button>
       </div>
       <div class="ui-stack" id="accountQuickActions" style="display:none">
         <a class="ui-btn ui-btn-secondary" id="accountViewPage" href="#" target="_blank" rel="noopener noreferrer">公開ページを見る</a>
@@ -2193,6 +2233,28 @@
         <button type="button" class="ui-btn ui-btn-secondary" id="copyEditKeyBtn">編集キーをコピー</button>
         <button type="button" class="ui-btn ui-btn-tertiary" id="editKeyIssuedCloseBtn">閉じる</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="googleDraftChoiceModal" hidden aria-modal="true">
+  <div class="modal-card" role="dialog" aria-labelledby="googleDraftChoiceTitle">
+    <h3 id="googleDraftChoiceTitle">編集中の下書きがあります</h3>
+    <p class="hint">この端末に保存された編集中データがあります。続けるか、公開済みデータを読み込むか選んでください。</p>
+    <div class="modal-actions ui-stack" style="margin-top:14px;">
+      <button type="button" class="ui-btn ui-btn-primary" id="googleDraftContinueBtn">この下書きを続ける</button>
+      <button type="button" class="ui-btn ui-btn-secondary" id="googleDraftLoadPublishedBtn">公開済みデータを読み込む</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="googlePagePickModal" hidden aria-modal="true">
+  <div class="modal-card" role="dialog" aria-labelledby="googlePagePickTitle">
+    <h3 id="googlePagePickTitle">編集するページを選択</h3>
+    <p class="hint">Googleアカウントで管理している公開ページです。</p>
+    <div id="googlePagePickList" class="google-page-pick-list"></div>
+    <div class="modal-actions ui-stack" style="margin-top:14px;">
+      <button type="button" class="ui-btn ui-btn-secondary" id="googlePagePickCancel">キャンセル</button>
     </div>
   </div>
 </div>
@@ -2684,6 +2746,7 @@ let lastFiltered = [];
 const DRAFT_STORAGE_KEY = 'utalis_draft_v1';
 const START_CHOICE_KEY = 'utalis_start_choice_v1';
 const START_CHOICE_GUEST = 'guest';
+const ACTIVE_STREAMER_KEY = 'utalis_active_streamer_v1';
 const DRAFT_VERSION = 1;
 const DRAFT_DEBOUNCE_MS = 500;
 let draftSaveTimer = null;
@@ -3975,6 +4038,9 @@ let issuedEditKeyPlaintext = null;
 let pendingPublishSuccessUrl = null;
 let publishedSnapshot = null;
 let publishedStreamerId = null;
+let activeOwnedStreamerId = null;
+let googleEditSessionInitialized = false;
+let pendingGoogleDraftChoiceStreamerId = null;
 const SESSION_TOKEN_KEY = 'utaeru_access_token';
 const EDIT_KEY_STORAGE_PREFIX = 'utaeru_edit_key:';
 
@@ -4061,7 +4127,10 @@ function getPublicPageUrl(sid) {
 }
 
 function getManagementModeLabel() {
-  if (onlineMode === 'google' && authUser) return 'Googleアカウントで管理中';
+  if (onlineMode === 'google' && authUser) {
+    if (activeOwnedStreamerId) return 'Googleでログイン中 — 編集中: ' + activeOwnedStreamerId;
+    return 'Googleでログイン中';
+  }
   if (onlineMode === 'edit-key' && editKeyVerified) return '編集キーで管理中';
   if (onlineMode === 'anonymous') return 'ログインなしで管理中';
   return '';
@@ -4507,7 +4576,9 @@ async function initAppEntry() {
 
   if (authUser) {
     dismissStartScreen();
+    setOnlineMode('google', { openPanel: false });
     finishEditorBootWithDraft();
+    await syncGoogleEditSessionAfterAuth({ fromBoot: true });
     document.documentElement.dataset.utalisEntryReady = '1';
     return;
   }
@@ -4526,6 +4597,200 @@ async function initAppEntry() {
   updatePreviewPanel();
   updateStreamerIdPreview();
   document.documentElement.dataset.utalisEntryReady = '1';
+}
+
+function getStoredActiveStreamerId() {
+  try {
+    const raw = localStorage.getItem(ACTIVE_STREAMER_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.streamerId === 'string') {
+      const sid = parsed.streamerId.trim();
+      return sid || null;
+    }
+    if (typeof raw === 'string' && !raw.startsWith('{')) {
+      const sid = raw.trim();
+      return sid || null;
+    }
+    return null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function setStoredActiveStreamerId(streamerId) {
+  if (!streamerId) {
+    clearStoredActiveStreamerId();
+    return;
+  }
+  try {
+    localStorage.setItem(ACTIVE_STREAMER_KEY, JSON.stringify({ streamerId }));
+  } catch (err) { /* ignore */ }
+}
+
+function clearStoredActiveStreamerId() {
+  try { localStorage.removeItem(ACTIVE_STREAMER_KEY); } catch (err) { /* ignore */ }
+}
+
+function clearGoogleActiveEditContext() {
+  activeOwnedStreamerId = null;
+  clearStoredActiveStreamerId();
+  googleEditSessionInitialized = false;
+  pendingGoogleDraftChoiceStreamerId = null;
+}
+
+function reconcileActiveOwnedStreamerFromStorage() {
+  if (!authUser) {
+    activeOwnedStreamerId = null;
+    return;
+  }
+  const stored = getStoredActiveStreamerId();
+  if (stored && authUser.ownedStreamerIds.includes(stored)) {
+    activeOwnedStreamerId = stored;
+    return;
+  }
+  if (activeOwnedStreamerId && !authUser.ownedStreamerIds.includes(activeOwnedStreamerId)) {
+    activeOwnedStreamerId = null;
+    clearStoredActiveStreamerId();
+  }
+}
+
+function setActiveOwnedStreamerId(streamerId) {
+  if (!authUser || !isStreamerIdOwned(streamerId)) return false;
+  activeOwnedStreamerId = streamerId;
+  setStoredActiveStreamerId(streamerId);
+  updateAuthUI();
+  updateManagementBar();
+  return true;
+}
+
+function getDraftStreamerIdFromEditor() {
+  const envelope = readDraftEnvelope();
+  if (envelope?.data?.streamerId) {
+    const sid = String(envelope.data.streamerId).trim();
+    if (sid) return sid;
+  }
+  const payload = buildDraftDataPayload();
+  return payload.streamerId ? String(payload.streamerId).trim() : '';
+}
+
+function resolveOwnedActiveStreamerId(owned) {
+  if (!owned.length) return null;
+  const stored = getStoredActiveStreamerId();
+  if (stored && owned.includes(stored)) return stored;
+  if (owned.length === 1) return owned[0];
+  return null;
+}
+
+function closeGoogleDraftChoiceModal() {
+  const modal = document.getElementById('googleDraftChoiceModal');
+  if (modal) modal.hidden = true;
+  pendingGoogleDraftChoiceStreamerId = null;
+}
+
+function closeGooglePagePickModal() {
+  const modal = document.getElementById('googlePagePickModal');
+  if (modal) modal.hidden = true;
+}
+
+function showGooglePagePickModal(owned) {
+  const list = document.getElementById('googlePagePickList');
+  const modal = document.getElementById('googlePagePickModal');
+  if (!list || !modal) return;
+  list.innerHTML = owned.map((sid) => {
+    const active = sid === activeOwnedStreamerId ? ' <span class="owned-page-active-badge">編集中</span>' : '';
+    return `<div class="google-page-pick-item">
+      <span class="google-page-pick-id">${escapeHtml(sid)}${active}</span>
+      <button type="button" class="ui-btn ui-btn-primary google-page-pick-edit" data-streamer-id="${escapeHtml(sid)}">編集</button>
+    </div>`;
+  }).join('');
+  modal.hidden = false;
+}
+
+function continueGoogleDraftChoice() {
+  const targetSid = pendingGoogleDraftChoiceStreamerId;
+  closeGoogleDraftChoiceModal();
+  setOnlineMode('google', { openPanel: false });
+  const draftSid = getDraftStreamerIdFromEditor();
+  if (draftSid && isStreamerIdOwned(draftSid)) {
+    setActiveOwnedStreamerId(draftSid);
+    if (streamerIdInput.value.trim() !== draftSid) {
+      streamerIdInput.value = draftSid;
+      updateStreamerIdPreview();
+    }
+    showAuthMessage('下書きを続けます。', 'success');
+    return;
+  }
+  if (targetSid && isStreamerIdOwned(targetSid)) {
+    showAuthMessage('下書きを続けます（公開ページIDが所有ページと一致しないため、更新対象は未設定です）。', 'info');
+    return;
+  }
+  showAuthMessage('下書きを続けます。', 'success');
+}
+
+async function loadPublishedFromGoogleDraftChoice() {
+  const sid = pendingGoogleDraftChoiceStreamerId;
+  closeGoogleDraftChoiceModal();
+  if (sid) await executeLoadOwnedPageForEdit(sid);
+}
+
+async function syncGoogleEditSessionAfterAuth(opts = {}) {
+  if (!authUser) return;
+  if (opts.force) googleEditSessionInitialized = false;
+  if (googleEditSessionInitialized && !opts.force) return;
+
+  const owned = authUser.ownedStreamerIds;
+  setOnlineMode('google', { openPanel: false });
+  reconcileActiveOwnedStreamerFromStorage();
+
+  if (!owned.length) {
+    clearGoogleActiveEditContext();
+    updateAuthUI();
+    googleEditSessionInitialized = true;
+    return;
+  }
+
+  if (owned.length > 1) {
+    const resolved = resolveOwnedActiveStreamerId(owned);
+    if (resolved) {
+      await activateOwnedPageForEdit(resolved, { fromSync: true });
+    } else {
+      showGooglePagePickModal(owned);
+    }
+    googleEditSessionInitialized = true;
+    updateAuthUI();
+    return;
+  }
+
+  await activateOwnedPageForEdit(owned[0], { fromSync: true });
+  googleEditSessionInitialized = true;
+  updateAuthUI();
+}
+
+async function activateOwnedPageForEdit(streamerId, opts = {}) {
+  if (!authUser || !isStreamerIdOwned(streamerId)) {
+    showAuthMessage('この公開ページを編集する権限がありません。', 'error');
+    return false;
+  }
+
+  if (
+    !opts.forceReload
+    && activeOwnedStreamerId === streamerId
+    && streamerIdInput.value.trim() === streamerId
+    && selectedKeys.size > 0
+  ) {
+    setActiveOwnedStreamerId(streamerId);
+    if (!opts.fromSync) closeAccountPanel();
+    return true;
+  }
+
+  if (shouldConfirmBeforeLoadPublicData()) {
+    pendingGoogleDraftChoiceStreamerId = streamerId;
+    document.getElementById('googleDraftChoiceModal').hidden = false;
+    return false;
+  }
+
+  return await executeLoadOwnedPageForEdit(streamerId, opts);
 }
 
 function normalizeOwnedIds(data) {
@@ -4592,18 +4857,35 @@ function renderOwnedPagesList(owned) {
   list.hidden = false;
   list.innerHTML = owned.map((sid) => {
     const url = getPublicPageUrl(sid);
-    return `<div class="owned-page-item">
+    const isActive = sid === activeOwnedStreamerId;
+    const editBtn = isActive
+      ? '<span class="owned-page-active-badge">編集中</span>'
+      : `<button type="button" class="ui-btn ui-btn-primary owned-page-edit" data-streamer-id="${escapeHtml(sid)}">編集</button>`;
+    return `<div class="owned-page-item${isActive ? ' is-active' : ''}">
       <span class="owned-page-id">${escapeHtml(sid)}</span>
       <div class="owned-page-actions">
         <a class="ui-btn ui-btn-secondary owned-page-view" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">見る</a>
-        <button type="button" class="ui-btn ui-btn-primary owned-page-edit" data-streamer-id="${escapeHtml(sid)}">編集する</button>
+        ${editBtn}
       </div>
     </div>`;
   }).join('');
 }
 
+function draftEnvelopeHasEditorContent(envelope) {
+  if (!envelope?.data || typeof envelope.data !== 'object') return false;
+  const d = envelope.data;
+  return !!(
+    (typeof d.streamerName === 'string' && d.streamerName.trim())
+    || d.streamerId
+    || (typeof d.subtitle === 'string' && d.subtitle.trim())
+    || (Array.isArray(d.selectedSongIds) && d.selectedSongIds.length > 0)
+    || (d.songMeta && typeof d.songMeta === 'object' && Object.keys(d.songMeta).length > 0)
+  );
+}
+
 function shouldConfirmBeforeLoadPublicData() {
-  if (readDraftEnvelope()) return true;
+  const envelope = readDraftEnvelope();
+  if (draftEnvelopeHasEditorContent(envelope)) return true;
   const payload = buildDraftDataPayload();
   return !(
     !payload.streamerName.trim()
@@ -4622,26 +4904,31 @@ function closeLoadPublicDataModal() {
   pendingLoadStreamerId = null;
 }
 
-async function executeLoadOwnedPageForEdit(streamerId) {
+async function executeLoadOwnedPageForEdit(streamerId, opts = {}) {
   if (!authUser || !isStreamerIdOwned(streamerId)) {
     showAuthMessage('この公開ページを編集する権限がありません。', 'error');
-    return;
+    return false;
   }
   authLoading = true;
   updateAuthUI();
-  showAuthMessage('公開データを読み込み中…', 'info');
+  if (!opts.silent) showAuthMessage('公開データを読み込み中…', 'info');
   try {
     const { res, data } = await apiFetch('/api/public/' + encodeURIComponent(streamerId));
     if (!res.ok || !data) {
-      showAuthMessage(apiErrorMessage(res.status, data), 'error');
-      return;
+      if (!opts.silent) showAuthMessage(apiErrorMessage(res.status, data), 'error');
+      return false;
     }
     setOnlineMode('google', { openPanel: false });
     applyPublicDataToBuilder(data, streamerId);
-    showAuthMessage('公開済みデータを読み込みました。', 'success');
-    closeAccountPanel();
+    setActiveOwnedStreamerId(streamerId);
+    if (!opts.silent) {
+      showAuthMessage('公開済みデータを読み込みました。', 'success');
+      closeAccountPanel();
+    }
+    return true;
   } catch (err) {
-    showAuthMessage('読み込みに失敗しました。ネットワークを確認してください。', 'error');
+    if (!opts.silent) showAuthMessage('読み込みに失敗しました。ネットワークを確認してください。', 'error');
+    return false;
   } finally {
     authLoading = false;
     updateAuthUI();
@@ -4653,7 +4940,18 @@ async function requestLoadOwnedPageForEdit(streamerId) {
     showAuthMessage('この公開ページを編集する権限がありません。', 'error');
     return;
   }
-  if (shouldConfirmBeforeLoadPublicData()) {
+  if (
+    streamerId === activeOwnedStreamerId
+    && streamerIdInput.value.trim() === streamerId
+    && selectedKeys.size > 0
+  ) {
+    closeAccountPanel();
+    return;
+  }
+  const currentSid = streamerIdInput.value.trim();
+  const needsConfirm = shouldConfirmBeforeLoadPublicData()
+    || (currentSid && hasUnpublishedChanges() && streamerId !== currentSid);
+  if (needsConfirm) {
     pendingLoadStreamerId = streamerId;
     document.getElementById('loadPublicDataModal').hidden = false;
     return;
@@ -4683,7 +4981,18 @@ function updateAuthUI() {
     signedIn.style.display = 'block';
     document.getElementById('authUserEmail').textContent = authUser.email || authUser.name || 'ログイン中';
     const owned = authUser.ownedStreamerIds;
+    reconcileActiveOwnedStreamerFromStorage();
     renderOwnedPagesList(owned);
+    const activeLine = document.getElementById('activeEditorPageLine');
+    const activeIdEl = document.getElementById('activeEditorPageId');
+    const switchWrap = document.getElementById('switchOwnedPageWrap');
+    if (activeOwnedStreamerId && activeLine && activeIdEl) {
+      activeLine.hidden = false;
+      activeIdEl.textContent = activeOwnedStreamerId;
+    } else if (activeLine) {
+      activeLine.hidden = true;
+    }
+    if (switchWrap) switchWrap.style.display = owned.length > 1 ? '' : 'none';
   } else {
     signedOut.style.display = 'block';
     signedIn.style.display = 'none';
@@ -4732,6 +5041,7 @@ async function refreshAuthMe(explicitToken) {
       name: data.name || (data.user && data.user.name) || '',
       ownedStreamerIds: normalizeOwnedIds(data),
     };
+    reconcileActiveOwnedStreamerFromStorage();
     updateAuthUI();
   } catch (err) {
     authUser = null;
@@ -4761,8 +5071,11 @@ async function completeUtaeruLogin(authBody) {
       showAuthMessage('ログインしました。', 'success');
       if (document.body.classList.contains('start-screen-active')) {
         setOnlineMode('google', { openPanel: false });
-        enterEditorFromStart({ restoreDraft: false });
+        enterEditorFromStart({ restoreDraft: true });
+      } else if (!draftBootComplete) {
+        finishEditorBootWithDraft();
       }
+      await syncGoogleEditSessionAfterAuth({ fromLogin: true, force: true });
     } else {
       showAuthMessage('Googleログインは完了しましたが、セッションを確認できませんでした。一度ページを再読み込みしてから、もう一度Googleログインをお試しください。', 'error');
     }
@@ -4834,13 +5147,13 @@ async function logoutUser() {
   updateAuthUI();
   try {
     await apiFetch('/api/auth/logout', { method: 'POST', body: '{}' });
-    setStoredAccessToken(null);
-    authUser = null;
     showAuthMessage('ログアウトしました。', 'info');
-    updateAuthUI();
   } catch (err) {
     showAuthMessage('ログアウトに失敗しました。', 'error');
   } finally {
+    setStoredAccessToken(null);
+    authUser = null;
+    clearGoogleActiveEditContext();
     authLoading = false;
     updateAuthUI();
   }
@@ -4865,6 +5178,8 @@ async function claimStreamerIdAction() {
     }
     showAuthMessage('公開ページID「' + sid + '」を取得しました。', 'success');
     await refreshAuthMe();
+    setActiveOwnedStreamerId(sid);
+    googleEditSessionInitialized = true;
   } catch (err) {
     showAuthMessage('取得に失敗しました。ネットワークを確認してください。', 'error');
   } finally {
@@ -5010,6 +5325,7 @@ async function publishWithGoogle(sid) {
     }
     markPublishedSnapshot();
     scheduleDraftSave(true);
+    setActiveOwnedStreamerId(sid);
     const publicUrl = PUBLIC_URL_BASE + PUBLIC_URL_PATH_PREFIX + sid;
     showAuthMessage('公開しました。', 'success');
     showPublishSuccessModal(publicUrl);
@@ -5121,6 +5437,8 @@ async function linkGoogleAction() {
     document.getElementById('editKeyInput').value = '';
     await refreshAuthMe();
     setOnlineMode('google');
+    setActiveOwnedStreamerId(sid);
+    googleEditSessionInitialized = true;
     showAuthMessage('Googleアカウントに連携しました。今後はGoogleログインで更新できます（旧編集キーは無効です）。', 'success');
   } catch (err) {
     showAuthMessage('連携に失敗しました。ネットワークを確認してください。', 'error');
@@ -5188,6 +5506,29 @@ document.getElementById('ownedPagesList')?.addEventListener('click', (e) => {
   const sid = btn.getAttribute('data-streamer-id');
   if (sid) requestLoadOwnedPageForEdit(sid);
 });
+document.getElementById('switchOwnedPageBtn')?.addEventListener('click', () => {
+  if (!authUser) return;
+  const owned = authUser.ownedStreamerIds;
+  if (owned.length > 1) showGooglePagePickModal(owned);
+});
+document.getElementById('googlePagePickList')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.google-page-pick-edit');
+  if (!btn) return;
+  e.preventDefault();
+  const sid = btn.getAttribute('data-streamer-id');
+  if (!sid) return;
+  closeGooglePagePickModal();
+  void requestLoadOwnedPageForEdit(sid);
+});
+document.getElementById('googlePagePickCancel')?.addEventListener('click', closeGooglePagePickModal);
+document.getElementById('googlePagePickModal')?.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('googlePagePickModal')) closeGooglePagePickModal();
+});
+document.getElementById('googleDraftContinueBtn')?.addEventListener('click', continueGoogleDraftChoice);
+document.getElementById('googleDraftLoadPublishedBtn')?.addEventListener('click', loadPublishedFromGoogleDraftChoice);
+document.getElementById('googleDraftChoiceModal')?.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('googleDraftChoiceModal')) closeGoogleDraftChoiceModal();
+});
 document.getElementById('loadPublicDataCancel')?.addEventListener('click', closeLoadPublicDataModal);
 document.getElementById('loadPublicDataConfirm')?.addEventListener('click', async () => {
   const sid = pendingLoadStreamerId;
@@ -5212,7 +5553,9 @@ document.getElementById('deletePageModal')?.addEventListener('click', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
-  if (!document.getElementById('loadPublicDataModal')?.hidden) closeLoadPublicDataModal();
+  if (!document.getElementById('googleDraftChoiceModal')?.hidden) closeGoogleDraftChoiceModal();
+  else if (!document.getElementById('googlePagePickModal')?.hidden) closeGooglePagePickModal();
+  else if (!document.getElementById('loadPublicDataModal')?.hidden) closeLoadPublicDataModal();
   else if (!document.getElementById('deletePageModal')?.hidden) closeDeletePageModal();
   else if (!document.getElementById('publishSuccessModal')?.hidden) closePublishSuccessModal();
   else if (!document.getElementById('editKeyIssuedModal')?.hidden) clearIssuedEditKeyDisplay();
