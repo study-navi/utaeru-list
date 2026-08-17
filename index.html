@@ -1519,6 +1519,9 @@
     z-index: 20;
   }
 
+  .song-removal-undo-toast[hidden] {
+    display: none !important;
+  }
   .song-removal-undo-toast {
     position: fixed;
     left: 50%;
@@ -2897,7 +2900,22 @@ function captureSongRemovalUndoSnapshot(keys) {
 
 function hideSongRemovalUndoToast() {
   const toast = document.getElementById('songRemovalUndoToast');
+  const msg = document.getElementById('songRemovalUndoMsg');
+  if (msg) msg.textContent = '';
   if (toast) toast.hidden = true;
+}
+
+function purgeExpiredSongRemovalUndoSession() {
+  try {
+    const raw = sessionStorage.getItem(SONG_REMOVAL_UNDO_SESSION_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.undo?.keys?.length || !parsed.savedAt || Date.now() - parsed.savedAt > SONG_REMOVAL_UNDO_MS) {
+      sessionStorage.removeItem(SONG_REMOVAL_UNDO_SESSION_KEY);
+    }
+  } catch (err) {
+    try { sessionStorage.removeItem(SONG_REMOVAL_UNDO_SESSION_KEY); } catch (e) { /* ignore */ }
+  }
 }
 
 function clearSongRemovalUndo() {
@@ -2921,6 +2939,7 @@ function persistBulkSongRemovalUndoSession(count) {
 }
 
 function tryRestoreSongRemovalUndoFromSession() {
+  purgeExpiredSongRemovalUndoSession();
   try {
     const raw = sessionStorage.getItem(SONG_REMOVAL_UNDO_SESSION_KEY);
     if (!raw) return;
@@ -2943,8 +2962,12 @@ function tryRestoreSongRemovalUndoFromSession() {
 function showSongRemovalUndoToast(count) {
   const toast = document.getElementById('songRemovalUndoToast');
   const msg = document.getElementById('songRemovalUndoMsg');
-  if (!toast || !msg || !lastSongRemovalUndo) return;
-  msg.textContent = `${count.toLocaleString('ja-JP')}曲を選択から外しました`;
+  const n = Number(count) || 0;
+  if (!toast || !msg || !lastSongRemovalUndo?.keys?.length || n <= 0) {
+    hideSongRemovalUndoToast();
+    return;
+  }
+  msg.textContent = `${n.toLocaleString('ja-JP')}曲を選択から外しました`;
   toast.hidden = false;
   if (songRemovalUndoTimer) clearTimeout(songRemovalUndoTimer);
   songRemovalUndoTimer = setTimeout(() => {
@@ -4801,6 +4824,7 @@ function hasStoredDraftEnvelope() {
 }
 
 function showStartScreen() {
+  clearSongRemovalUndo();
   document.body.classList.add('start-screen-active');
   const screen = document.getElementById('startScreen');
   if (screen) screen.hidden = false;
@@ -4819,7 +4843,7 @@ function dismissStartScreen() {
   }
 }
 
-function finishEditorBootWithDraft() {
+function finishEditorBootWithDraft(opts = {}) {
   const draftRestored = tryRestoreDraftOnBoot();
   if (!draftRestored) {
     selectPreset(0);
@@ -4830,14 +4854,20 @@ function finishEditorBootWithDraft() {
   updateStreamerIdPreview();
   syncBuilderChromeInsets();
   draftBootComplete = true;
-  tryRestoreSongRemovalUndoFromSession();
+  purgeExpiredSongRemovalUndoSession();
+  if (opts.restoreSongRemovalUndo) {
+    tryRestoreSongRemovalUndoFromSession();
+  } else {
+    clearSongRemovalUndo();
+  }
 }
 
 function enterEditorFromStart(opts = {}) {
   const restoreDraft = opts.restoreDraft !== false;
+  const restoreSongRemovalUndo = opts.restoreSongRemovalUndo === true;
   dismissStartScreen();
   if (restoreDraft) {
-    finishEditorBootWithDraft();
+    finishEditorBootWithDraft({ restoreSongRemovalUndo });
     return;
   }
   if (!draftBootComplete) {
@@ -4862,7 +4892,7 @@ async function initAppEntry() {
   if (authUser) {
     dismissStartScreen();
     setOnlineMode('google', { openPanel: false });
-    finishEditorBootWithDraft();
+    finishEditorBootWithDraft({ restoreSongRemovalUndo: true });
     await syncGoogleEditSessionAfterAuth({ fromBoot: true });
     document.documentElement.dataset.utalisEntryReady = '1';
     return;
@@ -4870,7 +4900,7 @@ async function initAppEntry() {
 
   if (getStartChoice() === START_CHOICE_GUEST) {
     dismissStartScreen();
-    finishEditorBootWithDraft();
+    finishEditorBootWithDraft({ restoreSongRemovalUndo: true });
     document.documentElement.dataset.utalisEntryReady = '1';
     return;
   }
@@ -5122,6 +5152,7 @@ async function loadPublishedFromGoogleDraftChoice() {
 
 async function syncGoogleEditSessionAfterAuth(opts = {}) {
   if (!authUser) return;
+  if (opts.fromLogin) clearSongRemovalUndo();
   if (opts.force) googleEditSessionInitialized = false;
   if (googleEditSessionInitialized && !opts.force) return;
 
@@ -5454,6 +5485,7 @@ async function completeUtaeruLogin(authBody) {
     await refreshAuthMe(accessToken);
     if (authUser) {
       showAuthMessage('ログインしました。', 'success');
+      clearSongRemovalUndo();
       if (document.body.classList.contains('start-screen-active')) {
         setOnlineMode('google', { openPanel: false });
         enterEditorFromStart({ restoreDraft: true });
@@ -5976,7 +6008,7 @@ initEditTabs();
 initSearchTargetTabs();
 document.getElementById('startGuestBtn')?.addEventListener('click', () => {
   setStartChoiceGuest();
-  enterEditorFromStart({ restoreDraft: true });
+  enterEditorFromStart({ restoreDraft: true, restoreSongRemovalUndo: true });
 });
 initAppEntry().then(() => {
   bootGoogleAuth(25);

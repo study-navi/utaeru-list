@@ -280,8 +280,149 @@ async function testR(width) {
   await browser.close();
 }
 
+async function testHiddenByDefault() {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  await addBypassStart(page);
+  await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForFunction(() => document.documentElement.dataset.utalisEntryReady === '1', { timeout: 15000 });
+  const state = await page.evaluate(() => {
+    const toast = document.getElementById('songRemovalUndoToast');
+    const btn = document.getElementById('songRemovalUndoBtn');
+    return {
+      hidden: toast?.hidden,
+      msg: document.getElementById('songRemovalUndoMsg')?.textContent,
+      toastDisplay: toast ? getComputedStyle(toast).display : null,
+      btnBox: btn?.getBoundingClientRect(),
+    };
+  });
+  if (state.hidden && state.msg === '' && state.toastDisplay === 'none') ok('T0: 通常編集画面でUndo非表示');
+  else fail('T0: 通常編集画面でUndo非表示', JSON.stringify(state));
+  await browser.close();
+}
+
+async function testGoogleLoginNoGhostUndo() {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  await page.route('**/api/auth/google', (route) => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ email: 'ghost@example.com', accessToken: 'mock.token' }),
+  }));
+  await page.route('**/api/auth/me', (route) => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ email: 'ghost@example.com', ownedStreamerIds: ['hiro'] }),
+  }));
+  await page.route('**/api/public/**', async (route) => {
+    if (route.request().method() !== 'GET') return route.continue();
+    await route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({
+        streamerName: 'テスト', subtitle: '', configVersion: 2, themeType: 'preset', presetIndex: 0,
+        streamerId: 'hiro', songs: [{ k: 'あ', y: 'y', a: 'A', t: 'T' }], songMeta: {}, tagPresets: [],
+        updatedAt: '2026-08-16T17:42:57.889Z',
+      }),
+    });
+  });
+  await page.addInitScript(() => {
+    localStorage.removeItem('utalis_draft_v1');
+    localStorage.removeItem('utalis_start_choice_v1');
+    sessionStorage.removeItem('utalis_song_removal_undo_v1');
+  });
+  await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForFunction(() => document.documentElement.dataset.utalisEntryReady === '1', { timeout: 15000 });
+  const startState = await page.evaluate(() => ({
+    hidden: document.getElementById('songRemovalUndoToast')?.hidden,
+    display: getComputedStyle(document.getElementById('songRemovalUndoToast')).display,
+  }));
+  if (startState.hidden && startState.display === 'none') ok('T1: スタート画面でUndo非表示');
+  else fail('T1: スタート画面でUndo非表示', JSON.stringify(startState));
+
+  await page.evaluate(async () => {
+    setOnlineMode('google', { openPanel: false });
+    await completeUtaeruLogin({ googleAccessToken: 'mock' });
+  });
+  await page.waitForTimeout(1000);
+  const afterLogin = await page.evaluate(() => ({
+    hidden: document.getElementById('songRemovalUndoToast')?.hidden,
+    msg: document.getElementById('songRemovalUndoMsg')?.textContent,
+    display: getComputedStyle(document.getElementById('songRemovalUndoToast')).display,
+    undo: lastSongRemovalUndo,
+  }));
+  if (afterLogin.hidden && afterLogin.msg === '' && afterLogin.display === 'none' && !afterLogin.undo) {
+    ok('T2: Googleログイン直後もUndo非表示');
+  } else fail('T2: Googleログイン直後もUndo非表示', JSON.stringify(afterLogin));
+  await browser.close();
+}
+
+async function testExpiredSessionNoRestore() {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  await addBypassStart(page);
+  await page.addInitScript(() => {
+    sessionStorage.setItem('utalis_song_removal_undo_v1', JSON.stringify({
+      undo: { keys: ['A\u0001T'], songMeta: {} },
+      savedAt: Date.now() - 20000,
+    }));
+  });
+  await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForFunction(() => document.documentElement.dataset.utalisEntryReady === '1', { timeout: 15000 });
+  const state = await page.evaluate(() => ({
+    hidden: document.getElementById('songRemovalUndoToast')?.hidden,
+    display: getComputedStyle(document.getElementById('songRemovalUndoToast')).display,
+    raw: sessionStorage.getItem('utalis_song_removal_undo_v1'),
+    undo: lastSongRemovalUndo,
+  }));
+  if (state.hidden && state.display === 'none' && !state.raw && !state.undo) ok('T3: 期限切れUndoは復元しない');
+  else fail('T3: 期限切れUndoは復元しない', JSON.stringify(state));
+  await browser.close();
+}
+
+async function testValidSessionRestore() {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  await addBypassStart(page);
+  const key = 'A\u0001T0';
+  await page.addInitScript((k) => {
+    sessionStorage.setItem('utalis_song_removal_undo_v1', JSON.stringify({
+      undo: { keys: [k], songMeta: { [k]: { marks: ['favorite'] } } },
+      savedAt: Date.now() - 1000,
+    }));
+  }, key);
+  await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForFunction(() => document.documentElement.dataset.utalisEntryReady === '1', { timeout: 15000 });
+  const state = await page.evaluate(() => ({
+    hidden: document.getElementById('songRemovalUndoToast')?.hidden,
+    msg: document.getElementById('songRemovalUndoMsg')?.textContent,
+    undoKeys: lastSongRemovalUndo?.keys?.length || 0,
+  }));
+  if (!state.hidden && state.msg === '1曲を選択から外しました' && state.undoKeys === 1) ok('T4: 有効なUndoだけ復元');
+  else fail('T4: 有効なUndoだけ復元', JSON.stringify(state));
+  await browser.close();
+}
+
+async function testToastAutoHide() {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  await setupEditor(page);
+  await selectNSongs(page, 1);
+  await page.evaluate(() => removeSelectedKeys([keyOf(MASTER_SONGS[0])]));
+  await page.waitForTimeout(10100);
+  const state = await page.evaluate(() => ({
+    hidden: document.getElementById('songRemovalUndoToast')?.hidden,
+    display: getComputedStyle(document.getElementById('songRemovalUndoToast')).display,
+    undo: lastSongRemovalUndo,
+  }));
+  if (state.hidden && state.display === 'none' && !state.undo) ok('T5: 10秒後にトースト全体が消える');
+  else fail('T5: 10秒後にトースト全体が消える', JSON.stringify(state));
+  await browser.close();
+}
+
 async function main() {
   console.log('=== test-song-removal-undo.mjs ===\n');
+  await testHiddenByDefault();
+  await testGoogleLoginNoGhostUndo();
+  await testExpiredSessionNoRestore();
+  await testValidSessionRestore();
   await testA();
   await testB();
   await testC();
@@ -296,6 +437,7 @@ async function main() {
   await testL();
   await testP();
   await testQ();
+  await testToastAutoHide();
   for (const w of [320, 375, 390, 430, 1280]) await testR(w);
   console.log('');
   if (failed) {
