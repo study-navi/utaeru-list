@@ -1,26 +1,26 @@
 {
-  "label": "v1.0 曲マーク表示（⭐/❤️/🔰）統一",
+  "label": "v1.0 SEO / Google検索対応",
   "establishedAt": "2026-08-17",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "v1.0 ブラウザ内下書き自動保存",
+    "label": "v1.0 曲マーク表示（⭐/❤️/🔰）統一",
     "establishedAt": "2026-08-17",
     "files": {
       "index.html": {
-        "bytes": 392739,
-        "sha256": "9e99d4abef099fb747629aaffb52c571e83a45f92c3e47e5c43bef6d805b5caf"
+        "bytes": 392725,
+        "sha256": "36a5e3df6541e0ad83072862ecfe2fefc9acc601ed05e21c28a1ce85f3a32ce4"
       },
       "hiro.html": {
-        "bytes": 26212,
-        "sha256": "c17ffd87d15713f6471ca78261b9e9e7e267de119e79294481bddeafb5db737e"
+        "bytes": 26221,
+        "sha256": "9f45223b35d38d69062f5a59c1b9a48415b3fcbea78e3c2303e1e8c3b6baf7d0"
       }
     }
   },
   "files": {
     "index.html": {
-      "bytes": 392725,
-      "sha256": "36a5e3df6541e0ad83072862ecfe2fefc9acc601ed05e21c28a1ce85f3a32ce4"
+      "bytes": 394387,
+      "sha256": "bf06c085c3f90e67c3649703ba202cafd9003e0e24e7dc9851527fef86bc1e6d"
     },
     "hiro.html": {
       "bytes": 26221,

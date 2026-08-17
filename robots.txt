@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://utalis.github.io/sitemap.xml

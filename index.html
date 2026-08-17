@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
-<meta name="description" content="Utalis（うたりす）— 配信で歌える曲リストを作成し、固定URLで公開できる無料ツール。">
-<meta property="og:title" content="Utalis｜うたりす — 歌える曲リスト">
-<meta property="og:description" content="配信で歌える曲リストを作成し、固定URLで公開できます。">
+<meta name="description" content="Utalis（うたりす）は、配信者・VTuber・歌い手向けの無料Webサービスです。歌える曲リストを選んでデザインし、固定URLで公開できます。歌枠の案内やリスナー向け曲検索に使えます。">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="Utalis（うたりす）｜配信者向け 歌える曲リスト作成">
+<meta property="og:description" content="Utalis（うたりす）は、配信者・VTuber・歌い手向けの無料Webサービスです。歌える曲リストを選んでデザインし、固定URLで公開できます。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://utalis.github.io/">
 <meta property="og:image" content="https://utalis.github.io/og-image.png">
@@ -15,13 +16,43 @@
 <meta property="og:image:alt" content="Utalis（うたりす）— 歌える曲リストを、かんたんに作って共有。">
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Utalis｜うたりす — 歌える曲リスト">
-<meta name="twitter:description" content="配信で歌える曲リストを作成し、固定URLで公開できます。">
+<meta name="twitter:title" content="Utalis（うたりす）｜配信者向け 歌える曲リスト作成">
+<meta name="twitter:description" content="Utalis（うたりす）は、配信者・VTuber・歌い手向けの無料Webサービスです。歌える曲リストを選んでデザインし、固定URLで公開できます。">
 <meta name="twitter:image" content="https://utalis.github.io/og-image.png">
 <meta name="twitter:image:alt" content="Utalis（うたりす）— 歌える曲リストを、かんたんに作って共有。">
 <link rel="canonical" href="https://utalis.github.io/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<title>Utalis｜うたりす — 歌える曲リスト</title>
+<title>Utalis（うたりす）｜配信者向け 歌える曲リスト作成</title>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "name": "Utalis",
+      "alternateName": "うたりす",
+      "url": "https://utalis.github.io/",
+      "description": "配信者・VTuber・歌い手向けに、歌える曲リストを作成・公開できる無料Webサービス。",
+      "inLanguage": "ja"
+    },
+    {
+      "@type": "WebApplication",
+      "name": "Utalis",
+      "alternateName": "うたりす",
+      "url": "https://utalis.github.io/",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web",
+      "browserRequirements": "Requires JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "JPY"
+      },
+      "description": "歌える曲リストを選んでデザインし、固定URLで公開できる無料Webサービス。"
+    }
+  ]
+}
+</script>
 <style>
   :root {
     color-scheme: light;
@@ -445,6 +476,13 @@
     font-weight: 600;
     color: var(--text-muted);
     letter-spacing: 0.02em;
+  }
+  .brand-summary {
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+    max-width: 36em;
   }
   .edit-nav {
     position: sticky;
@@ -2044,6 +2082,7 @@
       <h1 class="brand-wordmark">Utalis</h1>
       <span class="brand-wordmark-sub">うたりす</span>
     </div>
+    <p class="brand-summary">配信者・VTuber・歌い手向け。歌える曲リストを無料で作成・公開できます。</p>
   </header>
   <p class="auth-message" id="authMessage" style="display:none;"></p>
 
