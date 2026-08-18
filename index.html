@@ -176,9 +176,14 @@
   .bar-status.is-dirty { background: var(--warn-bg); color: var(--warn-text); font-weight: 700; }
   .bar-id {
     font-family: ui-monospace, monospace;
-    overflow-wrap: anywhere;
-    word-break: break-all;
-    max-width: min(100%, 220px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: normal;
+    overflow-wrap: normal;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: min(100%, 240px);
     line-height: 1.4;
   }
   .utaeru-bar-actions {
@@ -494,12 +499,14 @@
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--grid);
+    overflow: hidden;
   }
   .edit-tabs {
     display: flex;
     align-items: stretch;
     width: 100%;
     gap: 0;
+    flex-wrap: nowrap;
   }
   .edit-tab {
     flex: 1 1 0;
@@ -529,7 +536,7 @@
     background: var(--accent-wash);
     font-weight: 700;
   }
-  .edit-tab-text { min-width: 0; }
+  .edit-tab-text { min-width: 0; white-space: nowrap; }
   .edit-tab-label-short { display: none; }
   .edit-tab-badge {
     font-size: 11px;
@@ -1543,10 +1550,6 @@
     color: var(--accent);
     border: 1px solid var(--accent);
   }
-  @media (min-width: 480px) {
-    }
-  @media (max-width: 360px) {
-  
   .bulk-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
   .bulk-row-secondary { margin-top: 0; opacity: 0.92; }
   .tool-btn {
@@ -1948,9 +1951,9 @@
   .start-screen {
     min-height: 100dvh;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: 24px 16px 32px;
+    padding: max(20px, env(safe-area-inset-top)) 16px 28px;
     background: var(--page);
   }
   .start-screen[hidden] { display: none !important; }
@@ -1963,10 +1966,11 @@
   }
   .start-screen-inner {
     width: 100%;
-    max-width: 720px;
+    max-width: 400px;
     text-align: center;
+    padding-top: clamp(16px, 8vh, 48px);
   }
-  .start-brand-lockup { margin-bottom: 8px; }
+  .start-brand-lockup { margin-bottom: 6px; }
   .start-wordmark {
     margin: 0;
     font-size: clamp(28px, 7vw, 36px);
@@ -1983,32 +1987,38 @@
     letter-spacing: 0.02em;
   }
   .start-tagline {
-    margin: 0 0 20px;
-    font-size: 15px;
+    margin: 0 0 14px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text-primary);
-    line-height: 1.5;
+    line-height: 1.45;
   }
   .start-draft-hint {
-    margin: 0 0 16px;
-    font-size: 13px;
+    margin: 0 0 10px;
+    font-size: 12.5px;
     color: var(--text-secondary);
-    line-height: 1.5;
+    line-height: 1.45;
   }
   .start-actions {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
+    gap: 12px;
     max-width: 360px;
     margin: 0 auto;
+  }
+  .start-action-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
   .start-actions .ui-btn { min-height: 44px; width: 100%; }
   .start-note {
     margin: 0;
-    font-size: 13px;
-    line-height: 1.55;
+    font-size: 12px;
+    line-height: 1.45;
     color: var(--text-secondary);
+    text-align: center;
   }
   .start-note-muted { font-size: 12px; }
   .start-auth-message {
@@ -2155,23 +2165,48 @@
       margin: 2px 0 16px;
       line-height: 1.6;
     }
-    .bar-meta { display: none; }
+    .wrap .brand-intro { display: none; }
+    .start-screen-inner { padding-top: 20px; max-width: 100%; }
+    .start-wordmark-sub { display: none; }
     .bar-link, .bar-btn-ghost { display: none; }
     .bar-menu-toggle { display: inline-flex; align-items: center; justify-content: center; }
     .utaeru-bar { padding-left: 10px; padding-right: 10px; }
     .utaeru-bar-inner {
       min-height: 48px;
-      gap: 8px;
+      gap: 6px 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .utaeru-bar-left {
+      flex: 1 1 auto;
+      min-width: 0;
       align-items: center;
     }
-    .utaeru-brand { font-size: 15px; line-height: 1.2; }
-    .utaeru-bar-actions { gap: 8px; align-items: center; }
+    .utaeru-brand { font-size: 15px; line-height: 1.2; flex-shrink: 0; }
+    .bar-meta {
+      display: inline-flex;
+      flex: 1 1 100%;
+      order: 3;
+      width: 100%;
+      min-width: 0;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      line-height: 1.35;
+    }
+    .bar-status { flex-shrink: 0; }
+    .utaeru-bar-actions {
+      gap: 6px;
+      align-items: center;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
     .utaeru-bar-actions .bar-btn-primary {
-      padding: 8px 12px;
-      font-size: 13px;
+      padding: 8px 10px;
+      font-size: 12.5px;
       min-height: var(--ui-btn-h);
-      line-height: 1.3;
-      white-space: normal;
+      line-height: 1.2;
+      white-space: nowrap;
       text-align: center;
     }
     .bar-menu-toggle {
@@ -2180,28 +2215,36 @@
       flex-shrink: 0;
     }
     .bar-hint {
-      font-size: 12px;
-      line-height: 1.5;
-      padding-bottom: 8px;
+      font-size: 11.5px;
+      line-height: 1.4;
+      padding-bottom: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .edit-nav {
       margin-left: -14px;
       margin-right: -14px;
-      padding-left: 14px;
-      padding-right: 14px;
+      padding-left: 0;
+      padding-right: 0;
     }
-    .edit-tab-label-full { display: none; }
-    .edit-tab-label-short { display: inline; }
-    .edit-tab { font-size: 13px; padding: 6px 2px; min-height: 40px; }
+    .edit-tabs {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding: 0 14px;
+    }
+    .edit-tabs::-webkit-scrollbar { display: none; }
+    .edit-tab-label-full { display: inline; }
+    .edit-tab-label-short { display: none; }
+    .edit-tab {
+      flex: 0 0 auto;
+      min-width: max-content;
+      font-size: 14px;
+      padding: 10px 14px;
+      min-height: 44px;
+    }
     .edit-tab-badge { font-size: 11px; }
-    .song-row { flex-wrap: wrap; row-gap: 6px; }
-    .song-row-main { flex: 1 1 calc(100% - 34px); }
-    .song-row-actions {
-      flex: 1 1 100%;
-      margin-left: 0;
-      justify-content: flex-end;
-      padding-left: 26px;
-    }
     label.field-label {
       font-size: 13px;
       margin: 14px 0 7px;
@@ -2293,10 +2336,14 @@
     <p id="startDraftHint" class="start-draft-hint" hidden>この端末に前回の下書きがあります</p>
     <p class="auth-message start-auth-message" id="startAuthMessage" style="display:none;"></p>
     <div class="start-actions">
-      <button type="button" class="ui-btn ui-btn-primary" id="startGoogleLoginBtn">Googleでログイン</button>
-      <p class="start-note">別の端末でも、公開したリストを呼び出して編集できます</p>
-      <button type="button" class="ui-btn ui-btn-secondary" id="startGuestBtn">ログインせずにはじめる</button>
-      <p class="start-note start-note-muted">この端末に下書きを保存しながら作成できます</p>
+      <div class="start-action-group">
+        <button type="button" class="ui-btn ui-btn-primary" id="startGoogleLoginBtn">Googleでログイン</button>
+        <p class="start-note">別の端末でも、公開したリストを呼び出して編集できます</p>
+      </div>
+      <div class="start-action-group">
+        <button type="button" class="ui-btn ui-btn-secondary" id="startGuestBtn">ログインせずにはじめる</button>
+        <p class="start-note start-note-muted">この端末に下書きを保存しながら作成できます</p>
+      </div>
     </div>
   </div>
 </div>
