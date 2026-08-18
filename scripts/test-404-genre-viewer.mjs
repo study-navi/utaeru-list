@@ -19,7 +19,11 @@ function fail(msg, detail) {
 
 async function main() {
   const src = fs.readFileSync(HTML404, 'utf8');
-  for (const needle of ['GENRE_LOOKUP', 'GENRE_FILTER_OPTIONS', 'genreFilterRow', 'function setGenre', 'songMatchesGenreFilter']) {
+  for (const needle of [
+    'GENRE_LOOKUP', 'GENRE_FILTER_OPTIONS', 'TITLE_READING_LOOKUP',
+    'searchTarget', 'search-mode-segment', 'resolveTitleReading',
+    'genreFilterRow', 'function setGenre', 'songMatchesGenreFilter',
+  ]) {
     if (src.includes(needle)) ok(`404.html contains ${needle}`);
     else fail(`404.html missing ${needle}`);
   }
@@ -28,9 +32,9 @@ async function main() {
   const initStart = src.indexOf('function initPublicViewer');
   const initEnd = src.indexOf('applySiteFooterLinks();');
   const initBlock = src.slice(initStart, initEnd);
-  if (initBlock.includes('const GENRE_LOOKUP') && initBlock.includes('GENRE_FILTER_OPTIONS')) {
-    ok('404 initPublicViewer includes genre block');
-  } else fail('404 initPublicViewer genre block');
+  if (initBlock.includes('const GENRE_LOOKUP') && initBlock.includes('GENRE_FILTER_OPTIONS') && initBlock.includes('TITLE_READING_LOOKUP')) {
+    ok('404 initPublicViewer includes genre + title reading block');
+  } else fail('404 initPublicViewer genre/title block');
 
   const browser = await chromium.launch();
   const page = await browser.newPage();
@@ -67,9 +71,9 @@ async function main() {
   if (meta === '2曲 / 2組') ok(`genre click handler: ${meta}`);
   else fail('genre click handler', meta);
 
-  if (errors.some((e) => e.includes('GENRE_FILTER_OPTIONS is not defined'))) {
-    fail('GENRE_FILTER_OPTIONS undefined');
-  } else ok('browser: GENRE_FILTER_OPTIONS エラーなし');
+  if (errors.some((e) => e.includes('GENRE_FILTER_OPTIONS is not defined') || e.includes('TITLE_READING_LOOKUP is not defined') || e.includes('searchTarget is not defined'))) {
+    fail('viewer constants undefined', errors.join('; '));
+  } else ok('browser: viewer 定数エラーなし');
 
   await browser.close();
   fs.unlinkSync(p);

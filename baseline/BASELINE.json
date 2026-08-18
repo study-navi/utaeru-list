@@ -1,30 +1,30 @@
 {
-  "label": "第5段階 6ジャンル体系・自由タグ整理",
-  "establishedAt": "2026-08-18",
+  "label": "検索モード（曲名/アーティスト）+ 曲名読み ty/tk",
+  "establishedAt": "2026-08-19",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "第4段階 アニソン分類拡充",
+    "label": "第5段階 6ジャンル体系・自由タグ整理",
     "establishedAt": "2026-08-18",
     "files": {
       "index.html": {
-        "bytes": 617203,
-        "sha256": "60373f29d0dab30a31984c97b6ac052925eb648534ce921dc61d258a18bfea18"
+        "bytes": 629762,
+        "sha256": "a639e197ecad514b0e16e51d8f544d214001453aa8a1658ba72a26293e1ed946"
       },
       "hiro.html": {
-        "bytes": 126589,
-        "sha256": "f62172da8b0d95572ec1856b2090b196b8dc8db544cba6fb7068bc77bf92ab6a"
+        "bytes": 134824,
+        "sha256": "b2cd4a107b0f6c64f6aaaf2979aa11f5fd0eca7fb9700bc9ea5d2d6c9916a779"
       }
     }
   },
   "files": {
     "index.html": {
-      "bytes": 629762,
-      "sha256": "a639e197ecad514b0e16e51d8f544d214001453aa8a1658ba72a26293e1ed946"
+      "bytes": 928381,
+      "sha256": "ffc03550908492046200ec6c0c27d47aacde90c8ede27bc6ba1de9be27145fca"
     },
     "hiro.html": {
-      "bytes": 134824,
-      "sha256": "b2cd4a107b0f6c64f6aaaf2979aa11f5fd0eca7fb9700bc9ea5d2d6c9916a779"
+      "bytes": 299830,
+      "sha256": "88f05752dc71d6c8aa5b77d07bdd93debba546fee75bcf4cd57275f3f8150916"
     }
   },
   "catalog": {
@@ -44,9 +44,19 @@
       "y",
       "a",
       "t",
+      "ty",
+      "tk",
       "genres"
     ],
     "exported": [
+      "k",
+      "y",
+      "a",
+      "t",
+      "ty",
+      "tk"
+    ],
+    "hiroSample": [
       "k",
       "y",
       "a",

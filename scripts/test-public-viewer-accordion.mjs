@@ -173,13 +173,15 @@ async function main() {
     ];
     const url = writeFixture('fg', buildFixtureHtml({ songs }));
     const { page } = await openPage(browser, url);
+    await page.click('#searchTargetTitle');
     await page.fill('#searchInput', '新時代');
     await page.dispatchEvent('#searchInput', 'input');
     await page.waitForFunction(() => document.querySelectorAll('.flat-song-item').length === 1);
-    const title = await page.locator('.flat-song-item .song-title').first().textContent();
-    const artist = await page.locator('.flat-song-artist').first().textContent();
+    const title = await page.locator('.flat-song-item .flat-title-primary').first().textContent();
+    const artist = await page.locator('.flat-song-item .flat-artist-sub').first().textContent();
     if (title !== '新時代' || artist !== 'Ado') fail('F: 曲名検索', `${title}/${artist}`);
     else ok('F: 曲名検索 → フラット一覧');
+    await page.click('#searchTargetArtist');
     await page.fill('#searchInput', 'YOASOBI');
     await page.dispatchEvent('#searchInput', 'input');
     await page.waitForFunction(() => document.querySelectorAll('.flat-song-item').length === 1);

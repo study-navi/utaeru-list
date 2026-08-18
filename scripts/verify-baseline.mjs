@@ -180,8 +180,9 @@ check('hiro.html の builder-config がパース可能', () => {
 
 check('hiro.html の SONGS スキーマ (k, y, a, t)', () => {
   const songs = parseJsArray(hiroHtml, 'SONGS');
+  const fields = baseline.songFields.hiroSample || baseline.songFields.exported;
   for (const song of songs) {
-    assertSongShape(song, baseline.songFields.exported, 'SONGS');
+    assertSongShape(song, fields, 'SONGS');
   }
 });
 

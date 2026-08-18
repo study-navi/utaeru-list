@@ -15,8 +15,9 @@ const cssMatch = hiro.match(/<style>([\s\S]*?)<\/style>/);
 if (!cssMatch) throw new Error('hiro.html style block not found');
 const css = cssMatch[1];
 
-const searchPhMatch = hiro.match(/id="searchInput" placeholder="([^"]*)"/);
-const searchPlaceholder = searchPhMatch ? searchPhMatch[1] : '例：Story / AI';
+const searchBarMatch = hiro.match(/<div class="search-bar">[\s\S]*?<\/div>\s*\n\s*<div class="genre-filter-row/);
+if (!searchBarMatch) throw new Error('search-bar block not found in hiro.html');
+const searchBarHtml = searchBarMatch[0].replace(/\n\s*<div class="genre-filter-row$/, '');
 
 const viewerStart = hiro.indexOf('// @genre-lookup-inject');
 const viewerEnd = hiro.lastIndexOf('render();');
@@ -83,16 +84,7 @@ ${css}
     <span class="utalis-mark" aria-hidden="true">UTAEMO</span>
   </header>
 
-  <div class="search-bar">
-    <div class="search-shell">
-      <label class="search-label" for="searchInput">曲名・アーティスト名で検索</label>
-      <div class="search-input-row">
-        <input type="search" id="searchInput" placeholder="${searchPlaceholder}" autocomplete="off" />
-        <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
-      </div>
-      <div class="gyo-row" id="gyoRow"></div>
-    </div>
-  </div>
+  ${searchBarHtml}
 
   <div class="genre-filter-row filter-row" id="genreFilterRow" role="group" aria-label="ジャンル"></div>
 

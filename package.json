@@ -23,5 +23,9 @@
   "homepage": "https://github.com/study-navi/utaeru-list#readme",
   "dependencies": {
     "playwright-core": "^1.62.1"
+  },
+  "devDependencies": {
+    "kuroshiro": "^1.2.0",
+    "kuroshiro-analyzer-kuromoji": "^1.1.0"
   }
 }

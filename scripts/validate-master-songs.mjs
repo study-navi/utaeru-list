@@ -27,15 +27,18 @@ for (const s of songs) {
   if (!s.k || !s.y) fail('k/y欠損', String(s.id));
   if ([...s.k].length !== 1) fail('kは1文字', `${s.id}:${s.k}`);
   if (s.k !== s.y[0]) fail('k === y[0]', `${s.id} k=${s.k} y=${s.y}`);
+  if (!s.ty || !s.tk) fail('ty/tk欠損', String(s.id));
+  if ([...s.tk].length !== 1) fail('tkは1文字', `${s.id}:${s.tk}`);
+  if (s.tk !== s.ty[0]) fail('tk === ty[0]', `${s.id} tk=${s.tk} ty=${s.ty}`);
   if (s.genres !== undefined) {
     if (!Array.isArray(s.genres)) fail('genresは配列', String(s.id));
-    const allowed = new Set(['J-POP', 'アニソン', 'ボカロ']);
+    const allowed = new Set(['J-POP', 'アニソン', 'ボカロ', '洋楽', '演歌', 'その他']);
     for (const g of s.genres) {
       if (!allowed.has(g)) fail('genres値', `${s.id}:${g}`);
     }
   }
 }
-if (!failed) ok('全曲 k/y 整合');
+if (!failed) ok('全曲 k/y/ty/tk 整合');
 
 const byArtist = new Map();
 for (const s of songs) {
