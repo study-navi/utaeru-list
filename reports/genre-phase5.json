@@ -1,0 +1,385 @@
+{
+  "generatedAt": "2026-08-18T14:59:28.654Z",
+  "stats": {
+    "total": 1952,
+    "jpop": 1680,
+    "anime": 129,
+    "vocaloid": 189,
+    "western": 10,
+    "enka": 6,
+    "other": 34,
+    "multi": 96,
+    "unclassified": 0
+  },
+  "combinations": {
+    "J-POP": 1585,
+    "ボカロ": 185,
+    "J-POP+アニソン": 92,
+    "アニソン": 36,
+    "その他": 34,
+    "洋楽": 10,
+    "演歌": 6,
+    "J-POP+ボカロ": 3,
+    "アニソン+ボカロ": 1
+  },
+  "otherSongs": [
+    {
+      "id": 95,
+      "artist": "After the Rain [そらる×まふまふ]",
+      "title": "1・2・3",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 101,
+      "artist": "天月-あまつき-",
+      "title": "かいしんのいちげき！",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 102,
+      "artist": "天月-あまつき-",
+      "title": "月曜日の憂鬱",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 131,
+      "artist": "Ariana Grande and John Legend",
+      "title": "BEAUTY AND THE BEAST",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 139,
+      "artist": "UNDEAD(朔間零(CV増田俊樹)、羽風薫(CV細貝圭)、乙狩アドニス(CV羽多野渉)、大神晃牙(CV小野友樹))",
+      "title": "Melody in the Dark",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 165,
+      "artist": "いけてるお兄さん（CV:宮野真守）うたのお姉さん（CV:水樹奈々）",
+      "title": "ABC体操",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 549,
+      "artist": "96猫",
+      "title": "独りんぼエンヴィー",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 865,
+      "artist": "すとぷり",
+      "title": "はりーはりーらぶ",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 866,
+      "artist": "すとぷり",
+      "title": "スキスキ星人",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 886,
+      "artist": "スペシャルウィーク(cv.和氣あず未)、サイレンススズカ(cv.高野麻里佳)、トウカイテイオー(cv.Machico)",
+      "title": "うまぴょい伝説",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1054,
+      "artist": "ディズニー",
+      "title": "ホール･ニュー･ワールド",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1055,
+      "artist": "ディズニー",
+      "title": "パート･オブ･ユア･ワールド",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1056,
+      "artist": "ディズニー",
+      "title": "星に願いを",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1057,
+      "artist": "ディズニー",
+      "title": "フレンド･ライク･ミー",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1058,
+      "artist": "ディズニー",
+      "title": "アンダー･ザ･シー",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1059,
+      "artist": "ディズニー",
+      "title": "君はともだち",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1104,
+      "artist": "東京ディズニーリゾート",
+      "title": "ジャンボリミッキー！",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1127,
+      "artist": "AAA DEN-O form",
+      "title": "Climax Jump",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1167,
+      "artist": "DREAMS COME TRUE feat. FUZZY CONTROL",
+      "title": "その先へ",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1248,
+      "artist": "にじさんじ",
+      "title": "Hurrah!!",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1249,
+      "artist": "にじさんじ",
+      "title": "Virtual to LIVE",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1250,
+      "artist": "にじさんじ〔ChiroNoiR(叶、葛葉)〕",
+      "title": "ブラッディ･グルービー",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1336,
+      "artist": "HoneyWorks feat.星川サラ",
+      "title": "可愛いねって言われちゃった",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1397,
+      "artist": "Valkyrie(斎宮 宗(CV:高橋広樹)、影方みか(CV:大須賀純))",
+      "title": "魅惑劇",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1570,
+      "artist": "星街すいせい",
+      "title": "Stellar Stellar",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1571,
+      "artist": "星街すいせい",
+      "title": "ビビデバ",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1572,
+      "artist": "星街すいせい",
+      "title": "Orbital Period",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1644,
+      "artist": "まふまふ",
+      "title": "ジグソーパズル",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1646,
+      "artist": "まふまふ",
+      "title": "すーぱーぬこになれんかった",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1647,
+      "artist": "まふまふ",
+      "title": "メリーバッドエンド",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1648,
+      "artist": "まふまふ",
+      "title": "すーぱーぬこになりたい",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1649,
+      "artist": "まふまふ",
+      "title": "女の子になりたい",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1824,
+      "artist": "ユナ(CV:神田沙也加)",
+      "title": "longing",
+      "genres": [
+        "その他"
+      ]
+    },
+    {
+      "id": 1825,
+      "artist": "ユナ(CV:神田沙也加)",
+      "title": "Ubiquitous dB",
+      "genres": [
+        "その他"
+      ]
+    }
+  ],
+  "eve": [
+    {
+      "id": 191,
+      "title": "ドラマツルギー",
+      "genres": [
+        "J-POP"
+      ]
+    },
+    {
+      "id": 192,
+      "title": "ナンセンス文学",
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ]
+    },
+    {
+      "id": 193,
+      "title": "僕らまだアンダーグラウンド",
+      "genres": [
+        "J-POP"
+      ]
+    },
+    {
+      "id": 195,
+      "title": "やどりぎ",
+      "genres": [
+        "J-POP"
+      ]
+    },
+    {
+      "id": 196,
+      "title": "お気に召すまま",
+      "genres": [
+        "J-POP"
+      ]
+    },
+    {
+      "id": 197,
+      "title": "アウトサイダー",
+      "genres": [
+        "J-POP"
+      ]
+    },
+    {
+      "id": 198,
+      "title": "あの娘シークレット",
+      "genres": [
+        "J-POP"
+      ]
+    }
+  ],
+  "syudou": [
+    {
+      "id": 764,
+      "artist": "syudou",
+      "title": "邪魔",
+      "genres": [
+        "J-POP"
+      ]
+    },
+    {
+      "id": 765,
+      "artist": "syudou",
+      "title": "ビターチョコデコレーション",
+      "genres": [
+        "J-POP"
+      ]
+    },
+    {
+      "id": 766,
+      "artist": "syudou",
+      "title": "ギャンブル",
+      "genres": [
+        "J-POP"
+      ]
+    },
+    {
+      "id": 767,
+      "artist": "syudou feat. 初音ミク",
+      "title": "コールボーイ",
+      "genres": [
+        "ボカロ"
+      ]
+    }
+  ]
+}

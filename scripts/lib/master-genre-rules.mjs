@@ -4,13 +4,15 @@
  * Phase 1: アニソン・ボカロ（保守的）
  * Phase 2: 一般邦楽への J-POP 付与（除外リスト付き）
  * Phase 4: アニソン分類拡充（曲単位・確信度 A のみ）
+ * Phase 5: 6ジャンル体系（洋楽・演歌・その他）+ 未分類107曲
  */
 
 import { ANIME_VERIFIED_PHASE4, GENRE_CORRECTIONS_PHASE4 } from '../data/anime-verified-phase4.mjs';
+import { GENRE_VERIFIED_PHASE5, GENRE_CORRECTIONS_PHASE5 } from '../data/genre-verified-phase5.mjs';
 
-export const MASTER_GENRE_LABELS = ['J-POP', 'アニソン', 'ボカロ'];
+export const MASTER_GENRE_LABELS = ['J-POP', 'アニソン', 'ボカロ', '洋楽', '演歌', 'その他'];
 
-/** VOCALOID 原曲としてカタログ上すべてボカロ扱いできるアーティスト名 */
+/** VOCALOID P名義でカタログ上すべてボカロ扱いできるアーティスト（本人歌唱曲は曲単位で除外） */
 export const VOCALOID_ONLY_ARTISTS = new Set([
   '40mP',
   '40mP&シャノ',
@@ -61,18 +63,11 @@ export const VOCALOID_ONLY_ARTISTS = new Set([
   'halyosy',
   'ナユタン星人',
   'いよわ',
-  'Eve',
-  'syudou',
   'Giga',
   'ひとしずくP×やま△',
 ]);
 
-export const VOCALOID_FEAT_RE = /feat\.?\s*(初音ミク|鏡音(?:リン|レン)|巡音ルカ|MEIKO|KAITO|可不(?:\(KAFU\))?|KAFU|flower|GUMI|MAYU|重音テト|結月ゆかり)/i;
-
-export const EXPLICIT_ANIME_TITLE_RE = /(?:from|FROM)\s+[A-Z][A-Z\s\-]+|ONE PIECE|ドラゴンボール|鬼滅の刃|呪術廻戦|進撃の巨人|名探偵コナン|エヴァンゲリオン|ガンダム|ポケットモンスター|ポケモン|ジブリ|Disney|ディズニー|ウタ from/i;
-
-/** J-POP 付与から除外するアーティスト（完全一致） */
-export const JPOP_EXCLUDE_ARTISTS = new Set([
+export const WESTERN_ARTISTS = new Set([
   'Ed Sheeran',
   'Ariana Grande and John Legend',
   'Beyonce',
@@ -81,13 +76,26 @@ export const JPOP_EXCLUDE_ARTISTS = new Set([
   'CELINE DION',
   'TWICE',
   'BIGBANG',
-  'ディズニー',
-  '東京ディズニーリゾート',
   'WIZ KHALIFA(Feat.CHARLIE PUTH)',
+  'Alan Walker',
+]);
+
+export const ENKA_ARTISTS = new Set([
+  '石川さゆり',
   '坂本冬美',
   '美空ひばり',
-  'Alan Walker',
-  '石川さゆり',
+]);
+
+export const VOCALOID_FEAT_RE = /feat\.?\s*(初音ミク|鏡音(?:リン|レン)|巡音ルカ|MEIKO|KAITO|可不(?:\(KAFU\))?|KAFU|flower|GUMI|MAYU|重音テト|結月ゆかり)/i;
+
+export const EXPLICIT_ANIME_TITLE_RE = /(?:from|FROM)\s+[A-Z][A-Z\s\-]+|ONE PIECE|ドラゴンボール|鬼滅の刃|呪術廻戦|進撃の巨人|名探偵コナン|エヴァンゲリオン|ガンダム|ポケットモンスター|ポケモン|ジブリ|Disney|ディズニー|ウタ from/i;
+
+/** J-POP 付与から除外するアーティスト（完全一致） */
+export const JPOP_EXCLUDE_ARTISTS = new Set([
+  ...WESTERN_ARTISTS,
+  ...ENKA_ARTISTS,
+  'ディズニー',
+  '東京ディズニーリゾート',
 ]);
 
 /** J-POP 付与から除外するアーティスト名の前方一致 */
@@ -141,13 +149,6 @@ export const JPOP_EXCLUDE_CONTENT_RES = [
 
 export const VERIFIED_GENRES_BY_ID = {
   1863: ['J-POP', 'ボカロ'],
-  191: ['ボカロ'],
-  192: ['ボカロ'],
-  193: ['ボカロ'],
-  195: ['ボカロ'],
-  196: ['ボカロ'],
-  197: ['ボカロ'],
-  198: ['ボカロ'],
   89: ['J-POP', 'ボカロ'],
   70: ['J-POP', 'アニソン'],
   74: ['J-POP', 'アニソン'],
@@ -172,29 +173,34 @@ export const VERIFIED_GENRES_BY_ID = {
   1856: ['J-POP', 'アニソン'],
   1871: ['J-POP', 'アニソン'],
   372: ['J-POP', 'アニソン'],
-  // --- アニメタイアップ（曲単位で確認済み） ---
-  94: ['J-POP', 'アニソン'], // abingdon boys school / JAP
-  476: ['J-POP', 'アニソン'], // kimeru / OVERLAP
-  288: ['J-POP', 'アニソン'], // エミリア(cv.) / Stay Alive
-  978: ['J-POP', 'アニソン'], // ターニャ(cv.) / Los!Los!Los!
-  990: ['J-POP', 'アニソン'], // DALI / ムーンライト伝説
-  465: ['J-POP', 'アニソン'], // きただにひろし / ウィーアー！
-  975: ['J-POP', 'アニソン'], // 玉置成実 / Reason
-  718: ['J-POP', 'アニソン'], // May'n / ユニバーサル・バニー (マクロスF)
-  1530: ['J-POP', 'アニソン'], // fripSide / only my railgun
-  1531: ['J-POP', 'アニソン'], // fripSide / LEVEL5
-  408: ['J-POP', 'アニソン'], // 影山ヒロノブ / WE GOTTA POWER
-  407: ['J-POP', 'アニソン'], // 影山ヒロノブ / 僕達は天使だった
-  42: ['J-POP', 'アニソン'], // AKINO / 創聖のアクエリオン
-  43: ['J-POP', 'アニソン'], // AKINO / 海色
+  94: ['J-POP', 'アニソン'],
+  476: ['J-POP', 'アニソン'],
+  288: ['J-POP', 'アニソン'],
+  978: ['J-POP', 'アニソン'],
+  990: ['J-POP', 'アニソン'],
+  465: ['J-POP', 'アニソン'],
+  975: ['J-POP', 'アニソン'],
+  718: ['J-POP', 'アニソン'],
+  1530: ['J-POP', 'アニソン'],
+  1531: ['J-POP', 'アニソン'],
+  408: ['J-POP', 'アニソン'],
+  407: ['J-POP', 'アニソン'],
+  42: ['J-POP', 'アニソン'],
+  43: ['J-POP', 'アニソン'],
   715: ['J-POP', 'アニソン'],
   716: ['J-POP', 'アニソン'],
   717: ['J-POP', 'アニソン'],
-  1760: ['J-POP', 'アニソン'], // May'n/中島愛 / ライオン
-  1441: ['J-POP', 'アニソン'], // ヒグチアイ / 悪魔の子
+  1760: ['J-POP', 'アニソン'],
+  1441: ['J-POP', 'アニソン'],
 };
 
 function getVerifiedGenresById(id) {
+  if (GENRE_CORRECTIONS_PHASE5[id]) {
+    return normalizeGenreList(GENRE_CORRECTIONS_PHASE5[id].genres);
+  }
+  if (GENRE_VERIFIED_PHASE5[id]) {
+    return normalizeGenreList(GENRE_VERIFIED_PHASE5[id].genres);
+  }
   if (GENRE_CORRECTIONS_PHASE4[id]) {
     return normalizeGenreList(GENRE_CORRECTIONS_PHASE4[id].genres);
   }
@@ -232,12 +238,15 @@ function addJPopForAnime(genres, artist) {
   if (!genres.includes('アニソン')) return genres;
   if (genres.includes('J-POP')) return genres;
   if (isVocaloidOnlyProducerArtist(artist)) return genres;
+  if (genres.includes('洋楽') || genres.includes('演歌') || genres.includes('その他')) return genres;
   return ['J-POP', ...genres];
 }
 
 export function isExcludedFromJPop(song) {
   const combined = `${song.a} ${song.t}`;
   if (JPOP_EXCLUDE_ARTISTS.has(song.a)) return true;
+  if (WESTERN_ARTISTS.has(song.a)) return true;
+  if (ENKA_ARTISTS.has(song.a)) return true;
   for (const prefix of JPOP_EXCLUDE_ARTIST_PREFIXES) {
     if (song.a.startsWith(prefix)) return true;
   }
@@ -258,9 +267,19 @@ export function classifyBaseGenres(song) {
   const genres = [];
   const combined = `${song.a} ${song.t}`;
 
+  if (WESTERN_ARTISTS.has(song.a)) {
+    return ['洋楽'];
+  }
+  if (ENKA_ARTISTS.has(song.a)) {
+    return ['演歌'];
+  }
+  if (song.a === 'ディズニー' || song.a === '東京ディズニーリゾート') {
+    return ['その他'];
+  }
+
   if (isVocaloidOnlyProducerArtist(song.a)) {
     genres.push('ボカロ');
-  } else if (VOCALOID_FEAT_RE.test(combined)) {
+  } else if (VOCALOID_FEAT_RE.test(combined) || VOCALOID_FEAT_RE.test(song.a)) {
     genres.push('ボカロ');
     if (!isVocaloidOnlyProducerArtist(song.a)) genres.push('J-POP');
   }
@@ -276,6 +295,10 @@ export function classifyBaseGenres(song) {
 export function enrichWithJPop(song, genres) {
   const verified = getVerifiedGenresById(song.id);
   if (verified) return verified;
+
+  if (genres.some((g) => g === '洋楽' || g === '演歌' || g === 'その他')) {
+    return genres;
+  }
 
   if (genres.includes('ボカロ') && !genres.includes('J-POP')) {
     return genres;
@@ -318,6 +341,9 @@ export function summarizeGenreStats(songs) {
     jpop: 0,
     anime: 0,
     vocaloid: 0,
+    western: 0,
+    enka: 0,
+    other: 0,
     multi: 0,
     unclassified: 0,
   };
@@ -331,6 +357,9 @@ export function summarizeGenreStats(songs) {
     if (g.includes('J-POP')) stats.jpop += 1;
     if (g.includes('アニソン')) stats.anime += 1;
     if (g.includes('ボカロ')) stats.vocaloid += 1;
+    if (g.includes('洋楽')) stats.western += 1;
+    if (g.includes('演歌')) stats.enka += 1;
+    if (g.includes('その他')) stats.other += 1;
   }
   return stats;
 }

@@ -22,7 +22,8 @@ const SAMPLES = {
   vocalo: pick((s) => s.genres?.length === 1 && s.genres[0] === 'ボカロ'),
   multiJa: pick((s) => s.genres?.includes('J-POP') && s.genres?.includes('アニソン')),
   multiAv: pick((s) => s.genres?.includes('アニソン') && s.genres?.includes('ボカロ')),
-  empty: pick((s) => !s.genres?.length),
+  other: pick((s) => s.genres?.includes('その他') && !s.genres?.includes('J-POP')),
+  western: pick((s) => s.genres?.includes('洋楽')),
   adoJpop: pick((s) => s.a === 'Ado' && s.genres?.includes('J-POP') && !s.genres?.includes('アニソン')),
   adoBoth: pick((s) => s.a === 'Ado' && s.genres?.includes('J-POP') && s.genres?.includes('アニソン')),
 };
@@ -85,7 +86,8 @@ async function testViewer(browser) {
     toPublicSong(SAMPLES.vocalo),
     toPublicSong(SAMPLES.multiJa),
     toPublicSong(SAMPLES.multiAv),
-    toPublicSong(SAMPLES.empty),
+    toPublicSong(SAMPLES.other),
+    toPublicSong(SAMPLES.western),
     toPublicSong(SAMPLES.adoJpop),
     toPublicSong(SAMPLES.adoBoth),
     { k: 'あ', y: 'unknown', a: '存在しないアーティスト', t: '未登録曲XYZ' },
@@ -95,13 +97,13 @@ async function testViewer(browser) {
   const { page, errors } = await openViewer(browser, url);
 
   const genreChips = await page.locator('#genreFilterRow .chip').count();
-  if (genreChips !== 4) fail('viewer: ジャンル4ボタン', String(genreChips));
-  else ok('viewer: ジャンル4ボタン');
+  if (genreChips !== 7) fail('viewer: ジャンル7ボタン', String(genreChips));
+  else ok('viewer: ジャンル7ボタン（すべて+6ジャンル）');
 
   const chipHeights = await page.evaluate(() =>
     [...document.querySelectorAll('#genreFilterRow .chip')].map((c) => c.offsetHeight));
-  if (chipHeights.some((h) => h < 40)) fail('viewer: タップ領域', chipHeights.join(','));
-  else ok('viewer: タップ領域 >= 40px');
+  if (chipHeights.some((h) => h < 44)) fail('viewer: タップ領域', chipHeights.join(','));
+  else ok('viewer: タップ領域 >= 44px');
 
   const statBefore = await page.locator('#statSongs').textContent();
   await clickGenre(page, 'J-POP');
@@ -132,6 +134,12 @@ async function testViewer(browser) {
 
   await clickGenre(page, 'ボカロ');
   ok('viewer: ボカロ切替');
+
+  await clickGenre(page, '洋楽');
+  ok('viewer: 洋楽切替');
+
+  await clickGenre(page, 'その他');
+  ok('viewer: その他切替');
 
   await clickGenre(page, 'すべて');
   const allVisible = await page.evaluate(() =>
@@ -198,8 +206,8 @@ async function testEditor(browser) {
   await page.waitForSelector('#panelSongs:not([hidden])');
 
   const chips = await page.locator('#genreFilterRow .chip').count();
-  if (chips !== 4) fail('editor: ジャンル4ボタン', String(chips));
-  else ok('editor: ジャンル4ボタン');
+  if (chips !== 7) fail('editor: ジャンル7ボタン', String(chips));
+  else ok('editor: ジャンル7ボタン（すべて+6ジャンル）');
 
   // select J-POP songs while visible, switch genre, keys unchanged
   const before = await page.evaluate(({ jpopKey, animeKey }) => {
@@ -238,20 +246,20 @@ async function testEditor(browser) {
   if (!allAnime || searchCount === 0) fail('editor: ジャンル+検索 AND', String(searchCount));
   else ok('editor: ジャンル+検索 AND');
 
-  // unclassified only in すべて
+  // その他は J-POP フィルタに出ない
   await page.fill('#searchInput', '');
   await page.dispatchEvent('#searchInput', 'input');
   await page.click('#searchTargetTitle');
   await clickGenre(page, 'すべて');
-  await page.fill('#searchInput', SAMPLES.empty.t);
+  await page.fill('#searchInput', SAMPLES.other.t);
   await page.dispatchEvent('#searchInput', 'input');
   await page.waitForTimeout(150);
-  const inAll = await page.evaluate((t) => lastFiltered.some((s) => s.t === t), SAMPLES.empty.t);
+  const inAll = await page.evaluate((t) => lastFiltered.some((s) => s.t === t), SAMPLES.other.t);
   await clickGenre(page, 'J-POP');
   await page.waitForTimeout(150);
-  const inJpop = await page.evaluate((t) => lastFiltered.some((s) => s.t === t), SAMPLES.empty.t);
-  if (!inAll || inJpop) fail('editor: 未分類はすべてのみ', `${inAll}/${inJpop}`);
-  else ok('editor: 未分類はすべてのみ');
+  const inJpop = await page.evaluate((t) => lastFiltered.some((s) => s.t === t), SAMPLES.other.t);
+  if (!inAll || inJpop) fail('editor: その他はJ-POPに含まれない', `${inAll}/${inJpop}`);
+  else ok('editor: その他はJ-POPに含まれない');
 
   // responsive widths
   for (const w of [320, 375, 390, 430, 1280]) {
@@ -262,7 +270,7 @@ async function testEditor(browser) {
     }));
     if (layout.scroll) fail(`editor: ${w}px 横スクロール`);
     else ok(`editor: ${w}px 横スクロールなし`);
-    if (layout.h < 40) fail(`editor: ${w}px タップ領域`, String(layout.h));
+    if (layout.h < 44) fail(`editor: ${w}px タップ領域`, String(layout.h));
   }
 
   await page.close();
@@ -289,7 +297,7 @@ async function main() {
 
   const hiroBefore = await checkHiroApi();
   // genre counts unchanged
-  const counts = { jpop: 0, anime: 0, vocalo: 0, empty: 0 };
+  const counts = { jpop: 0, anime: 0, vocalo: 0, western: 0, enka: 0, other: 0, empty: 0 };
   for (const s of MASTER) {
     const g = s.genres || [];
     if (!g.length) counts.empty++;
@@ -297,9 +305,12 @@ async function main() {
       if (g.includes('J-POP')) counts.jpop++;
       if (g.includes('アニソン')) counts.anime++;
       if (g.includes('ボカロ')) counts.vocalo++;
+      if (g.includes('洋楽')) counts.western++;
+      if (g.includes('演歌')) counts.enka++;
+      if (g.includes('その他')) counts.other++;
     }
   }
-  ok(`MASTER_SONGS genres: J-POP=${counts.jpop} アニソン=${counts.anime} ボカロ=${counts.vocalo} 未分類=${counts.empty}`);
+  ok(`MASTER_SONGS genres: J-POP=${counts.jpop} アニソン=${counts.anime} ボカロ=${counts.vocalo} 洋楽=${counts.western} 演歌=${counts.enka} その他=${counts.other} 未分類=${counts.empty}`);
 
   if (failed) {
     console.error(`\n${failed} failed`);

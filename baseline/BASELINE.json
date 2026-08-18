@@ -1,30 +1,30 @@
 {
-  "label": "第4段階 アニソン分類拡充",
+  "label": "第5段階 6ジャンル体系・自由タグ整理",
   "establishedAt": "2026-08-18",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "第3段階 ジャンル絞り込み UI",
+    "label": "第4段階 アニソン分類拡充",
     "establishedAt": "2026-08-18",
     "files": {
       "index.html": {
-        "bytes": 615497,
-        "sha256": "f6e566f4e1999a5c9354fb78b85ab2027d9cc08591d50b35cc9eb65f99309b8d"
+        "bytes": 617203,
+        "sha256": "60373f29d0dab30a31984c97b6ac052925eb648534ce921dc61d258a18bfea18"
       },
       "hiro.html": {
-        "bytes": 125735,
-        "sha256": "0024a86fee5bed0b34bd403feb46ced4286ba8bfeed986be0fd529d55316b016"
+        "bytes": 126589,
+        "sha256": "f62172da8b0d95572ec1856b2090b196b8dc8db544cba6fb7068bc77bf92ab6a"
       }
     }
   },
   "files": {
     "index.html": {
-      "bytes": 617203,
-      "sha256": "60373f29d0dab30a31984c97b6ac052925eb648534ce921dc61d258a18bfea18"
+      "bytes": 629762,
+      "sha256": "a639e197ecad514b0e16e51d8f544d214001453aa8a1658ba72a26293e1ed946"
     },
     "hiro.html": {
-      "bytes": 126589,
-      "sha256": "f62172da8b0d95572ec1856b2090b196b8dc8db544cba6fb7068bc77bf92ab6a"
+      "bytes": 134824,
+      "sha256": "b2cd4a107b0f6c64f6aaaf2979aa11f5fd0eca7fb9700bc9ea5d2d6c9916a779"
     }
   },
   "catalog": {

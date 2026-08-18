@@ -61,8 +61,8 @@ if (ex.animeMulti) ok(`B/D: J-POP+アニソン例 ${ex.animeMulti.a}/${ex.animeM
 else fail('B/D: J-POP+アニソン');
 if (ex.vocaloidMulti) ok(`E: J-POP+ボカロ例 ${ex.vocaloidMulti.a}/${ex.vocaloidMulti.t}`);
 else fail('E: J-POP+ボカロ');
-if (ex.unclassified) ok(`F: 未分類例 ${ex.unclassified.a}/${ex.unclassified.t}`);
-else fail('F: 未分類');
+if (ex.unclassified) fail('F: 未分類が残存', `${ex.unclassified.a}/${ex.unclassified.t}`);
+else ok('F: 未分類0');
 
 const stats = summarizeGenreStats(songs);
 console.log('Stats:', stats);
