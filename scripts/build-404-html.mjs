@@ -88,6 +88,8 @@ ${css}
     </div>
   </div>
 
+  <div class="genre-filter-row filter-row" id="genreFilterRow" role="group" aria-label="ジャンル"></div>
+
   <div class="filter-row" id="statusFilterRow"></div>
   <div class="filter-row" id="tagFilterRow" style="display:none;"></div>
 

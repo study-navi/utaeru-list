@@ -186,6 +186,27 @@
     font-weight: 700;
   }
 
+  .genre-filter-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    margin: 0 0 10px;
+    padding: 0 2px;
+    overflow: visible;
+    flex-wrap: unset;
+  }
+  .genre-filter-row .chip {
+    min-height: 44px;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 13px;
+    padding: 8px 4px;
+    width: 100%;
+  }
+  @media (max-width: 360px) {
+    .genre-filter-row .chip { font-size: 12px; }
+  }
+
   .result-meta {
     font-size: 12px;
     color: var(--text-muted);
@@ -504,6 +525,8 @@
       <div class="gyo-row" id="gyoRow"></div>
     </div>
   </div>
+
+  <div class="genre-filter-row filter-row" id="genreFilterRow" role="group" aria-label="ジャンル"></div>
 
   <div class="filter-row" id="statusFilterRow"></div>
   <div class="filter-row" id="tagFilterRow" style="display:none;"></div>
@@ -851,9 +874,11 @@ const resultMeta = document.getElementById('resultMeta');
 const filterSummaryEl = document.getElementById('filterSummary');
 const statusFilterRow = document.getElementById('statusFilterRow');
 const tagFilterRow = document.getElementById('tagFilterRow');
+const genreFilterRow = document.getElementById('genreFilterRow');
 const randomBtn = document.getElementById('randomBtn');
 const randomPick = document.getElementById('randomPick');
 
+let activeGenre = null;
 let activeGyo = null;
 let activeMark = null;   // null | 'signature' | 'favorite' | 'learning'
 let newOnly = false;       // Phase 3: 🆕新着 トグル（マークフィルタとは独立、AND条件）
@@ -867,6 +892,26 @@ allChip.className = 'chip active';
 allChip.textContent = 'すべて';
 allChip.addEventListener('click', () => setGyo(null));
 gyoRow.appendChild(allChip);
+
+function setGenre(value) {
+  activeGenre = value;
+  [...genreFilterRow.children].forEach((c, i) => {
+    c.classList.toggle('active', GENRE_FILTER_OPTIONS[i].value === value);
+  });
+  render();
+}
+GENRE_FILTER_OPTIONS.forEach(({ value, label }) => {
+  const chip = document.createElement('div');
+  chip.className = 'chip' + (value === null ? ' active' : '');
+  chip.textContent = label;
+  chip.setAttribute('role', 'button');
+  chip.tabIndex = 0;
+  chip.addEventListener('click', () => setGenre(value));
+  chip.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setGenre(value); }
+  });
+  genreFilterRow.appendChild(chip);
+});
 
 GYO.forEach(g => {
   const chip = document.createElement('div');
@@ -943,6 +988,7 @@ if (usedTags.length > 0) {
 
 function updateFilterSummary() {
   const parts = [];
+  if (activeGenre) parts.push(activeGenre);
   if (activeGyo) parts.push(`${activeGyo}行`);
   if (activeMark && MARK_LABELS[activeMark]) parts.push(MARK_LABELS[activeMark].label);
   if (newOnly) parts.push('🆕 新着');
@@ -1058,6 +1104,9 @@ function render() {
   let filtered = SONGS;
   if (activeGyo) {
     filtered = filtered.filter(s => gyoOf(s.k) === activeGyo);
+  }
+  if (activeGenre) {
+    filtered = filtered.filter(s => songMatchesGenreFilter(s));
   }
   if (q) {
     const nq = norm(q);

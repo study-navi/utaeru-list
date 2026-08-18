@@ -1,15 +1,15 @@
 {
-  "label": "v1.0 SEO / Google検索対応",
-  "establishedAt": "2026-08-17",
+  "label": "第3段階 ジャンル絞り込み UI",
+  "establishedAt": "2026-08-18",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "v1.0 曲マーク表示（⭐/❤️/🔰）統一",
+    "label": "v1.0 SEO / Google検索対応",
     "establishedAt": "2026-08-17",
     "files": {
       "index.html": {
-        "bytes": 392725,
-        "sha256": "36a5e3df6541e0ad83072862ecfe2fefc9acc601ed05e21c28a1ce85f3a32ce4"
+        "bytes": 394387,
+        "sha256": "bf06c085c3f90e67c3649703ba202cafd9003e0e24e7dc9851527fef86bc1e6d"
       },
       "hiro.html": {
         "bytes": 26221,
@@ -19,12 +19,12 @@
   },
   "files": {
     "index.html": {
-      "bytes": 394387,
-      "sha256": "bf06c085c3f90e67c3649703ba202cafd9003e0e24e7dc9851527fef86bc1e6d"
+      "bytes": 615497,
+      "sha256": "f6e566f4e1999a5c9354fb78b85ab2027d9cc08591d50b35cc9eb65f99309b8d"
     },
     "hiro.html": {
-      "bytes": 26221,
-      "sha256": "9f45223b35d38d69062f5a59c1b9a48415b3fcbea78e3c2303e1e8c3b6baf7d0"
+      "bytes": 125735,
+      "sha256": "0024a86fee5bed0b34bd403feb46ced4286ba8bfeed986be0fd529d55316b016"
     }
   },
   "catalog": {
