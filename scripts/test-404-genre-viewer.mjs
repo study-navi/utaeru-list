@@ -24,6 +24,7 @@ async function main() {
     'searchTarget', 'search-mode-segment', 'resolveTitleReading',
     'genreFilterRow', 'function setGenre', 'songMatchesGenreFilter',
     'sortMode', 'SORT_OPTIONS', 'sortSelect', 'sortSongsList', 'initSortSelect',
+    'CURRENT_NEW_BATCH', 'NEW_BATCH_LOOKUP', 'isCurrentNewBatchSong', 'catalogFilterRow',
   ]) {
     if (src.includes(needle)) ok(`404.html contains ${needle}`);
     else fail(`404.html missing ${needle}`);
