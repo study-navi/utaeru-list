@@ -72,6 +72,11 @@ function assertSongShape(song, fields, label) {
       throw new Error(`${label}: "${field}" は文字列である必要があります`);
     }
   }
+  if ('genres' in song) {
+    if (!Array.isArray(song.genres)) {
+      throw new Error(`${label}: "genres" は配列である必要があります`);
+    }
+  }
 }
 
 const baseline = JSON.parse(fs.readFileSync(BASELINE_PATH, 'utf8'));

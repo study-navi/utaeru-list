@@ -27,6 +27,13 @@ for (const s of songs) {
   if (!s.k || !s.y) fail('k/y欠損', String(s.id));
   if ([...s.k].length !== 1) fail('kは1文字', `${s.id}:${s.k}`);
   if (s.k !== s.y[0]) fail('k === y[0]', `${s.id} k=${s.k} y=${s.y}`);
+  if (s.genres !== undefined) {
+    if (!Array.isArray(s.genres)) fail('genresは配列', String(s.id));
+    const allowed = new Set(['J-POP', 'アニソン', 'ボカロ']);
+    for (const g of s.genres) {
+      if (!allowed.has(g)) fail('genres値', `${s.id}:${g}`);
+    }
+  }
 }
 if (!failed) ok('全曲 k/y 整合');
 
