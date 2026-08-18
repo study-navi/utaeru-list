@@ -130,6 +130,14 @@ async function checkChipLayout(page, label, width) {
   else fail(`${label}: 横スクロール`);
   if (!lay.lineBreaks) ok(`${label}: ラベル改行なし`);
   else fail(`${label}: ラベル改行`);
+  if (width <= 430) {
+    const expected = [['すべて', '新着', 'J-POP', 'アニソン'], ['ボカロ', '洋楽', '演歌', 'その他']];
+    if (JSON.stringify(lay.rows) === JSON.stringify(expected)) ok(`${label}: 4×2配置`);
+    else fail(`${label}: 4×2配置`, rowDesc);
+  } else if (width >= 1280) {
+    if (lay.rows.length === 1 && lay.rows[0].length === 8) ok(`${label}: 1行8chip`);
+    else fail(`${label}: 1行8chip`, rowDesc);
+  }
   if (lay.heights.every((h) => h >= 34 && h <= 40)) ok(`${label}: chip高さ統一 ${lay.heights[0]}px`);
   else fail(`${label}: chip高さ`, lay.heights.join(','));
   return lay;
@@ -163,10 +171,8 @@ function run404Tests() {
   }
   if (!src.includes('catalogFilterRow')) ok('404.html: catalogFilterRow なし');
   else fail('404.html: catalogFilterRow 残存');
-  if (!src.includes("label: 'すべて'") || src.includes('narrowFilterRow')) {
-    // genre inject may not have すべて in narrow chips
-    ok('404.html: 絞り込みchipにすべてなし');
-  }
+  if (src.includes("value: 'all'") && src.includes("label: 'すべて'")) ok('404.html: 絞り込みchipにすべてあり');
+  else fail('404.html: 絞り込みchipにすべてなし');
 }
 
 async function runViewerFilterTests(browser) {
@@ -187,9 +193,13 @@ async function runViewerFilterTests(browser) {
   const layout = await measureFilterArea(page);
   if (!layout.hasCatalog && !layout.hasGenreRow) ok('viewer: 旧catalog/genre行なし');
   else fail('viewer: 旧行残存', JSON.stringify(layout));
-  if (layout.narrowLabels.join(',') === '新着,J-POP,アニソン,ボカロ,洋楽,演歌,その他') {
-    ok('viewer: 絞り込み7chip');
+  if (layout.narrowLabels.join(',') === 'すべて,新着,J-POP,アニソン,ボカロ,洋楽,演歌,その他') {
+    ok('viewer: 絞り込み8chip');
   } else fail('viewer: chip labels', layout.narrowLabels.join(','));
+
+  const initActive = await activeChips(page);
+  if (initActive.length === 1 && initActive[0] === 'すべて') ok('viewer: 初期「すべて」選択');
+  else fail('viewer: 初期active', initActive.join(','));
 
   if ((await meta(page)) === '4曲 / 3組') ok('viewer: 初期全曲');
   else fail('viewer: 初期', await meta(page));
@@ -198,15 +208,18 @@ async function runViewerFilterTests(browser) {
   if ((await activeChips(page)).includes('J-POP')) ok('viewer: J-POP ON');
   else fail('viewer: J-POP active');
   await clickNarrow(page, 'J-POP');
-  if (!(await activeChips(page)).includes('J-POP') && (await meta(page)) === '4曲 / 3組') {
-    ok('viewer: J-POP再タップ解除');
-  } else fail('viewer: J-POP OFF', (await activeChips(page)).join(','));
+  const afterJpopOff = await activeChips(page);
+  if (afterJpopOff.length === 1 && afterJpopOff[0] === 'すべて' && (await meta(page)) === '4曲 / 3組') {
+    ok('viewer: J-POP再タップ→すべて');
+  } else fail('viewer: J-POP OFF', afterJpopOff.join(','));
 
   await clickNarrow(page, '新着');
   if ((await meta(page)) === '2曲 / 1組') ok('viewer: 新着 ON 2曲');
   else fail('viewer: 新着', await meta(page));
   await clickNarrow(page, '新着');
-  if ((await meta(page)) === '4曲 / 3組') ok('viewer: 新着再タップ解除');
+  if ((await meta(page)) === '4曲 / 3組' && (await activeChips(page)).join(',') === 'すべて') {
+    ok('viewer: 新着再タップ→すべて');
+  } else fail('viewer: 新着 OFF', await meta(page));
 
   await clickNarrow(page, '新着');
   await clickNarrow(page, 'アニソン');
@@ -220,8 +233,16 @@ async function runViewerFilterTests(browser) {
     ok('viewer: J-POP→アニソン切替');
   } else fail('viewer: J-POP切替', switched.join(','));
   await clickNarrow(page, 'J-POP');
-  if ((await activeChips(page)).length === 0) ok('viewer: 同chip再タップ解除→全曲');
-  else fail('viewer: 全解除', (await activeChips(page)).join(','));
+  const afterAll = await activeChips(page);
+  if (afterAll.length === 1 && afterAll[0] === 'すべて') ok('viewer: 同chip再タップ→すべて');
+  else fail('viewer: すべてへ', afterAll.join(','));
+
+  await clickNarrow(page, 'J-POP');
+  await clickNarrow(page, 'すべて');
+  const afterAllClick = await activeChips(page);
+  if (afterAllClick.length === 1 && afterAllClick[0] === 'すべて' && (await meta(page)) === '4曲 / 3組') {
+    ok('viewer: すべてクリックで解除');
+  } else fail('viewer: すべて解除', afterAllClick.join(','));
 
   await clickNarrow(page, 'J-POP');
   await page.selectOption('#sortSelect', 'title-desc');
@@ -285,8 +306,11 @@ async function runEditorTests(browser) {
   await page.waitForSelector('#panelSongs:not([hidden])');
 
   const layout = await measureFilterArea(page);
-  if (layout.narrowLabels.length === 7) ok('編集: 絞り込み7chip');
+  if (layout.narrowLabels.length === 8) ok('編集: 絞り込み8chip');
   else fail('編集: chips', layout.narrowLabels.join(','));
+  const initActive = await activeChips(page);
+  if (initActive.length === 1 && initActive[0] === 'すべて') ok('編集: 初期「すべて」選択');
+  else fail('編集: 初期active', initActive.join(','));
   if (await page.locator('#narrowFilterBlock .narrow-filter-label').textContent() === '絞り込み') {
     ok('編集: 絞り込み見出し');
   } else fail('編集: label');

@@ -247,7 +247,7 @@ async function checkFilterSingleSelect(page, label) {
 
   await click('アニソン');
   chips = await active();
-  if (chips.length === 0) ok(`${label}: 再タップ解除`);
+  if (chips.length === 1 && chips[0] === 'すべて') ok(`${label}: 再タップ→すべて`);
   else fail(`${label}: 解除`, chips.join(','));
 
   await click('J-POP');

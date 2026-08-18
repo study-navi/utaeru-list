@@ -97,8 +97,8 @@ async function testViewer(browser) {
   const { page, errors } = await openViewer(browser, url);
 
   const genreChips = await page.locator('#narrowFilterRow .chip').count();
-  if (genreChips !== 7) fail('viewer: ジャンル7ボタン', String(genreChips));
-  else ok('viewer: 絞り込み7chip（新着+6ジャンル）');
+  if (genreChips !== 8) fail('viewer: ジャンル8ボタン', String(genreChips));
+  else ok('viewer: 絞り込み8chip（すべて+新着+6ジャンル）');
 
   const chipHeights = await page.evaluate(() =>
     [...document.querySelectorAll('#narrowFilterRow .chip')].map((c) => c.offsetHeight));
@@ -207,8 +207,8 @@ async function testEditor(browser) {
   await page.waitForSelector('#panelSongs:not([hidden])');
 
   const chips = await page.locator('#narrowFilterRow .chip').count();
-  if (chips !== 7) fail('editor: ジャンル7ボタン', String(chips));
-  else ok('editor: 絞り込み7chip（新着+6ジャンル）');
+  if (chips !== 8) fail('editor: ジャンル8ボタン', String(chips));
+  else ok('editor: 絞り込み8chip（すべて+新着+6ジャンル）');
 
   // select J-POP songs while visible, switch genre, keys unchanged
   const before = await page.evaluate(({ jpopKey, animeKey }) => {
