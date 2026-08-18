@@ -679,6 +679,11 @@
     margin: 0 0 6px;
   }
   #panelMore .ui-field-group .hint { margin-bottom: 10px; }
+  #panelMore .backup-export-btn {
+    align-self: flex-start;
+    max-width: 100%;
+    min-height: 44px;
+  }
 
   .card-songs { scroll-margin-top: var(--builder-scroll-offset, calc(64px + env(safe-area-inset-top, 0px))); }
   .card-preview { background: var(--page); }
@@ -1569,7 +1574,7 @@
 
   .export-bar-inner {
     max-width: 720px; margin: 0 auto;
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    display: flex; align-items: center; gap: 8px;
     flex-wrap: wrap;
   }
   .export-count {
@@ -2602,6 +2607,11 @@
           <button type="button" class="tool-btn" id="tagAdminAddBtn">＋ 追加</button>
         </div>
       </div>
+      <div class="ui-field-group">
+        <h3>バックアップ・書き出し</h3>
+        <p class="hint">現在の曲リストをHTMLファイルとして保存できます。通常の編集では、この操作は必要ありません。</p>
+        <button type="button" class="tool-btn backup-export-btn" id="exportBtn" disabled>HTMLファイルとして保存</button>
+      </div>
     </section>
   </div>
 
@@ -2623,7 +2633,6 @@
 <div class="export-bar">
   <div class="export-bar-inner">
     <div class="export-count"><span class="n" id="selectedCount">0</span>曲 選択中</div>
-    <button class="export-btn" id="exportBtn" disabled>HTMLファイルを書き出す</button>
     <p class="draft-save-status" id="draftSaveStatus" hidden aria-live="polite"></p>
   </div>
 </div>

@@ -127,7 +127,7 @@ async function runViewport(label, width, height) {
   if (groups.basicGroups < 3 || !groups.songSearch || !groups.songFilter || !groups.songBulk) {
     fail(`${label}: 境界グループ`, JSON.stringify(groups));
   } else ok(`${label}: 境界グループ`);
-  if (!groups.previewShell || groups.moreGroups < 2) fail(`${label}: プレビュー/管理グループ`, JSON.stringify(groups));
+  if (!groups.previewShell || groups.moreGroups < 3) fail(`${label}: プレビュー/管理グループ`, JSON.stringify(groups));
   else ok(`${label}: プレビュー/管理グループ`);
 
   if (errors.length) fail(`${label}: JSエラー`, errors.join('; '));
