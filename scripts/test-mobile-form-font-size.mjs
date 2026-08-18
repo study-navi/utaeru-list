@@ -17,7 +17,6 @@ const PRIMARY_IDS = [
   { id: 'subtitle', label: 'サブタイトル' },
   { id: 'streamerIdInput', label: '公開ページID' },
   { id: 'searchInput', label: '曲検索' },
-  { id: 'tagAdminInput', label: 'タグ入力' },
   { id: 'editKeyStreamerIdInput', label: '編集キーID' },
   { id: 'editKeyInput', label: '編集キー' },
   { id: 'deleteConfirmInput', label: '削除確認入力' },

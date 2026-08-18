@@ -70,7 +70,6 @@ async function setupEditorState(page, suffix) {
     }
     selectPreset(2);
     tagPresets.push({ id: 'free-tag', label: '自由タグテスト' });
-    renderTagAdmin();
     activeGyo = 'あ';
     activeKana = 'あ';
     songListView = 'selected';

@@ -71,7 +71,6 @@ async function fillBasicEditor(page, opts = {}) {
     }
     selectPreset(themePreset);
     tagPresets.push({ id: 'free-tag-test', label: '自由タグテスト' });
-    renderTagAdmin();
     render();
     updateSelectedCount();
   }, { songCount: opts.songCount || 10, themePreset: opts.themePreset ?? 2 });

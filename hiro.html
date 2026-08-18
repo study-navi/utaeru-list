@@ -675,7 +675,6 @@
   </div>
 
   <div class="filter-row" id="statusFilterRow"></div>
-  <div class="filter-row" id="tagFilterRow" style="display:none;"></div>
 
   <div class="random-row">
     <button class="random-btn" id="randomBtn">🎲 表示中からランダム</button>
@@ -1156,7 +1155,6 @@ const resultsEl = document.getElementById('results');
 const resultMeta = document.getElementById('resultMeta');
 const filterSummaryEl = document.getElementById('filterSummary');
 const statusFilterRow = document.getElementById('statusFilterRow');
-const tagFilterRow = document.getElementById('tagFilterRow');
 const randomBtn = document.getElementById('randomBtn');
 const randomPick = document.getElementById('randomPick');
 
@@ -1301,29 +1299,6 @@ function refreshStatusChips() {
   if (newChip) newChip.classList.toggle('active', newOnly);
 }
 
-// ---- Phase 3: タグフィルタ（実際に使われているタグのみ・複数選択でOR条件） ----
-const usedTagIds = new Set();
-SONGS.forEach(s => {
-  const m = SONG_META[keyOf(s)];
-  if (m && Array.isArray(m.tags)) m.tags.forEach(id => usedTagIds.add(id));
-});
-const usedTags = TAG_PRESETS.filter(t => usedTagIds.has(t.id));
-
-if (usedTags.length > 0) {
-  tagFilterRow.style.display = 'flex';
-  usedTags.forEach(t => {
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.textContent = t.label;
-    chip.addEventListener('click', () => {
-      if (activeTags.has(t.id)) activeTags.delete(t.id); else activeTags.add(t.id);
-      chip.classList.toggle('active', activeTags.has(t.id));
-      render();
-    });
-    tagFilterRow.appendChild(chip);
-  });
-}
-
 function updateFilterSummary() {
   const parts = [];
   if (catalogScope === 'new-batch') parts.push('新着');
@@ -1333,13 +1308,6 @@ function updateFilterSummary() {
   else if (searchTarget === 'artist') parts.unshift('アーティスト');
   if (activeMark && MARK_LABELS[activeMark]) parts.push(MARK_LABELS[activeMark].label);
   if (newOnly) parts.push('🆕 最近追加');
-  if (activeTags.size > 0) {
-    const labels = [...activeTags].map(id => {
-      const t = TAG_PRESETS.find(t => t.id === id);
-      return t ? t.label : null;
-    }).filter(Boolean);
-    if (labels.length) parts.push(labels.join(' / '));
-  }
   if (parts.length === 0) {
     filterSummaryEl.style.display = 'none';
     filterSummaryEl.textContent = '';
@@ -1354,14 +1322,6 @@ function songRowHtml(s, q) {
   const badges = [];
   if (isCurrentNewBatchSong(s)) badges.push(`<span class="v-badge v-badge-utaemo-new" title="UTAEMO新着">NEW</span>`);
   if (isNewArrival(meta.addedAt)) badges.push(`<span class="v-badge" title="リスト追加から30日以内">🆕</span>`);
-  const tagObjs = Array.isArray(meta.tags)
-    ? meta.tags.map(id => TAG_PRESETS.find(t => t.id === id)).filter(Boolean)
-    : [];
-  const shownTags = tagObjs.slice(0, 2);
-  const restCount = tagObjs.length - shownTags.length;
-  const tagsHtml = tagObjs.length
-    ? `<div class="v-tag-row">${shownTags.map(t => `<span class="v-tag">${escapeHtml(t.label)}</span>`).join('')}${restCount > 0 ? `<span class="v-tag v-tag-more">+${restCount}</span>` : ''}</div>`
-    : '';
   return `
     <li>
       <div class="song-main-row">
@@ -1369,7 +1329,6 @@ function songRowHtml(s, q) {
         ${badges.length ? `<span class="v-badges">${badges.join('')}</span>` : ''}
       </div>
       ${marksRowHtml(meta)}
-      ${tagsHtml}
     </li>`;
 }
 
@@ -1378,14 +1337,6 @@ function flatSongRowHtml(s, q) {
   const badges = [];
   if (isCurrentNewBatchSong(s)) badges.push(`<span class="v-badge v-badge-utaemo-new" title="UTAEMO新着">NEW</span>`);
   if (isNewArrival(meta.addedAt)) badges.push(`<span class="v-badge" title="リスト追加から30日以内">🆕</span>`);
-  const tagObjs = Array.isArray(meta.tags)
-    ? meta.tags.map(id => TAG_PRESETS.find(t => t.id === id)).filter(Boolean)
-    : [];
-  const shownTags = tagObjs.slice(0, 2);
-  const restCount = tagObjs.length - shownTags.length;
-  const tagsHtml = tagObjs.length
-    ? `<div class="v-tag-row">${shownTags.map(t => `<span class="v-tag">${escapeHtml(t.label)}</span>`).join('')}${restCount > 0 ? `<span class="v-tag v-tag-more">+${restCount}</span>` : ''}</div>`
-    : '';
   const titleLine = searchTarget === 'title'
     ? `<span class="flat-title-primary">${highlight(s.t, searchTarget === 'title' ? q : '')}</span><span class="flat-artist-sub">${highlight(s.a, '')}</span>`
     : `<span class="song-title">${highlight(s.t, q)}</span>`;
@@ -1398,7 +1349,6 @@ function flatSongRowHtml(s, q) {
       </div>
       ${artistLine}
       ${marksRowHtml(meta)}
-      ${tagsHtml}
     </li>`;
 }
 

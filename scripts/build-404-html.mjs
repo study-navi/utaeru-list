@@ -88,7 +88,6 @@ ${css}
   ${searchBarHtml}
 
   <div class="filter-row" id="statusFilterRow"></div>
-  <div class="filter-row" id="tagFilterRow" style="display:none;"></div>
 
   <div class="random-row">
     <button class="random-btn" id="randomBtn">🎲 表示中からランダム</button>

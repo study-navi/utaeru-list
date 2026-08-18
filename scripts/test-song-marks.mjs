@@ -105,8 +105,10 @@ async function runViewport(label, width, height) {
   }));
   if (ui.hasWelcome || ui.hasStatusLabel) fail(`${label}: 旧仕様UI削除`, JSON.stringify(ui));
   else ok(`${label}: 旧仕様UI削除`);
-  if (!ui.hasMarkLabel || !ui.hasFreeTagLabel) fail(`${label}: 曲マークUI`, JSON.stringify(ui));
+  if (!ui.hasMarkLabel) fail(`${label}: 曲マークUI`, JSON.stringify(ui));
   else ok(`${label}: 曲マークUI`);
+  if (ui.hasFreeTagLabel) fail(`${label}: 自由タグUI撤去`, JSON.stringify(ui));
+  else ok(`${label}: 自由タグUIなし`);
 
   const songA = 'Story';
   const songB = 'カブトムシ';

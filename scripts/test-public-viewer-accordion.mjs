@@ -222,18 +222,18 @@ async function main() {
     fs.unlinkSync(url.replace('file://', ''));
   }
 
-  // L. free tags
+  // L. free tags — UI撤去後は tagFilterRow 非表示（データは保持）
   {
     const songs = [{ k: 'あ', y: 'あ', a: 'Ado', t: 'tagged' }];
     const tagPresets = [{ id: 't1', label: 'リクエスト可' }];
     const songMeta = { 'Ado\u0001tagged': { tags: ['t1'] } };
     const url = writeFixture('l', buildFixtureHtml({ songs, songMeta, tagPresets }));
     const { page } = await openPage(browser, url);
-    await page.locator('#tagFilterRow .chip').click();
-    await page.waitForFunction(() => document.querySelectorAll('.flat-song-item').length === 1);
-    const tag = await page.locator('.v-tag').first().textContent();
-    if (tag !== 'リクエスト可') fail('L: タグ', tag);
-    else ok('L: 自由タグ絞り込み → フラット一覧');
+    const hasTagRow = await page.evaluate(() => !!document.getElementById('tagFilterRow'));
+    const tagChips = await page.locator('#tagFilterRow .chip').count();
+    const vTags = await page.locator('.v-tag').count();
+    if (!hasTagRow && tagChips === 0 && vTags === 0) ok('L: 自由タグUI撤去（データ保持）');
+    else fail('L: 自由タグUI', `${hasTagRow}/${tagChips}/${vTags}`);
     await page.close();
     fs.unlinkSync(url.replace('file://', ''));
   }
