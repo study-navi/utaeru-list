@@ -2134,10 +2134,39 @@
       line-height: 1.45;
     }
     input[type="text"],
-    input[type="search"] {
+    input[type="search"],
+    input[type="password"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="number"],
+    input[type="date"],
+    input[type="datetime-local"],
+    textarea,
+    select,
+    .ui-input,
+    .account-panel input[type="text"],
+    .account-panel input[type="password"],
+    .edit-key-form input[type="text"],
+    .edit-key-form input[type="password"] {
+      font-size: 16px;
       min-height: 44px;
-      padding: 11px 12px;
       line-height: 1.4;
+    }
+    input[type="text"],
+    input[type="search"] {
+      padding: 10px 12px;
+    }
+    input[type="password"],
+    .ui-input,
+    .account-panel input[type="text"],
+    .account-panel input[type="password"],
+    .edit-key-form input[type="text"],
+    .edit-key-form input[type="password"] {
+      padding: 10px 12px;
+    }
+    input[type="date"] {
+      padding: 8px 10px;
     }
     .field-error,
     .url-preview,
