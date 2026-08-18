@@ -710,9 +710,13 @@ const GENRE_LOOKUP = {"AI\u0001Story":["J-POP"],"AI\u0001ハピネス":["J-POP"]
 // @new-batch-inject
 const CURRENT_NEW_BATCH = "batch-2026-emokara-01";
 const NEW_BATCH_LOOKUP = {"シマエナガ\u0001Happy children《レコおと》":["batch-2026-emokara-01"],"中山美穂\u0001Rosa":["batch-2026-emokara-01"],"子門真人\u0001およげ! たいやきくん":["batch-2026-emokara-01"],"サザンオールスターズ\u0001希望の轍":["batch-2026-emokara-01"],"PRINCESS PRINCESS\u0001ジュリアン":["batch-2026-emokara-01"],"PRINCESS PRINCESS\u000119 GROWING UP -ode to my buddy-":["batch-2026-emokara-01"],"徳永英明\u0001僕のそばに":["batch-2026-emokara-01"],"槇原敬之\u0001北風 〜君にとどきますように〜":["batch-2026-emokara-01"],"LUNA SEA\u0001ROSIER":["batch-2026-emokara-01"],"高橋洋樹\u0001魔訶不思議アドベンチャー!":["batch-2026-emokara-01"],"TM NETWORK(TMN)\u0001SEVEN DAYS WAR (FOUR PIECES BAND MIX)":["batch-2026-emokara-01"],"RAZZ MA TAZZ\u0001夜明け":["batch-2026-emokara-01"],"三人祭\u0001チュッ! 夏パ〜ティ":["batch-2026-emokara-01"],"モーニング娘。\u0001ザ☆ピ〜ス!":["batch-2026-emokara-01"],"ZARD\u0001汗の中でCRY":["batch-2026-emokara-01"],"JUDY AND MARY\u0001くじら12号":["batch-2026-emokara-01"],"小松未歩\u0001謎":["batch-2026-emokara-01"],"L'Arc〜en〜Ciel\u0001Caress of Venus":["batch-2026-emokara-01"],"the FIELD OF VIEW\u0001渇いた叫び":["batch-2026-emokara-01"],"小田和正\u0001たしかなこと":["batch-2026-emokara-01"],"ZARD\u0001運命のルーレット廻して":["batch-2026-emokara-01"],"倖田來未\u0001WIND":["batch-2026-emokara-01"],"Janne Da Arc\u0001桜":["batch-2026-emokara-01"],"和田光司\u0001ターゲット 〜赤い衝撃〜":["batch-2026-emokara-01"],"CHEMISTRY\u0001最期の川":["batch-2026-emokara-01"],"ASIAN KUNG-FU GENERATION\u0001転がる岩、君に朝が降る":["batch-2026-emokara-01"],"AQUA\u0001CARTOON HEROES":["batch-2026-emokara-01"],"倉木麻衣\u0001風のららら":["batch-2026-emokara-01"],"NICO Touches the Walls\u0001手をたたけ":["batch-2026-emokara-01"],"小野正利\u0001departure!":["batch-2026-emokara-01"],"西野カナ\u0001Always":["batch-2026-emokara-01"],"宇多田ヒカル\u0001桜流し":["batch-2026-emokara-01"],"Janne Da Arc\u0001Dear my....":["batch-2026-emokara-01"],"スピッツ\u0001砂漠の花":["batch-2026-emokara-01"],"See-Saw\u0001あんなに一緒だったのに":["batch-2026-emokara-01"],"the pillows\u0001Funny Bunny":["batch-2026-emokara-01"],"天野月子\u0001聲":["batch-2026-emokara-01"],"Acid Black Cherry\u0001優しい嘘":["batch-2026-emokara-01"],"大黒摩季\u0001Anything Goes!":["batch-2026-emokara-01"],"cosMo@暴走P\u0001初音ミクの暴走":["batch-2026-emokara-01"],"シド\u0001ENAMEL":["batch-2026-emokara-01"],"Kagrra,\u0001うたかた":["batch-2026-emokara-01"],"Aice5\u0001Love Power":["batch-2026-emokara-01"],"No.D/上野悠仁\u0001火葬曲":["batch-2026-emokara-01"],"藤原さくら\u0001Soup":["batch-2026-emokara-01"],"BOWL\u0001ティアドロップ":["batch-2026-emokara-01"],"OSTER project\u0001ミラクルペイント":["batch-2026-emokara-01"],"福原遥\u0001なめこのうた":["batch-2026-emokara-01"],"Galileo Galilei\u0001夏空":["batch-2026-emokara-01"],"シド\u0001乱舞のメロディ":["batch-2026-emokara-01"],"SiM\u0001Rosso & Dry":["batch-2026-emokara-01"],"倉橋ヨエコ\u0001夜な夜な夜な":["batch-2026-emokara-01"]};
+const NEW_BATCH_ORDER = {"シマエナガ\u0001Happy children《レコおと》":0,"中山美穂\u0001Rosa":1,"子門真人\u0001およげ! たいやきくん":2,"サザンオールスターズ\u0001希望の轍":3,"PRINCESS PRINCESS\u0001ジュリアン":4,"PRINCESS PRINCESS\u000119 GROWING UP -ode to my buddy-":5,"徳永英明\u0001僕のそばに":6,"槇原敬之\u0001北風 〜君にとどきますように〜":7,"LUNA SEA\u0001ROSIER":8,"高橋洋樹\u0001魔訶不思議アドベンチャー!":9,"TM NETWORK(TMN)\u0001SEVEN DAYS WAR (FOUR PIECES BAND MIX)":10,"RAZZ MA TAZZ\u0001夜明け":11,"三人祭\u0001チュッ! 夏パ〜ティ":12,"モーニング娘。\u0001ザ☆ピ〜ス!":13,"ZARD\u0001汗の中でCRY":14,"JUDY AND MARY\u0001くじら12号":15,"小松未歩\u0001謎":16,"L'Arc〜en〜Ciel\u0001Caress of Venus":17,"the FIELD OF VIEW\u0001渇いた叫び":18,"小田和正\u0001たしかなこと":19,"ZARD\u0001運命のルーレット廻して":20,"倖田來未\u0001WIND":21,"Janne Da Arc\u0001桜":22,"和田光司\u0001ターゲット 〜赤い衝撃〜":23,"CHEMISTRY\u0001最期の川":24,"ASIAN KUNG-FU GENERATION\u0001転がる岩、君に朝が降る":25,"AQUA\u0001CARTOON HEROES":26,"倉木麻衣\u0001風のららら":27,"NICO Touches the Walls\u0001手をたたけ":28,"小野正利\u0001departure!":29,"西野カナ\u0001Always":30,"宇多田ヒカル\u0001桜流し":31,"Janne Da Arc\u0001Dear my....":32,"スピッツ\u0001砂漠の花":33,"See-Saw\u0001あんなに一緒だったのに":34,"the pillows\u0001Funny Bunny":35,"天野月子\u0001聲":36,"Acid Black Cherry\u0001優しい嘘":37,"大黒摩季\u0001Anything Goes!":38,"cosMo@暴走P\u0001初音ミクの暴走":39,"シド\u0001ENAMEL":40,"Kagrra,\u0001うたかた":41,"Aice5\u0001Love Power":42,"No.D/上野悠仁\u0001火葬曲":43,"藤原さくら\u0001Soup":44,"BOWL\u0001ティアドロップ":45,"OSTER project\u0001ミラクルペイント":46,"福原遥\u0001なめこのうた":47,"Galileo Galilei\u0001夏空":48,"シド\u0001乱舞のメロディ":49,"SiM\u0001Rosso & Dry":50,"倉橋ヨエコ\u0001夜な夜な夜な":51};
 function isCurrentNewBatchSong(s) {
   const batches = NEW_BATCH_LOOKUP[keyOf(s)];
   return !!(batches && batches.indexOf(CURRENT_NEW_BATCH) >= 0);
+}
+function getBatchOrderIndex(s) {
+  return NEW_BATCH_ORDER[keyOf(s)];
 }
 // @end-new-batch-inject
 // @title-reading-lookup-inject
@@ -797,7 +801,8 @@ let searchTarget = 'artist';
 let activeKana = null;
 
 // @song-sort-inject
-const SORT_OPTIONS = [{"value":"default","label":"標準順"},{"value":"kana-asc","label":"あ→ん"},{"value":"kana-desc","label":"ん→あ"},{"value":"added-desc","label":"最近追加した順"},{"value":"added-asc","label":"古く追加した順"}];
+const SORT_OPTIONS = [{"value":"title-asc","label":"曲名 あ→ん"},{"value":"title-desc","label":"曲名 ん→あ"},{"value":"artist-asc","label":"アーティスト あ→ん"},{"value":"artist-desc","label":"アーティスト ん→あ"},{"value":"batch-order","label":"UTAEMO新着順"},{"value":"added-desc","label":"追加が新しい順"},{"value":"added-asc","label":"追加が古い順"}];
+const DEFAULT_SORT_BY_TARGET = {"artist":"artist-asc","title":"title-asc"};
 const JA_COLLATOR = new Intl.Collator('ja', { sensitivity: 'base', numeric: true });
 function readingSortTier(str) {
   if (!str) return 2;
@@ -815,6 +820,13 @@ function compareReading(a, b, dir) {
   const bb = (b || '').toLowerCase();
   return dir * JA_COLLATOR.compare(aa, bb);
 }
+function defaultSortForSearchTarget(target) {
+  return DEFAULT_SORT_BY_TARGET[target] || DEFAULT_SORT_BY_TARGET.artist;
+}
+function withinGroupSortMode(sortMode) {
+  if (sortMode === 'title-asc' || sortMode === 'title-desc') return sortMode;
+  return 'title-asc';
+}
 function buildOriginalIndexMap(sourceList, keyOfFn) {
   const m = new Map();
   sourceList.forEach(function(s, i) { m.set(keyOfFn(s), i); });
@@ -823,22 +835,51 @@ function buildOriginalIndexMap(sourceList, keyOfFn) {
 function hasAnyAddedAt(songs, getAddedAt) {
   return songs.some(function(s) { return !!getAddedAt(s); });
 }
+function compareByTitle(a, b, dir, getTitleTy, getArtistY, origIdx) {
+  var c = compareReading(getTitleTy(a), getTitleTy(b), dir);
+  if (c !== 0) return c;
+  c = compareReading(getArtistY(a), getArtistY(b), 1);
+  if (c !== 0) return c;
+  return origIdx(a) - origIdx(b);
+}
+function compareByArtist(a, b, dir, getTitleTy, getArtistY, origIdx) {
+  var c = compareReading(getArtistY(a), getArtistY(b), dir);
+  if (c !== 0) return c;
+  c = compareReading(getTitleTy(a), getTitleTy(b), 1);
+  if (c !== 0) return c;
+  return origIdx(a) - origIdx(b);
+}
 function sortSongsList(songs, opts) {
   const sortMode = opts.sortMode;
-  const searchTarget = opts.searchTarget;
   const sourceList = opts.sourceList;
   const keyOfFn = opts.keyOf;
   const getTitleTy = opts.getTitleTy;
   const getArtistY = opts.getArtistY;
   const getAddedAt = opts.getAddedAt;
-  const useSelectedDefaultSort = opts.useSelectedDefaultSort;
-  const selectedDefaultSortFn = opts.selectedDefaultSortFn;
-  if (sortMode === 'default') {
-    if (useSelectedDefaultSort && selectedDefaultSortFn) return selectedDefaultSortFn(songs);
-    return songs;
-  }
+  const getBatchOrder = opts.getBatchOrder;
   const idxMap = buildOriginalIndexMap(sourceList, keyOfFn);
   function origIdx(s) { return idxMap.get(keyOfFn(s)) ?? 999999; }
+  if (sortMode === 'title-asc' || sortMode === 'title-desc') {
+    const dir = sortMode === 'title-asc' ? 1 : -1;
+    return [...songs].sort(function(a, b) { return compareByTitle(a, b, dir, getTitleTy, getArtistY, origIdx); });
+  }
+  if (sortMode === 'artist-asc' || sortMode === 'artist-desc') {
+    const dir = sortMode === 'artist-asc' ? 1 : -1;
+    return [...songs].sort(function(a, b) { return compareByArtist(a, b, dir, getTitleTy, getArtistY, origIdx); });
+  }
+  if (sortMode === 'batch-order') {
+    function batchIdx(s) { return getBatchOrder ? getBatchOrder(s) : undefined; }
+    return [...songs].sort(function(a, b) {
+      const ba = batchIdx(a);
+      const bb = batchIdx(b);
+      const aIn = ba !== undefined;
+      const bIn = bb !== undefined;
+      if (aIn && !bIn) return -1;
+      if (!aIn && bIn) return 1;
+      if (aIn && bIn && ba !== bb) return ba - bb;
+      return compareByTitle(a, b, 1, getTitleTy, getArtistY, origIdx);
+    });
+  }
   if (sortMode === 'added-desc' || sortMode === 'added-asc') {
     const dir = sortMode === 'added-desc' ? -1 : 1;
     return [...songs].sort(function(a, b) {
@@ -854,54 +895,151 @@ function sortSongsList(songs, opts) {
       return origIdx(a) - origIdx(b);
     });
   }
-  const dir = sortMode === 'kana-asc' ? 1 : -1;
-  return [...songs].sort(function(a, b) {
-    var pA, pB, sA, sB;
-    if (searchTarget === 'title') {
-      pA = getTitleTy(a) || ''; pB = getTitleTy(b) || '';
-      sA = getArtistY(a) || ''; sB = getArtistY(b) || '';
-    } else {
-      pA = getArtistY(a) || ''; pB = getArtistY(b) || '';
-      sA = getTitleTy(a) || ''; sB = getTitleTy(b) || '';
-    }
-    var c = compareReading(pA, pB, dir);
-    if (c !== 0) return c;
-    c = compareReading(sA, sB, dir);
-    if (c !== 0) return c;
-    return origIdx(a) - origIdx(b);
-  });
+  return songs;
 }
 function sortArtistGroups(groups, opts) {
   const sortMode = opts.sortMode;
   const getArtistY = opts.getArtistY;
-  if (sortMode !== 'kana-asc' && sortMode !== 'kana-desc') return groups;
-  const dir = sortMode === 'kana-asc' ? 1 : -1;
+  const getBatchOrder = opts.getBatchOrder;
+  const getAddedAt = opts.getAddedAt;
+  if (sortMode === 'artist-asc' || sortMode === 'artist-desc') {
+    const dir = sortMode === 'artist-asc' ? 1 : -1;
+    return [...groups].sort(function(ga, gb) {
+      return compareReading(getArtistY(ga.songs[0]), getArtistY(gb.songs[0]), dir);
+    });
+  }
+  if (sortMode === 'batch-order' && getBatchOrder) {
+    function minBatch(g) {
+      var min = 999999;
+      for (var i = 0; i < g.songs.length; i++) {
+        var idx = getBatchOrder(g.songs[i]);
+        if (idx !== undefined && idx < min) min = idx;
+      }
+      return min;
+    }
+    return [...groups].sort(function(ga, gb) {
+      var ma = minBatch(ga);
+      var mb = minBatch(gb);
+      var aIn = ma < 999999;
+      var bIn = mb < 999999;
+      if (aIn && !bIn) return -1;
+      if (!aIn && bIn) return 1;
+      if (aIn && bIn && ma !== mb) return ma - mb;
+      return compareReading(getArtistY(ga.songs[0]), getArtistY(gb.songs[0]), 1);
+    });
+  }
+  if (sortMode === 'added-desc' || sortMode === 'added-asc') {
+    const dir = sortMode === 'added-desc' ? -1 : 1;
+    function pickAdded(g) {
+      var best = null;
+      for (var i = 0; i < g.songs.length; i++) {
+        var a = getAddedAt(g.songs[i]);
+        if (!a) continue;
+        if (!best || (dir < 0 ? a.localeCompare(best) > 0 : a.localeCompare(best) < 0)) best = a;
+      }
+      return best;
+    }
+    return [...groups].sort(function(ga, gb) {
+      var aa = pickAdded(ga);
+      var ba = pickAdded(gb);
+      if (aa && !ba) return -1;
+      if (!aa && ba) return 1;
+      if (!aa && !ba) return compareReading(getArtistY(ga.songs[0]), getArtistY(gb.songs[0]), 1);
+      var cmp = aa.localeCompare(ba);
+      if (cmp !== 0) return dir * cmp;
+      return compareReading(getArtistY(ga.songs[0]), getArtistY(gb.songs[0]), 1);
+    });
+  }
   return [...groups].sort(function(ga, gb) {
-    const ya = getArtistY(ga.songs[0]) || '';
-    const yb = getArtistY(gb.songs[0]) || '';
-    return compareReading(ya, yb, dir);
+    return compareReading(getArtistY(ga.songs[0]), getArtistY(gb.songs[0]), 1);
   });
+}
+function buildArtistGroups(songs, opts) {
+  const byArtist = new Map();
+  for (var i = 0; i < songs.length; i++) {
+    var s = songs[i];
+    if (!byArtist.has(s.a)) byArtist.set(s.a, []);
+    byArtist.get(s.a).push(s);
+  }
+  var withinMode = withinGroupSortMode(opts.sortMode);
+  for (var entry of byArtist.entries()) {
+    byArtist.set(entry[0], sortSongsList(entry[1], {
+      sortMode: withinMode,
+      sourceList: opts.sourceList,
+      keyOf: opts.keyOf,
+      getTitleTy: opts.getTitleTy,
+      getArtistY: opts.getArtistY,
+      getAddedAt: opts.getAddedAt,
+      getBatchOrder: opts.getBatchOrder,
+    }));
+  }
+  var groups = [];
+  for (var entry2 of byArtist.entries()) {
+    groups.push({ artist: entry2[0], songs: entry2[1] });
+  }
+  return sortArtistGroups(groups, {
+    sortMode: opts.sortMode,
+    getArtistY: opts.getArtistY,
+    getBatchOrder: opts.getBatchOrder,
+    getAddedAt: opts.getAddedAt,
+  });
+}
+function shouldUseFlatListMode(opts) {
+  if (opts.songListView === 'selected') return true;
+  if (opts.searchTarget === 'title') return true;
+  if (opts.q) return true;
+  if (opts.sortMode === 'title-asc' || opts.sortMode === 'title-desc') return true;
+  if (opts.sortMode === 'batch-order') return true;
+  if (opts.sortMode === 'added-desc' || opts.sortMode === 'added-asc') return true;
+  if (opts.newOnly || opts.activeMark || opts.activeTagsSize > 0 || opts.catalogScope === 'new-batch') return true;
+  return false;
 }
 function shouldUseFlatForAddedSort(searchTarget, sortMode) {
   return searchTarget === 'artist' && (sortMode === 'added-desc' || sortMode === 'added-asc');
 }
-let sortMode = 'default';
+let sortMode = defaultSortForSearchTarget('artist');
+let sortUserChosen = false;
 
 function initSortSelect() {
   const sel = document.getElementById('sortSelect');
-  if (!sel || sel.dataset.inited) return;
-  sel.dataset.inited = '1';
-  SORT_OPTIONS.forEach(function(opt) {
-    const o = document.createElement('option');
-    o.value = opt.value;
-    o.textContent = opt.label;
-    sel.appendChild(o);
-  });
+  if (!sel) return;
+  if (!sel.dataset.inited) {
+    sel.dataset.inited = '1';
+    SORT_OPTIONS.forEach(function(opt) {
+      const o = document.createElement('option');
+      o.value = opt.value;
+      o.textContent = opt.label;
+      sel.appendChild(o);
+    });
+    sel.addEventListener('change', function() {
+      sortMode = sel.value;
+      sortUserChosen = true;
+      render();
+    });
+  }
   sel.value = sortMode;
-  sel.addEventListener('change', function() {
-    sortMode = sel.value;
-    render();
+}
+function applyDefaultSortForSearchTarget() {
+  if (sortUserChosen) return;
+  sortMode = defaultSortForSearchTarget(searchTarget);
+  const sel = document.getElementById('sortSelect');
+  if (sel) sel.value = sortMode;
+}
+function updateSortSelectState(filtered) {
+  const sel = document.getElementById('sortSelect');
+  if (!sel) return;
+  const canAdded = hasAnyAddedAt(filtered, function(s) { return (SONG_META[keyOf(s)] || {}).addedAt; });
+  [...sel.options].forEach(function(o) {
+    if (o.value === 'added-desc' || o.value === 'added-asc') {
+      o.disabled = !canAdded;
+      o.title = canAdded ? '' : '追加日が設定された曲があるとき使えます';
+    }
   });
+  if ((sortMode === 'added-desc' || sortMode === 'added-asc') && !canAdded) {
+    sortMode = defaultSortForSearchTarget(searchTarget);
+    sortUserChosen = false;
+    sel.value = sortMode;
+  }
 }
 function getTitleTyForSort(s) {
   const tr = resolveTitleReading(s);
@@ -913,14 +1051,23 @@ function getAddedAtForSort(s) {
 function applySortToFiltered(filtered) {
   return sortSongsList(filtered, {
     sortMode: sortMode,
-    searchTarget: searchTarget,
     sourceList: SONGS,
     keyOf: keyOf,
     getTitleTy: getTitleTyForSort,
     getArtistY: function(s) { return s.y; },
     getAddedAt: getAddedAtForSort,
-    useSelectedDefaultSort: false,
-    selectedDefaultSortFn: null,
+    getBatchOrder: getBatchOrderIndex,
+  });
+}
+function buildSortedArtistGroups(filtered) {
+  return buildArtistGroups(filtered, {
+    sortMode: sortMode,
+    sourceList: SONGS,
+    keyOf: keyOf,
+    getTitleTy: getTitleTyForSort,
+    getArtistY: function(s) { return s.y; },
+    getAddedAt: getAddedAtForSort,
+    getBatchOrder: getBatchOrderIndex,
   });
 }
 // @end-song-sort-inject
@@ -969,14 +1116,14 @@ function setSearchTarget(target) {
   if (target !== 'title' && target !== 'artist') return;
   searchTarget = target;
   activeKana = null;
-  initSortSelect();
-document.querySelectorAll('.search-mode-tab').forEach(tab => {
+  document.querySelectorAll('.search-mode-tab').forEach(tab => {
     const active = tab.dataset.target === target;
     tab.classList.toggle('active', active);
     tab.setAttribute('aria-selected', active ? 'true' : 'false');
   });
   searchInput.placeholder = target === 'artist' ? 'アーティスト名を入力' : '曲名を入力';
   searchInput.setAttribute('aria-label', searchInput.placeholder);
+  applyDefaultSortForSearchTarget();
   updateGyoSubRow();
   render();
 }
@@ -1217,7 +1364,16 @@ function flatSongRowHtml(s, q) {
 }
 
 function isFlatListMode(q) {
-  return searchTarget === 'title' || !!(q || activeMark || newOnly || activeTags.size > 0 || catalogScope === 'new-batch') || shouldUseFlatForAddedSort(searchTarget, sortMode);
+  return shouldUseFlatListMode({
+    sortMode: sortMode,
+    searchTarget: searchTarget,
+    q: q,
+    songListView: null,
+    newOnly: newOnly,
+    activeMark: activeMark,
+    activeTagsSize: activeTags.size,
+    catalogScope: catalogScope,
+  });
 }
 
 function artistAccordionHtml(g, q, index) {
@@ -1327,19 +1483,7 @@ function render() {
     return;
   }
 
-  const groups = [];
-  let cur = null;
-  for (const s of filtered) {
-    if (!cur || cur.artist !== s.a) {
-      cur = { artist: s.a, songs: [] };
-      groups.push(cur);
-    }
-    cur.songs.push(s);
-  }
-  const sortedGroups = sortArtistGroups(groups, {
-    sortMode: sortMode,
-    getArtistY: function(s) { return s.y; },
-  });
+  const sortedGroups = buildSortedArtistGroups(filtered);
 
   const MAX_GROUPS = 400;
   const shown = sortedGroups.slice(0, MAX_GROUPS);
@@ -1389,6 +1533,7 @@ document.getElementById('statSongs').textContent = SONGS.length.toLocaleString('
 document.getElementById('statArtists').textContent = new Set(SONGS.map(s => s.a)).size.toLocaleString('ja-JP');
 document.getElementById('statUpdated').textContent = '2026/7/28';
 
+initSortSelect();
 render();
 </script>
 </body>

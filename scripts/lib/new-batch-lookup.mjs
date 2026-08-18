@@ -4,6 +4,21 @@
 import { matchBatchEntries } from './song-match.mjs';
 import { NEW_SONG_BATCHES, CURRENT_NEW_BATCH } from '../data/new-song-batches.mjs';
 
+/** CURRENT_NEW_BATCH 内の元データ順 index（key → 0-based index） */
+export function buildNewBatchOrderMap(songs, batchId = CURRENT_NEW_BATCH) {
+  const batch = NEW_SONG_BATCHES.find((b) => b.id === batchId);
+  if (!batch) return {};
+  const results = matchBatchEntries(batch.songs, songs);
+  /** @type {Record<string, number>} */
+  const order = {};
+  results.forEach((r, batchIndex) => {
+    if (r.status === 'registered' && r.song) {
+      order[`${r.song.a}\u0001${r.song.t}`] = batchIndex;
+    }
+  });
+  return order;
+}
+
 export function buildNewBatchLookup(songs, batches = NEW_SONG_BATCHES) {
   /** @type {Record<string, string[]>} */
   const lookup = {};

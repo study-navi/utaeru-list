@@ -38,6 +38,7 @@ function keyOf(s) { return s.a + "\\u0001" + s.t; }
 document.getElementById('statArtists').textContent = new Set(SONGS.map(s => s.a)).size.toLocaleString('ja-JP');
 document.getElementById('statUpdated').textContent = formatUpdatedLabel(PUBLIC_DATA.updatedAt);
 
+initSortSelect();
 render();
 }`
   );

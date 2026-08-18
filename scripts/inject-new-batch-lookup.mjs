@@ -5,7 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildNewBatchLookup, runBatchMatchReport } from './lib/new-batch-lookup.mjs';
+import { buildNewBatchLookup, buildNewBatchOrderMap, runBatchMatchReport } from './lib/new-batch-lookup.mjs';
 import { parseMasterSongsFromIndexHtml } from './lib/genre-lookup.mjs';
 import { CURRENT_NEW_BATCH } from './data/new-song-batches.mjs';
 
@@ -30,12 +30,17 @@ if (report.needsReview.length > 0) {
 }
 
 const lookup = buildNewBatchLookup(songs);
+const order = buildNewBatchOrderMap(songs);
 const block = `${START}
 const CURRENT_NEW_BATCH = ${JSON.stringify(CURRENT_NEW_BATCH)};
 const NEW_BATCH_LOOKUP = ${JSON.stringify(lookup)};
+const NEW_BATCH_ORDER = ${JSON.stringify(order)};
 function isCurrentNewBatchSong(s) {
   const batches = NEW_BATCH_LOOKUP[keyOf(s)];
   return !!(batches && batches.indexOf(CURRENT_NEW_BATCH) >= 0);
+}
+function getBatchOrderIndex(s) {
+  return NEW_BATCH_ORDER[keyOf(s)];
 }
 ${END}`;
 
