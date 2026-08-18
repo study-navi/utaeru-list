@@ -72,7 +72,7 @@ async function run() {
     'data-utalis-viewer="light"',
     'page-kind',
     'search-shell',
-    'artist-block',
+    'artist-accordion',
   ]) {
     if (html404.includes(needle)) ok(`404.html に ${needle} を含む`);
     else fail(`404.html に ${needle}`, 'not found');

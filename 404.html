@@ -77,6 +77,13 @@
     font-size: 12px;
     color: var(--text-muted);
   }
+  .header-song-count {
+    display: block;
+    width: 100%;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+  }
   .header-stats strong {
     font-weight: 800;
     color: var(--text-primary);
@@ -228,24 +235,103 @@
   .random-pick .rp-title { font-weight: 800; font-size: 16px; color: var(--text-primary); line-height: 1.35; }
   .random-pick .rp-artist { color: var(--text-muted); font-size: 12.5px; margin-top: 4px; }
 
-  .artist-block { margin-bottom: 18px; }
-  .artist-block:last-child { margin-bottom: 0; }
-  .artist-name {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text-secondary);
-    padding: 0 0 6px;
-    margin: 0 0 2px;
+  .artist-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .artist-accordion-item {
     border-bottom: 1px solid var(--grid);
+  }
+  .artist-accordion-item:last-child { border-bottom: none; }
+  .artist-accordion-trigger {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 2px;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    text-align: left;
+    font: inherit;
+  }
+  .artist-accordion-trigger:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+  .artist-accordion-trigger:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
+  .artist-accordion-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.35;
+    word-break: break-word;
+  }
+  .artist-accordion-meta {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .artist-accordion-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .artist-accordion-chevron {
+    font-size: 14px;
+    line-height: 1;
+    color: var(--accent);
+    width: 16px;
+    text-align: center;
+  }
+  .artist-accordion-panel {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 180ms ease, opacity 150ms ease;
+  }
+  .artist-accordion-item.is-open .artist-accordion-panel {
+    max-height: 5000px;
+    opacity: 1;
+  }
+  .artist-accordion-panel-inner {
+    padding: 0 0 8px 0;
+  }
+  .artist-accordion-panel .song-list li:first-child {
+    padding-top: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .artist-accordion-panel { transition: none; }
+  }
+
+  .flat-song-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .flat-song-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--grid);
+  }
+  .flat-song-item:last-child { border-bottom: none; }
+  .flat-song-artist {
+    margin-top: 4px;
+    font-size: 12.5px;
+    color: var(--text-muted);
     line-height: 1.4;
     word-break: break-word;
   }
-  .artist-count-inline {
-    font-weight: 500;
-    color: var(--text-muted);
-    font-size: 12px;
-    margin-left: 6px;
-  }
+
   ul.song-list {
     list-style: none;
     margin: 0;
@@ -773,6 +859,8 @@ let activeMark = null;   // null | 'signature' | 'favorite' | 'learning'
 let newOnly = false;       // Phase 3: 🆕新着 トグル（マークフィルタとは独立、AND条件）
 let activeTags = new Set(); // Phase 3: 複数選択可・選択されたタグのいずれかを含む曲（OR条件）
 let lastFiltered = [];     // Phase 3: 「表示中からランダム」で使用
+let lastGroups = [];       // render() 直近のアーティストグループ（アコーディオン操作用）
+const expandedArtists = new Set(); // 複数同時展開可
 
 const allChip = document.createElement('div');
 allChip.className = 'chip active';
@@ -897,6 +985,59 @@ function songRowHtml(s, q) {
     </li>`;
 }
 
+function flatSongRowHtml(s, q) {
+  const meta = SONG_META[keyOf(s)] || {};
+  const badges = [];
+  if (isNewArrival(meta.addedAt)) badges.push(`<span class="v-badge" title="新着">🆕</span>`);
+  const tagObjs = Array.isArray(meta.tags)
+    ? meta.tags.map(id => TAG_PRESETS.find(t => t.id === id)).filter(Boolean)
+    : [];
+  const shownTags = tagObjs.slice(0, 2);
+  const restCount = tagObjs.length - shownTags.length;
+  const tagsHtml = tagObjs.length
+    ? `<div class="v-tag-row">${shownTags.map(t => `<span class="v-tag">${escapeHtml(t.label)}</span>`).join('')}${restCount > 0 ? `<span class="v-tag v-tag-more">+${restCount}</span>` : ''}</div>`
+    : '';
+  return `
+    <li class="flat-song-item">
+      <div class="song-main-row">
+        <span class="song-title">${highlight(s.t, q)}</span>
+        ${badges.length ? `<span class="v-badges">${badges.join('')}</span>` : ''}
+      </div>
+      <div class="flat-song-artist">${highlight(s.a, q)}</div>
+      ${marksRowHtml(meta)}
+      ${tagsHtml}
+    </li>`;
+}
+
+function isFlatListMode(q) {
+  return !!(q || activeMark || newOnly || activeTags.size > 0);
+}
+
+function artistAccordionHtml(g, q, index) {
+  const expanded = expandedArtists.has(g.artist);
+  const panelId = `artist-panel-${index}`;
+  return `
+    <div class="artist-accordion-item${expanded ? ' is-open' : ''}">
+      <button type="button" class="artist-accordion-trigger"
+        data-artist-index="${index}"
+        aria-expanded="${expanded ? 'true' : 'false'}"
+        aria-controls="${panelId}">
+        <span class="artist-accordion-name">${highlight(g.artist, q)}</span>
+        <span class="artist-accordion-meta">
+          <span class="artist-accordion-count">${g.songs.length}曲</span>
+          <span class="artist-accordion-chevron" aria-hidden="true">${expanded ? '⌄' : '›'}</span>
+        </span>
+      </button>
+      <div class="artist-accordion-panel" id="${panelId}" role="region" aria-label="${escapeHtml(g.artist)}の曲" ${expanded ? '' : 'hidden'}>
+        <div class="artist-accordion-panel-inner">
+          <ul class="song-list">
+            ${g.songs.map(s => songRowHtml(s, q)).join('')}
+          </ul>
+        </div>
+      </div>
+    </div>`;
+}
+
 function highlight(text, q) {
   if (!q) return escapeHtml(text);
   const nText = norm(text);
@@ -964,15 +1105,13 @@ function render() {
 
   const MAX_GROUPS = 400;
   const shown = groups.slice(0, MAX_GROUPS);
+  lastGroups = shown;
 
-  resultsEl.innerHTML = shown.map(g => `
-    <div class="artist-block">
-      <div class="artist-name">${highlight(g.artist, q)}<span class="artist-count-inline">${g.songs.length}曲</span></div>
-      <ul class="song-list">
-        ${g.songs.map(s => songRowHtml(s, q)).join('')}
-      </ul>
-    </div>
-  `).join('');
+  if (isFlatListMode(q)) {
+    resultsEl.innerHTML = `<ul class="flat-song-list">${filtered.map(s => flatSongRowHtml(s, q)).join('')}</ul>`;
+  } else {
+    resultsEl.innerHTML = `<div class="artist-accordion">${shown.map((g, i) => artistAccordionHtml(g, q, i)).join('')}</div>`;
+  }
 
   if (groups.length > MAX_GROUPS) {
     const note = document.createElement('div');
@@ -984,6 +1123,17 @@ function render() {
 
 searchInput.addEventListener('input', render);
 clearBtn.addEventListener('click', () => { searchInput.value = ''; render(); searchInput.focus(); });
+
+resultsEl.addEventListener('click', (e) => {
+  const btn = e.target.closest('.artist-accordion-trigger');
+  if (!btn) return;
+  const idx = Number(btn.getAttribute('data-artist-index'));
+  const group = lastGroups[idx];
+  if (!group) return;
+  if (expandedArtists.has(group.artist)) expandedArtists.delete(group.artist);
+  else expandedArtists.add(group.artist);
+  render();
+});
 
 randomBtn.addEventListener('click', () => {
   const pool = lastFiltered;

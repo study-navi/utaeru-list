@@ -31,6 +31,7 @@ async function checkViewport(page, label, width, height) {
       h1: document.getElementById('streamerName')?.textContent?.trim(),
       searchShell: !!document.querySelector('.search-shell'),
       searchHeight: document.getElementById('searchInput')?.offsetHeight || 0,
+      artistAccordions: document.querySelectorAll('.artist-accordion-item').length,
       artistBlocks: document.querySelectorAll('.artist-block').length,
       artistCards: document.querySelectorAll('.artist-group').length,
       scrollW: document.documentElement.scrollWidth,
@@ -54,7 +55,8 @@ async function checkViewport(page, label, width, height) {
   else ok(`${label} ${width}px: 検索欄 44px+`);
   if (data.artistCards !== 0) fail(`${label} ${width}px: 旧カードUIなし`, String(data.artistCards));
   else ok(`${label} ${width}px: 軽量アーティスト一覧`);
-  if (data.artistBlocks < 1) fail(`${label} ${width}px: artist-block`, String(data.artistBlocks));
+  if (data.artistAccordions < 1 && data.artistBlocks < 1) fail(`${label} ${width}px: アーティスト一覧`, `${data.artistAccordions}/${data.artistBlocks}`);
+  else ok(`${label} ${width}px: アーティスト一覧（アコーディオン）`);
   if (data.scrollW > data.clientW + 2) fail(`${label} ${width}px: 横スクロール`, `${data.scrollW}/${data.clientW}`);
   else ok(`${label} ${width}px: 横スクロールなし`);
   if (data.pageBg !== '#f5f8fc') fail(`${label} ${width}px: ページ背景`, data.pageBg);
