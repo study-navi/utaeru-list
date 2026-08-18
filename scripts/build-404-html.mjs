@@ -39,6 +39,7 @@ document.getElementById('statArtists').textContent = new Set(SONGS.map(s => s.a)
 document.getElementById('statUpdated').textContent = formatUpdatedLabel(PUBLIC_DATA.updatedAt);
 
 initSortSelect();
+applySearchPanelState();
 render();
 }`
   );
