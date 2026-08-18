@@ -196,21 +196,21 @@ async function runViewport(label, width, height) {
     const filtered = filterSongsForList(MASTER_SONGS);
     return {
       count: filtered.length,
-      genreOk: filtered.every((s) => songMatchesGenreFilter(s)),
+      genreOk: filtered.every((s) => songMatchesNarrowFilter(s)),
       tkOk: filtered.every((s) => s.tk && gyoOf(s.tk) === 'さ'),
     };
   });
   if (!genreAndGyo.count || !genreAndGyo.genreOk || !genreAndGyo.tkOk) fail(`${label}: ジャンル+曲名五十音`, JSON.stringify(genreAndGyo));
   else ok(`${label}: ジャンル+曲名五十音 (${genreAndGyo.count}曲)`);
 
-  const genreAfterModeSwitch = await page.evaluate(() => activeGenre);
+  const genreAfterModeSwitch = await page.evaluate(() => activeFilter);
   await setSearchTarget(page, 'artist');
-  const genreKept = await page.evaluate(() => activeGenre);
+  const genreKept = await page.evaluate(() => activeFilter);
   if (genreKept !== genreAfterModeSwitch || genreKept !== 'アニソン') fail(`${label}: モード切替でジャンル維持`, genreKept);
   else ok(`${label}: モード切替でジャンル維持`);
 
   await clickGyo(page, null);
-  await clickGenre(page, 'すべて');
+  await clickGenre(page, 'アニソン');
   await setSearchTarget(page, 'artist');
   const accordion = await page.evaluate(() => !!document.querySelector('.artist-group'));
   if (!accordion) fail(`${label}: アーティストモードアコーディオン`);

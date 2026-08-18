@@ -255,7 +255,7 @@ async function runEditorUiTests(browser) {
   await setSort(page, 'title-asc');
   await setSearchTarget(page, 'title');
   const titles = await page.evaluate(() =>
-    [...document.querySelectorAll('.flat-title-primary')].slice(0, 5).map((el) => el.textContent.trim()),
+    [...document.querySelectorAll('.flat-title-primary, .song-item .song-title')].slice(0, 5).map((el) => el.textContent.trim()),
   );
   if (titles.length >= 3) ok(`編集: 曲名 あ→ん flat ${titles.length}件`);
   else fail('編集: 曲名 flat', String(titles.length));

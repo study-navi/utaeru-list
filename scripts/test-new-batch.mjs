@@ -49,7 +49,7 @@ function unitTests() {
   const html404 = fs.readFileSync(path.join(ROOT, '404.html'), 'utf8');
   for (const needles of [
     'CURRENT_NEW_BATCH', 'NEW_BATCH_LOOKUP', 'isCurrentNewBatchSong',
-    'narrowFilterRow', 'catalogScope', 'songMatchesCatalogFilter', 'toggleCatalogNewBatch',
+    'narrowFilterRow', 'activeFilter', 'songMatchesNarrowFilter', 'toggleNarrowFilter',
   ]) {
     if (html404.includes(needles)) ok(`404.html contains ${needles}`);
     else fail(`404.html missing ${needles}`);
