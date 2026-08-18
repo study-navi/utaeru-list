@@ -347,6 +347,19 @@ async function testDetachAndRelease() {
   });
   await page.waitForTimeout(800);
 
+  const keyStorage = await page.evaluate(() => ({
+    sessionKey: sessionStorage.getItem('utaeru_edit_key:active-page'),
+    localKey: localStorage.getItem('utaeru_edit_key:active-page'),
+    modalText: document.getElementById('editKeyIssuedTitle')?.textContent || '',
+    modalHint: document.querySelector('#editKeyIssuedModal .hint')?.textContent || '',
+  }));
+  if (keyStorage.sessionKey?.startsWith('ut_') && !keyStorage.localKey) {
+    ok('編集キーは sessionStorage（utaeru_edit_key:ID）のみ');
+  } else fail('編集キー保存先', JSON.stringify(keyStorage));
+  if (keyStorage.modalText.includes('保管') && keyStorage.modalHint.includes('なくすと更新できません')) {
+    ok('detach後: 編集キー喪失警告モーダル表示');
+  } else fail('detach後: 編集キー喪失警告モーダル表示', JSON.stringify(keyStorage));
+
   if (state.detachCalls.includes('active-page')) ok('detach-google: 公開中ページを編集キーへ移行');
   else fail('detach-google', JSON.stringify(state.detachCalls));
   if (state.releaseCalls.includes('deleted-page') && state.releaseCalls.includes('reserved-page')) {
@@ -355,6 +368,54 @@ async function testDetachAndRelease() {
   const confirmEnabled = await page.locator('#deleteGoogleAccountConfirm').isEnabled();
   if (confirmEnabled && state.ownedIds.length === 0) ok('所有解除後 → アカウント削除可能');
   else fail('所有解除後 → アカウント削除可能', JSON.stringify({ confirmEnabled, owned: state.ownedIds }));
+  await browser.close();
+}
+
+async function testForbiddenDetach() {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  const state = createMockState(['mine-page']);
+  await installMockApi(page, state);
+  await page.route('**/api/streamer/other-page/detach-google', async (route) => {
+    await route.fulfill({
+      status: 403,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'forbidden' }),
+    });
+  });
+  await setupEditor(page);
+  await loginGoogle(page);
+  const res = await page.evaluate(async () => {
+    const { res, data } = await apiFetch('/api/streamer/other-page/detach-google', { method: 'POST', body: '{}' });
+    return { status: res.status, error: data?.error };
+  });
+  if (res.status === 403 && res.error === 'forbidden') ok('他人のstreamerId detach → 403');
+  else fail('他人のstreamerId detach → 403', JSON.stringify(res));
+  if (state.ownedIds.includes('mine-page')) ok('他人detach試行後も自分の所有は維持');
+  else fail('他人detach試行後も自分の所有は維持', JSON.stringify(state.ownedIds));
+  await browser.close();
+}
+
+async function testReleaseBlocksActive() {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  const state = createMockState(['active-page']);
+  await installMockApi(page, state);
+  await page.route('**/api/streamer/active-page/release-google-ownership', async (route) => {
+    await route.fulfill({
+      status: 409,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'active_page_needs_detach' }),
+    });
+  });
+  await setupEditor(page);
+  await loginGoogle(page);
+  const res = await page.evaluate(async () => {
+    const { res, data } = await apiFetch('/api/streamer/active-page/release-google-ownership', { method: 'POST', body: '{}' });
+    return { status: res.status, error: data?.error };
+  });
+  if (res.status === 409 && res.error === 'active_page_needs_detach') ok('公開中ページ release → 409');
+  else fail('公開中ページ release → 409', JSON.stringify(res));
   await browser.close();
 }
 
@@ -411,6 +472,8 @@ async function main() {
   await testM();
   await testNandO();
   await testDetachAndRelease();
+  await testForbiddenDetach();
+  await testReleaseBlocksActive();
   await testP();
   await testQ();
   await testRegressionFlags();

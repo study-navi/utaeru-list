@@ -334,9 +334,6 @@ async function handleDetachGoogle(request, path, env) {
 
   await env.DB.batch([
     env.DB.prepare(
-      'DELETE FROM streamer_owners WHERE streamer_id = ? AND user_id = ?',
-    ).bind(streamerId, user.user_id),
-    env.DB.prepare(
       'UPDATE streamer_edit_keys SET revoked_at = ? WHERE streamer_id = ? AND revoked_at IS NULL',
     ).bind(now, streamerId),
     env.DB.prepare(`
@@ -347,6 +344,9 @@ async function handleDetachGoogle(request, path, env) {
         created_at = excluded.created_at,
         revoked_at = NULL
     `).bind(streamerId, keyHash, now),
+    env.DB.prepare(
+      'DELETE FROM streamer_owners WHERE streamer_id = ? AND user_id = ?',
+    ).bind(streamerId, user.user_id),
   ]);
 
   return json({ streamerId, ok: true, editKey }, 200);
