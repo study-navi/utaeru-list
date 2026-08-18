@@ -233,6 +233,7 @@ async function runEditorUiTests(browser) {
   await addBypassStart(page);
   await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.waitForFunction(() => typeof MASTER_SONGS !== 'undefined', { timeout: 15000 });
+  await page.waitForFunction(() => document.documentElement.dataset.utalisEntryReady === '1', { timeout: 15000 });
   await page.click('#editTabSongs');
   await page.waitForSelector('#panelSongs:not([hidden])');
 
@@ -268,13 +269,13 @@ async function runEditorUiTests(browser) {
   else fail('編集: accordion', String(artists.length));
 
   await setSort(page, 'batch-order');
-  await page.evaluate(() => [...document.querySelectorAll('#catalogFilterRow .chip')].find((c) => c.textContent === '新着')?.click());
+  await page.evaluate(() => [...document.querySelectorAll('#narrowFilterRow .chip')].find((c) => c.textContent === '新着')?.click());
   await page.waitForTimeout(200);
   const batchMeta = await page.locator('#resultMeta').textContent();
   if (batchMeta?.includes('52曲')) ok(`編集: 新着+batch-order ${batchMeta}`);
   else fail('編集: 新着+batch-order', batchMeta);
 
-  await page.evaluate(() => [...document.querySelectorAll('#catalogFilterRow .chip')].find((c) => c.textContent === 'すべて')?.click());
+  await page.evaluate(() => [...document.querySelectorAll('#narrowFilterRow .chip')].find((c) => c.textContent === '新着')?.click());
   await setSort(page, 'title-desc');
   await setSearchTarget(page, 'artist');
   const keptSort = await page.locator('#sortSelect').inputValue();
@@ -347,7 +348,7 @@ async function runViewerUiTests(browser) {
   if (flat.join(',') === 'Alpha,Zen,Mid') ok('viewer: アーティストモード+曲名 あ→ん flat');
   else fail('viewer: cross mode sort', flat.join(','));
 
-  await page.locator('#genreFilterRow .chip', { hasText: 'J-POP' }).click();
+  await page.locator('#narrowFilterRow .chip', { hasText: 'J-POP' }).click();
   await page.waitForTimeout(150);
   const sortAfterGenre = await page.locator('#sortSelect').inputValue();
   if (sortAfterGenre === 'title-asc') ok('viewer: ジャンル切替でソート維持');

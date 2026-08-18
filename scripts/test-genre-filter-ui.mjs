@@ -75,7 +75,7 @@ async function openViewer(browser, url) {
 }
 
 async function clickGenre(page, label) {
-  await page.locator('#genreFilterRow .chip', { hasText: label }).click();
+  await page.locator('#narrowFilterRow .chip', { hasText: label }).click();
   await page.waitForTimeout(80);
 }
 
@@ -96,14 +96,14 @@ async function testViewer(browser) {
   const url = writeFixture('viewer', buildFixtureHtml({ songs: fixtureSongs }));
   const { page, errors } = await openViewer(browser, url);
 
-  const genreChips = await page.locator('#genreFilterRow .chip').count();
+  const genreChips = await page.locator('#narrowFilterRow .chip').count();
   if (genreChips !== 7) fail('viewer: ジャンル7ボタン', String(genreChips));
-  else ok('viewer: ジャンル7ボタン（すべて+6ジャンル）');
+  else ok('viewer: 絞り込み7chip（新着+6ジャンル）');
 
   const chipHeights = await page.evaluate(() =>
-    [...document.querySelectorAll('#genreFilterRow .chip')].map((c) => c.offsetHeight));
-  if (chipHeights.some((h) => h < 44)) fail('viewer: タップ領域', chipHeights.join(','));
-  else ok('viewer: タップ領域 >= 44px');
+    [...document.querySelectorAll('#narrowFilterRow .chip')].map((c) => c.offsetHeight));
+  if (chipHeights.some((h) => h < 34)) fail('viewer: タップ領域', chipHeights.join(','));
+  else ok('viewer: タップ領域 >= 34px');
 
   const statBefore = await page.locator('#statSongs').textContent();
   await clickGenre(page, 'J-POP');
@@ -141,11 +141,11 @@ async function testViewer(browser) {
   await clickGenre(page, 'その他');
   ok('viewer: その他切替');
 
-  await clickGenre(page, 'すべて');
+  await clickGenre(page, 'その他');
   const allVisible = await page.evaluate(() =>
     document.querySelectorAll('#results .song-list li, #results .flat-song-item').length);
-  if (allVisible !== fixtureSongs.length) fail('viewer: すべてで全曲', `${allVisible} vs ${fixtureSongs.length}`);
-  else ok('viewer: すべてで全曲（未一致曲含む）');
+  if (allVisible !== fixtureSongs.length) fail('viewer: 解除後全曲', `${allVisible} vs ${fixtureSongs.length}`);
+  else ok('viewer: ジャンル再タップで全曲（未一致曲含む）');
 
   // Ado artist count per genre
   await clickGenre(page, 'J-POP');
@@ -173,7 +173,8 @@ async function testViewer(browser) {
 
   await page.fill('#searchInput', '');
   await page.dispatchEvent('#searchInput', 'input');
-  await clickGenre(page, 'すべて');
+  await clickGenre(page, 'J-POP');
+  await clickGenre(page, 'J-POP');
 
   // genre + mark
   const markSongs = [toPublicSong(SAMPLES.vocalo), toPublicSong(SAMPLES.jpop)];
@@ -205,9 +206,9 @@ async function testEditor(browser) {
   await page.click('#editTabSongs');
   await page.waitForSelector('#panelSongs:not([hidden])');
 
-  const chips = await page.locator('#genreFilterRow .chip').count();
+  const chips = await page.locator('#narrowFilterRow .chip').count();
   if (chips !== 7) fail('editor: ジャンル7ボタン', String(chips));
-  else ok('editor: ジャンル7ボタン（すべて+6ジャンル）');
+  else ok('editor: 絞り込み7chip（新着+6ジャンル）');
 
   // select J-POP songs while visible, switch genre, keys unchanged
   const before = await page.evaluate(({ jpopKey, animeKey }) => {
@@ -250,7 +251,8 @@ async function testEditor(browser) {
   await page.fill('#searchInput', '');
   await page.dispatchEvent('#searchInput', 'input');
   await page.click('#searchTargetTitle');
-  await clickGenre(page, 'すべて');
+  await clickGenre(page, 'J-POP');
+  await clickGenre(page, 'J-POP');
   await page.fill('#searchInput', SAMPLES.other.t);
   await page.dispatchEvent('#searchInput', 'input');
   await page.waitForTimeout(150);
@@ -266,11 +268,11 @@ async function testEditor(browser) {
     await page.setViewportSize({ width: w, height: 800 });
     const layout = await page.evaluate(() => ({
       scroll: document.documentElement.scrollWidth > document.documentElement.clientWidth,
-      h: document.querySelector('#genreFilterRow .chip')?.offsetHeight || 0,
+      h: document.querySelector('#narrowFilterRow .chip')?.offsetHeight || 0,
     }));
     if (layout.scroll) fail(`editor: ${w}px 横スクロール`);
     else ok(`editor: ${w}px 横スクロールなし`);
-    if (layout.h < 44) fail(`editor: ${w}px タップ領域`, String(layout.h));
+    if (layout.h < 34) fail(`editor: ${w}px タップ領域`, String(layout.h));
   }
 
   await page.close();

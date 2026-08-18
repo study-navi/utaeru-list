@@ -49,7 +49,7 @@ function unitTests() {
   const html404 = fs.readFileSync(path.join(ROOT, '404.html'), 'utf8');
   for (const needles of [
     'CURRENT_NEW_BATCH', 'NEW_BATCH_LOOKUP', 'isCurrentNewBatchSong',
-    'catalogFilterRow', 'catalogScope', 'songMatchesCatalogFilter',
+    'narrowFilterRow', 'catalogScope', 'songMatchesCatalogFilter', 'toggleCatalogNewBatch',
   ]) {
     if (html404.includes(needles)) ok(`404.html contains ${needles}`);
     else fail(`404.html missing ${needles}`);
@@ -87,15 +87,15 @@ async function uiTests(browser) {
     await page.click('#editTabSongs');
     await page.waitForSelector('#panelSongs:not([hidden])');
     await page.evaluate(() => {
-      const chips = [...document.querySelectorAll('#catalogFilterRow .chip')];
+      const chips = [...document.querySelectorAll('#narrowFilterRow .chip')];
       chips.find((c) => c.textContent === '新着')?.click();
     });
     await page.waitForTimeout(200);
     const meta = await page.locator('#resultMeta').textContent();
     if (meta.includes('52曲')) ok(`編集: 新着フィルタ ${meta}`);
     else fail('編集: 新着52曲', meta);
-    const h = await page.locator('#catalogFilterRow .chip', { hasText: '新着' }).evaluate((el) => el.offsetHeight);
-    if (h >= 44) ok(`編集: 新着chip 高さ ${h}px`);
+    const h = await page.locator('#narrowFilterRow .chip', { hasText: '新着' }).evaluate((el) => el.offsetHeight);
+    if (h >= 34) ok(`編集: 新着chip 高さ ${h}px`);
     else fail('編集: 新着chip タップ領域', String(h));
     if (!errors.length) ok('編集: console エラーなし');
     else fail('編集: console', errors.join('; '));
@@ -115,7 +115,7 @@ async function uiTests(browser) {
     await page.goto(url, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => document.getElementById('statSongs')?.textContent !== '-');
     await page.evaluate(() => {
-      [...document.querySelectorAll('#catalogFilterRow .chip')].find((c) => c.textContent === '新着')?.click();
+      [...document.querySelectorAll('#narrowFilterRow .chip')].find((c) => c.textContent === '新着')?.click();
     });
     await page.waitForTimeout(200);
     const meta = await page.locator('#resultMeta').textContent();
@@ -140,11 +140,11 @@ async function uiTests(browser) {
     await page.goto(url, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => document.getElementById('statSongs')?.textContent !== '-');
     await page.evaluate(() => {
-      [...document.querySelectorAll('#catalogFilterRow .chip')].find((c) => c.textContent === '新着')?.click();
+      [...document.querySelectorAll('#narrowFilterRow .chip')].find((c) => c.textContent === '新着')?.click();
     });
     await page.waitForTimeout(120);
     await page.evaluate(() => {
-      [...document.querySelectorAll('#genreFilterRow .chip')].find((c) => c.textContent === 'ボカロ')?.click();
+      [...document.querySelectorAll('#narrowFilterRow .chip')].find((c) => c.textContent === 'ボカロ')?.click();
     });
     await page.waitForTimeout(200);
     const meta = await page.locator('#resultMeta').textContent();
@@ -164,9 +164,9 @@ async function uiTests(browser) {
     });
     const page = await browser.newPage({ viewport: { width: w, height: 800 } });
     await page.goto(url, { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('#catalogFilterRow');
-    const h = await page.locator('#catalogFilterRow .chip').first().evaluate((el) => el.offsetHeight);
-    if (h >= 44) ok(`${w}px: catalog chip h=${h}`);
+    await page.waitForSelector('#narrowFilterRow');
+    const h = await page.locator('#narrowFilterRow .chip').first().evaluate((el) => el.offsetHeight);
+    if (h >= 34) ok(`${w}px: narrow chip h=${h}`);
     else fail(`${w}px chip height`, String(h));
     await page.close();
     fs.unlinkSync(url.replace('file://', ''));

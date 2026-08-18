@@ -22,9 +22,9 @@ async function main() {
   for (const needle of [
     'GENRE_LOOKUP', 'GENRE_FILTER_OPTIONS', 'TITLE_READING_LOOKUP',
     'searchTarget', 'search-mode-segment', 'resolveTitleReading',
-    'genreFilterRow', 'function setGenre', 'songMatchesGenreFilter',
+    'narrowFilterRow', 'function toggleGenreFilter', 'songMatchesGenreFilter',
     'sortMode', 'SORT_OPTIONS', 'sortSelect', 'sortSongsList', 'initSortSelect',
-    'CURRENT_NEW_BATCH', 'NEW_BATCH_LOOKUP', 'isCurrentNewBatchSong', 'catalogFilterRow',
+    'CURRENT_NEW_BATCH', 'NEW_BATCH_LOOKUP', 'isCurrentNewBatchSong', 'toggleCatalogNewBatch',
   ]) {
     if (src.includes(needle)) ok(`404.html contains ${needle}`);
     else fail(`404.html missing ${needle}`);
@@ -67,7 +67,7 @@ async function main() {
   await page.goto(`file://${p}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.waitForFunction(() => document.getElementById('statSongs')?.textContent !== '-', { timeout: 15000 });
 
-  await page.locator('#genreFilterRow .chip', { hasText: 'アニソン' }).click();
+  await page.locator('#narrowFilterRow .chip', { hasText: 'アニソン' }).click();
   await page.waitForTimeout(150);
   const meta = await page.locator('#resultMeta').textContent();
   if (meta === '2曲 / 2組') ok(`genre click handler: ${meta}`);

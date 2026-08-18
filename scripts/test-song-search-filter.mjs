@@ -64,7 +64,7 @@ async function setSearch(page, text) {
 
 async function clickGenre(page, label) {
   await page.evaluate((genreLabel) => {
-    const chip = [...document.querySelectorAll('#genreFilterRow .chip')].find((c) => c.textContent === genreLabel);
+    const chip = [...document.querySelectorAll('#narrowFilterRow .chip')].find((c) => c.textContent === genreLabel);
     chip?.click();
   }, label);
   await page.waitForTimeout(120);

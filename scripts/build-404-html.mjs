@@ -15,9 +15,9 @@ const cssMatch = hiro.match(/<style>([\s\S]*?)<\/style>/);
 if (!cssMatch) throw new Error('hiro.html style block not found');
 const css = cssMatch[1];
 
-const searchBarMatch = hiro.match(/<div class="search-bar">[\s\S]*?<\/div>\s*\n\s*<div class="genre-filter-row/);
+const searchBarMatch = hiro.match(/<div class="search-bar">[\s\S]*?<\/div>\s*\n\s*\n\s*<div class="filter-row" id="statusFilterRow"/);
 if (!searchBarMatch) throw new Error('search-bar block not found in hiro.html');
-const searchBarHtml = searchBarMatch[0].replace(/\n\s*<div class="genre-filter-row$/, '');
+const searchBarHtml = searchBarMatch[0].replace(/\n\s*\n\s*<div class="filter-row" id="statusFilterRow"$/, '');
 
 const viewerStart = hiro.indexOf('// @genre-lookup-inject');
 const viewerEnd = hiro.lastIndexOf('render();');
@@ -86,8 +86,6 @@ ${css}
   </header>
 
   ${searchBarHtml}
-
-  <div class="genre-filter-row filter-row" id="genreFilterRow" role="group" aria-label="ジャンル"></div>
 
   <div class="filter-row" id="statusFilterRow"></div>
   <div class="filter-row" id="tagFilterRow" style="display:none;"></div>
