@@ -114,6 +114,40 @@
     box-shadow: 0 1px 2px rgba(21, 32, 43, 0.04);
   }
 
+
+  .sort-control-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+    min-height: 44px;
+  }
+  .sort-control-label {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .sort-control-select {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px 32px 8px 12px;
+    border: 1px solid var(--grid);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+  .sort-control-select:disabled {
+    opacity: 0.5;
+  }
   .search-mode-segment {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -562,6 +596,10 @@
       </div>
       <div class="gyo-row" id="gyoRow"></div>
       <div class="gyo-row gyo-sub-row" id="gyoSubRow" hidden aria-label="五十音 1文字"></div>
+      <div class="sort-control-row">
+        <label class="sort-control-label" for="sortSelect">並び替え</label>
+        <select class="sort-control-select" id="sortSelect" aria-label="並び替え"></select>
+      </div>
     </div>
   </div>
 
@@ -713,6 +751,135 @@ const gyoRow = document.getElementById('gyoRow');
 let searchTarget = 'artist';
 let activeKana = null;
 
+// @song-sort-inject
+const SORT_OPTIONS = [{"value":"default","label":"標準順"},{"value":"kana-asc","label":"あ→ん"},{"value":"kana-desc","label":"ん→あ"},{"value":"added-desc","label":"最近追加した順"},{"value":"added-asc","label":"古く追加した順"}];
+const JA_COLLATOR = new Intl.Collator('ja', { sensitivity: 'base', numeric: true });
+function readingSortTier(str) {
+  if (!str) return 2;
+  const ch = str[0];
+  if (/[a-zA-Z0-9]/.test(ch)) return 1;
+  if (/[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff]/.test(ch)) return 0;
+  return 1;
+}
+function compareReading(a, b, dir) {
+  dir = dir === undefined ? 1 : dir;
+  const ta = readingSortTier(a);
+  const tb = readingSortTier(b);
+  if (ta !== tb) return ta - tb;
+  const aa = (a || '').toLowerCase();
+  const bb = (b || '').toLowerCase();
+  return dir * JA_COLLATOR.compare(aa, bb);
+}
+function buildOriginalIndexMap(sourceList, keyOfFn) {
+  const m = new Map();
+  sourceList.forEach(function(s, i) { m.set(keyOfFn(s), i); });
+  return m;
+}
+function hasAnyAddedAt(songs, getAddedAt) {
+  return songs.some(function(s) { return !!getAddedAt(s); });
+}
+function sortSongsList(songs, opts) {
+  const sortMode = opts.sortMode;
+  const searchTarget = opts.searchTarget;
+  const sourceList = opts.sourceList;
+  const keyOfFn = opts.keyOf;
+  const getTitleTy = opts.getTitleTy;
+  const getArtistY = opts.getArtistY;
+  const getAddedAt = opts.getAddedAt;
+  const useSelectedDefaultSort = opts.useSelectedDefaultSort;
+  const selectedDefaultSortFn = opts.selectedDefaultSortFn;
+  if (sortMode === 'default') {
+    if (useSelectedDefaultSort && selectedDefaultSortFn) return selectedDefaultSortFn(songs);
+    return songs;
+  }
+  const idxMap = buildOriginalIndexMap(sourceList, keyOfFn);
+  function origIdx(s) { return idxMap.get(keyOfFn(s)) ?? 999999; }
+  if (sortMode === 'added-desc' || sortMode === 'added-asc') {
+    const dir = sortMode === 'added-desc' ? -1 : 1;
+    return [...songs].sort(function(a, b) {
+      const aa = getAddedAt(a);
+      const ba = getAddedAt(b);
+      const aHas = !!aa;
+      const bHas = !!ba;
+      if (aHas && !bHas) return -1;
+      if (!aHas && bHas) return 1;
+      if (!aHas && !bHas) return origIdx(a) - origIdx(b);
+      const cmp = aa.localeCompare(ba);
+      if (cmp !== 0) return dir * cmp;
+      return origIdx(a) - origIdx(b);
+    });
+  }
+  const dir = sortMode === 'kana-asc' ? 1 : -1;
+  return [...songs].sort(function(a, b) {
+    var pA, pB, sA, sB;
+    if (searchTarget === 'title') {
+      pA = getTitleTy(a) || ''; pB = getTitleTy(b) || '';
+      sA = getArtistY(a) || ''; sB = getArtistY(b) || '';
+    } else {
+      pA = getArtistY(a) || ''; pB = getArtistY(b) || '';
+      sA = getTitleTy(a) || ''; sB = getTitleTy(b) || '';
+    }
+    var c = compareReading(pA, pB, dir);
+    if (c !== 0) return c;
+    c = compareReading(sA, sB, dir);
+    if (c !== 0) return c;
+    return origIdx(a) - origIdx(b);
+  });
+}
+function sortArtistGroups(groups, opts) {
+  const sortMode = opts.sortMode;
+  const getArtistY = opts.getArtistY;
+  if (sortMode !== 'kana-asc' && sortMode !== 'kana-desc') return groups;
+  const dir = sortMode === 'kana-asc' ? 1 : -1;
+  return [...groups].sort(function(ga, gb) {
+    const ya = getArtistY(ga.songs[0]) || '';
+    const yb = getArtistY(gb.songs[0]) || '';
+    return compareReading(ya, yb, dir);
+  });
+}
+function shouldUseFlatForAddedSort(searchTarget, sortMode) {
+  return searchTarget === 'artist' && (sortMode === 'added-desc' || sortMode === 'added-asc');
+}
+let sortMode = 'default';
+
+function initSortSelect() {
+  const sel = document.getElementById('sortSelect');
+  if (!sel || sel.dataset.inited) return;
+  sel.dataset.inited = '1';
+  SORT_OPTIONS.forEach(function(opt) {
+    const o = document.createElement('option');
+    o.value = opt.value;
+    o.textContent = opt.label;
+    sel.appendChild(o);
+  });
+  sel.value = sortMode;
+  sel.addEventListener('change', function() {
+    sortMode = sel.value;
+    render();
+  });
+}
+function getTitleTyForSort(s) {
+  const tr = resolveTitleReading(s);
+  return tr?.ty || '';
+}
+function getAddedAtForSort(s) {
+  return (SONG_META[keyOf(s)] || {}).addedAt;
+}
+function applySortToFiltered(filtered) {
+  return sortSongsList(filtered, {
+    sortMode: sortMode,
+    searchTarget: searchTarget,
+    sourceList: SONGS,
+    keyOf: keyOf,
+    getTitleTy: getTitleTyForSort,
+    getArtistY: function(s) { return s.y; },
+    getAddedAt: getAddedAtForSort,
+    useSelectedDefaultSort: false,
+    selectedDefaultSortFn: null,
+  });
+}
+// @end-song-sort-inject
+
 function resolveTitleReading(s) {
   if (s.ty) return { ty: s.ty, tk: s.tk || s.ty[0] };
   const hit = TITLE_READING_LOOKUP[keyOf(s)];
@@ -757,7 +924,8 @@ function setSearchTarget(target) {
   if (target !== 'title' && target !== 'artist') return;
   searchTarget = target;
   activeKana = null;
-  document.querySelectorAll('.search-mode-tab').forEach(tab => {
+  initSortSelect();
+document.querySelectorAll('.search-mode-tab').forEach(tab => {
     const active = tab.dataset.target === target;
     tab.classList.toggle('active', active);
     tab.setAttribute('aria-selected', active ? 'true' : 'false');
@@ -968,7 +1136,7 @@ function flatSongRowHtml(s, q) {
 }
 
 function isFlatListMode(q) {
-  return searchTarget === 'title' || !!(q || activeMark || newOnly || activeTags.size > 0);
+  return searchTarget === 'title' || !!(q || activeMark || newOnly || activeTags.size > 0) || shouldUseFlatForAddedSort(searchTarget, sortMode);
 }
 
 function artistAccordionHtml(g, q, index) {
@@ -1057,6 +1225,7 @@ function render() {
     });
   }
 
+  filtered = applySortToFiltered(filtered);
   lastFiltered = filtered;
   randomBtn.disabled = filtered.length === 0;
 
@@ -1083,9 +1252,13 @@ function render() {
     }
     cur.songs.push(s);
   }
+  const sortedGroups = sortArtistGroups(groups, {
+    sortMode: sortMode,
+    getArtistY: function(s) { return s.y; },
+  });
 
   const MAX_GROUPS = 400;
-  const shown = groups.slice(0, MAX_GROUPS);
+  const shown = sortedGroups.slice(0, MAX_GROUPS);
   lastGroups = shown;
 
   if (isFlatListMode(q)) {
@@ -1094,10 +1267,10 @@ function render() {
     resultsEl.innerHTML = `<div class="artist-accordion">${shown.map((g, i) => artistAccordionHtml(g, q, i)).join('')}</div>`;
   }
 
-  if (groups.length > MAX_GROUPS) {
+  if (sortedGroups.length > MAX_GROUPS) {
     const note = document.createElement('div');
     note.className = 'result-meta';
-    note.textContent = `他 ${groups.length - MAX_GROUPS} 組は絞り込みを続けると表示されます`;
+    note.textContent = `他 ${sortedGroups.length - MAX_GROUPS} 組は絞り込みを続けると表示されます`;
     resultsEl.appendChild(note);
   }
 }

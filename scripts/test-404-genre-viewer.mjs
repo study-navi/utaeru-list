@@ -23,6 +23,7 @@ async function main() {
     'GENRE_LOOKUP', 'GENRE_FILTER_OPTIONS', 'TITLE_READING_LOOKUP',
     'searchTarget', 'search-mode-segment', 'resolveTitleReading',
     'genreFilterRow', 'function setGenre', 'songMatchesGenreFilter',
+    'sortMode', 'SORT_OPTIONS', 'sortSelect', 'sortSongsList', 'initSortSelect',
   ]) {
     if (src.includes(needle)) ok(`404.html contains ${needle}`);
     else fail(`404.html missing ${needle}`);
