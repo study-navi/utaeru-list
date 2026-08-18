@@ -53,6 +53,76 @@ async function activeChips(page) {
   );
 }
 
+async function chipLayoutSnapshot(page) {
+  return page.evaluate(() => {
+    const row = document.getElementById('narrowFilterRow');
+    const chips = [...document.querySelectorAll('#narrowFilterRow .chip')];
+    const rowRect = row?.getBoundingClientRect();
+    const rows = new Map();
+    chips.forEach((chip) => {
+      const r = chip.getBoundingClientRect();
+      const y = Math.round(r.top);
+      if (!rows.has(y)) rows.set(y, []);
+      rows.get(y).push({
+        label: chip.textContent?.trim(),
+        w: Math.round(r.width),
+        h: Math.round(r.height),
+        lines: Math.round(chip.scrollHeight / parseFloat(getComputedStyle(chip).lineHeight || '14')),
+      });
+    });
+    const rowList = [...rows.entries()].sort((a, b) => a[0] - b[0]).map(([, items]) => items);
+    const lastRow = rowList[rowList.length - 1] || [];
+    const lastRowCenter = lastRow.length
+      ? lastRow.reduce((s, c) => s + (rows.get([...rows.keys()].sort((a, b) => a - b).pop()) ? 0 : 0), 0)
+      : 0;
+    let lastRowMid = 0;
+    if (lastRow.length && rowRect) {
+      const first = chips.find((c) => c.textContent?.trim() === lastRow[0].label);
+      const last = chips.find((c) => c.textContent?.trim() === lastRow[lastRow.length - 1].label);
+      if (first && last) {
+        lastRowMid = (first.getBoundingClientRect().left + last.getBoundingClientRect().right) / 2;
+      }
+    }
+    const rowMid = rowRect ? rowRect.left + rowRect.width / 2 : 0;
+    const orphanOther = lastRow.length === 1 && lastRow[0].label === 'その他';
+    const orphanOtherLeft = orphanOther && Math.abs(lastRowMid - rowMid) >= 24;
+    const sixPlusOne = rowList.length === 2 && rowList[0].length === 6 && rowList[1].length === 1;
+    const lineBreaks = chips.some((chip) => {
+      const range = document.createRange();
+      range.selectNodeContents(chip);
+      return range.getClientRects().length > 1;
+    });
+    return {
+      rows: rowList.map((items) => items.map((i) => i.label)),
+      heights: chips.map((c) => c.offsetHeight),
+      scroll: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+      lastRowCentered: lastRow.length ? Math.abs(lastRowMid - rowMid) < 24 : true,
+      orphanOtherLeft,
+      sixPlusOne,
+      lineBreaks,
+      narrowH: document.querySelector('.narrow-filter-block')?.offsetHeight ?? 0,
+    };
+  });
+}
+
+async function checkChipLayout(page, label, width) {
+  await page.setViewportSize({ width, height: width <= 430 ? 844 : 900 });
+  await page.waitForTimeout(120);
+  const lay = await chipLayoutSnapshot(page);
+  const rowDesc = lay.rows.map((r) => r.join('+')).join(' / ');
+  if (!lay.sixPlusOne && !lay.orphanOtherLeft) ok(`${label}: chip配置 ${rowDesc}`);
+  else fail(`${label}: 孤立その他`, rowDesc);
+  if (lay.lastRowCentered || lay.rows.length <= 1) ok(`${label}: 最終行バランス`);
+  else fail(`${label}: 最終行中央`, rowDesc);
+  if (!lay.scroll) ok(`${label}: 横スクロールなし`);
+  else fail(`${label}: 横スクロール`);
+  if (!lay.lineBreaks) ok(`${label}: ラベル改行なし`);
+  else fail(`${label}: ラベル改行`);
+  if (lay.heights.every((h) => h >= 34 && h <= 40)) ok(`${label}: chip高さ統一 ${lay.heights[0]}px`);
+  else fail(`${label}: chip高さ`, lay.heights.join(','));
+  return lay;
+}
+
 async function measureFilterArea(page) {
   return page.evaluate(() => {
     const bar = document.querySelector('.search-bar');
@@ -73,8 +143,8 @@ async function measureFilterArea(page) {
 function run404Tests() {
   const src = fs.readFileSync(HTML404, 'utf8');
   for (const needle of [
-    'narrowFilterRow', 'NARROW_FILTER_OPTIONS', 'toggleCatalogNewBatch', 'toggleGenreFilter',
-    'GENRE_FILTER_OPTIONS', 'GENRE_LOOKUP', 'CURRENT_NEW_BATCH', 'sortSelect', 'initSortSelect',
+    'narrowFilterRow', 'NARROW_FILTER_OPTIONS', 'toggleNarrowFilter', 'activeFilter',
+    'GENRE_LOOKUP', 'CURRENT_NEW_BATCH', 'sortSelect', 'initSortSelect',
   ]) {
     if (src.includes(needle)) ok(`404.html: ${needle}`);
     else fail(`404.html missing ${needle}`);
@@ -129,14 +199,16 @@ async function runViewerFilterTests(browser) {
   await clickNarrow(page, '新着');
   await clickNarrow(page, 'アニソン');
   const both = await activeChips(page);
-  if (both.includes('新着') && both.includes('アニソン')) ok('viewer: 新着+アニソン AND');
-  else fail('viewer: 新着+アニソン', both.join(','));
-  await clickNarrow(page, '新着');
-  if ((await activeChips(page)).includes('アニソン') && !(await activeChips(page)).includes('新着')) {
-    ok('viewer: 新着解除→アニソンのみ');
-  } else fail('viewer: 新着解除');
-  await clickNarrow(page, 'アニソン');
-  if ((await activeChips(page)).length === 0) ok('viewer: アニソン解除→全曲');
+  if (!both.includes('新着') && both.includes('アニソン') && both.length === 1) {
+    ok('viewer: 新着→アニソン切替（単一選択）');
+  } else fail('viewer: 新着→アニソン', both.join(','));
+  await clickNarrow(page, 'J-POP');
+  const switched = await activeChips(page);
+  if (switched.includes('J-POP') && !switched.includes('アニソン') && switched.length === 1) {
+    ok('viewer: J-POP→アニソン切替');
+  } else fail('viewer: J-POP切替', switched.join(','));
+  await clickNarrow(page, 'J-POP');
+  if ((await activeChips(page)).length === 0) ok('viewer: 同chip再タップ解除→全曲');
   else fail('viewer: 全解除', (await activeChips(page)).join(','));
 
   await clickNarrow(page, 'J-POP');
@@ -173,18 +245,14 @@ async function runViewerFilterTests(browser) {
     else fail('viewer: accordion');
   }
 
+  const layoutHeights = {};
+  for (const w of [320, 375, 390, 430, 1280]) {
+    const lay = await checkChipLayout(page, `${w}px`, w);
+    layoutHeights[w] = lay.narrowH;
+  }
+
   const afterLayout = await measureFilterArea(page);
   ok(`viewer 375px: 絞り込みエリア高さ total=${afterLayout.total}px narrow=${afterLayout.narrow}px`);
-
-  for (const w of [320, 390, 430, 1280]) {
-    await page.setViewportSize({ width: w, height: 800 });
-    const lay = await page.evaluate(() => ({
-      scroll: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
-      h: document.querySelector('#narrowFilterRow .chip')?.offsetHeight || 0,
-    }));
-    if (!lay.scroll && lay.h >= 34) ok(`${w}px: chip h=${lay.h} 横スクロールなし`);
-    else fail(`${w}px`, JSON.stringify(lay));
-  }
 
   if (!errors.length) ok('viewer: console エラーなし');
   else fail('viewer: console', errors.join('; '));
@@ -215,6 +283,10 @@ async function runEditorTests(browser) {
   const metaText = await page.locator('#resultMeta').textContent();
   if (metaText?.includes('52曲')) ok(`編集: 新着 ${metaText}`);
   else fail('編集: 新着', metaText);
+
+  for (const w of [320, 375, 390, 430, 1280]) {
+    await checkChipLayout(page, `編集${w}px`, w);
+  }
 
   if (!errors.length) ok('編集: console エラーなし');
   else fail('編集: console', errors.join('; '));

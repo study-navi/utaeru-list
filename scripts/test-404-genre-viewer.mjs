@@ -20,11 +20,11 @@ function fail(msg, detail) {
 async function main() {
   const src = fs.readFileSync(HTML404, 'utf8');
   for (const needle of [
-    'GENRE_LOOKUP', 'GENRE_FILTER_OPTIONS', 'TITLE_READING_LOOKUP',
+    'GENRE_LOOKUP', 'TITLE_READING_LOOKUP',
     'searchTarget', 'search-mode-segment', 'resolveTitleReading',
-    'narrowFilterRow', 'function toggleGenreFilter', 'songMatchesGenreFilter',
+    'narrowFilterRow', 'toggleNarrowFilter', 'activeFilter', 'songMatchesNarrowFilter',
     'sortMode', 'SORT_OPTIONS', 'sortSelect', 'sortSongsList', 'initSortSelect',
-    'CURRENT_NEW_BATCH', 'NEW_BATCH_LOOKUP', 'isCurrentNewBatchSong', 'toggleCatalogNewBatch',
+    'CURRENT_NEW_BATCH', 'NEW_BATCH_LOOKUP', 'isCurrentNewBatchSong',
   ]) {
     if (src.includes(needle)) ok(`404.html contains ${needle}`);
     else fail(`404.html missing ${needle}`);
@@ -34,7 +34,7 @@ async function main() {
   const initStart = src.indexOf('function initPublicViewer');
   const initEnd = src.indexOf('applySiteFooterLinks();');
   const initBlock = src.slice(initStart, initEnd);
-  if (initBlock.includes('const GENRE_LOOKUP') && initBlock.includes('GENRE_FILTER_OPTIONS') && initBlock.includes('TITLE_READING_LOOKUP')) {
+  if (initBlock.includes('const GENRE_LOOKUP') && initBlock.includes('TITLE_READING_LOOKUP')) {
     ok('404 initPublicViewer includes genre + title reading block');
   } else fail('404 initPublicViewer genre/title block');
 

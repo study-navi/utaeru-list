@@ -102,55 +102,72 @@
 
   .narrow-filter-block {
     margin: 0;
-    padding-top: 0;
+    padding: 0;
   }
   .narrow-filter-label {
     font-size: 11px;
     font-weight: 600;
     color: var(--text-muted);
-    margin: 0 0 6px 2px;
+    margin: 0 0 4px 2px;
     letter-spacing: 0.04em;
   }
   .narrow-filter-row {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
     gap: 6px;
     margin: 0;
     padding: 0;
     overflow: visible;
   }
   .narrow-filter-row .chip {
-    flex: 1 1 calc(25% - 5px);
-    min-width: calc(33.333% - 4px);
+    box-sizing: border-box;
+    flex: 0 0 calc((100% - 18px) / 4);
+    max-width: calc((100% - 18px) / 4);
+    min-width: 0;
     min-height: 36px;
     padding: 6px 8px;
     font-size: 12px;
     font-weight: 600;
+    line-height: 1.2;
     border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
+    white-space: nowrap;
     text-align: center;
     background: var(--surface);
     border: 1px solid var(--grid);
     color: var(--text-secondary);
-    box-sizing: border-box;
+    cursor: pointer;
+    user-select: none;
   }
+  .narrow-filter-row .chip:hover { background: var(--surface-2); }
   .narrow-filter-row .chip.active {
     background: var(--accent-wash);
     border-color: var(--accent);
     color: var(--accent);
+    font-weight: 600;
   }
-  @media (max-width: 360px) {
+  @media (max-width: 359px) {
     .narrow-filter-row .chip {
-      flex: 1 1 calc(33.333% - 4px);
-      min-width: calc(33.333% - 4px);
-      font-size: 11px;
+      flex-basis: calc((100% - 12px) / 3);
+      max-width: calc((100% - 12px) / 3);
+      font-size: 11.5px;
       padding: 6px 6px;
     }
   }
-  @media (min-width: 430px) {
+  @media (min-width: 640px) {
+    .narrow-filter-row {
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+    }
     .narrow-filter-row .chip {
-      flex: 0 1 auto;
-      min-width: 0;
+      flex: 0 0 auto;
+      max-width: none;
+      width: auto;
+      padding: 6px 12px;
     }
   }
   .search-bar {
@@ -354,10 +371,6 @@
     color: var(--accent);
     border: 1px solid var(--accent);
   }
-  @media (min-width: 480px) {
-    }
-  @media (max-width: 360px) {
-  
   .result-meta {
     font-size: 12px;
     color: var(--text-muted);
@@ -492,9 +505,10 @@
     padding: 0;
   }
   .flat-song-item {
-    padding: 12px 0;
+    padding: 10px 2px;
     border-bottom: 1px solid var(--grid);
   }
+  .flat-song-item:first-child { border-top: 1px solid var(--grid); }
   .flat-song-item:last-child { border-bottom: none; }
   .flat-song-artist {
     margin-top: 4px;
@@ -510,10 +524,13 @@
     padding: 0;
   }
   ul.song-list li {
-    padding: 10px 0;
+    padding: 10px 2px 10px 8px;
     border-bottom: 1px solid var(--grid);
   }
   ul.song-list li:last-child { border-bottom: none; }
+  .artist-accordion-panel-inner ul.song-list li:first-child {
+    border-top: 1px solid var(--grid);
+  }
   mark {
     background: var(--accent-wash);
     color: var(--text-primary);
@@ -1249,7 +1266,7 @@ function shouldUseFlatListMode(opts) {
   if (opts.sortMode === 'title-asc' || opts.sortMode === 'title-desc') return true;
   if (opts.sortMode === 'batch-order') return true;
   if (opts.sortMode === 'added-desc' || opts.sortMode === 'added-asc') return true;
-  if (opts.newOnly || opts.activeMark || opts.activeTagsSize > 0 || opts.catalogScope === 'new-batch') return true;
+  if (opts.newOnly || opts.activeMark || opts.activeTagsSize > 0 || opts.activeFilter === 'new-batch') return true;
   return false;
 }
 function shouldUseFlatForAddedSort(searchTarget, sortMode) {
@@ -1398,27 +1415,15 @@ const statusFilterRow = document.getElementById('statusFilterRow');
 const randomBtn = document.getElementById('randomBtn');
 const randomPick = document.getElementById('randomPick');
 
-let catalogScope = 'all';
-let activeGenre = null;
-function songMatchesCatalogFilter(s) {
-  if (catalogScope !== 'new-batch') return true;
-  return isCurrentNewBatchSong(s);
-}
-function songMatchesGenreFilter(s) {
-  if (!activeGenre) return true;
-  return lookupSongGenres(s).includes(activeGenre);
+let activeFilter = null;
+function songMatchesNarrowFilter(s) {
+  if (!activeFilter) return true;
+  if (activeFilter === 'new-batch') return isCurrentNewBatchSong(s);
+  return lookupSongGenres(s).includes(activeFilter);
 }
 
 const NARROW_FILTER_OPTIONS = [
-  { kind: 'catalog', value: 'new-batch', label: '新着' },
-  { kind: 'genre', value: 'J-POP', label: 'J-POP' },
-  { kind: 'genre', value: 'アニソン', label: 'アニソン' },
-  { kind: 'genre', value: 'ボカロ', label: 'ボカロ' },
-  { kind: 'genre', value: '洋楽', label: '洋楽' },
-  { kind: 'genre', value: '演歌', label: '演歌' },
-  { kind: 'genre', value: 'その他', label: 'その他' },
-];
-const GENRE_FILTER_OPTIONS = [
+  { value: 'new-batch', label: '新着' },
   { value: 'J-POP', label: 'J-POP' },
   { value: 'アニソン', label: 'アニソン' },
   { value: 'ボカロ', label: 'ボカロ' },
@@ -1430,26 +1435,16 @@ const narrowFilterRow = document.getElementById('narrowFilterRow');
 function refreshNarrowFilterChips() {
   if (!narrowFilterRow) return;
   [...narrowFilterRow.children].forEach(function(chip) {
-    const kind = chip.dataset.filterKind;
-    const value = chip.dataset.filterValue;
-    let active = false;
-    if (kind === 'catalog') active = catalogScope === value;
-    else if (kind === 'genre') active = activeGenre === value;
-    chip.classList.toggle('active', active);
+    chip.classList.toggle('active', chip.dataset.filterValue === activeFilter);
   });
 }
-function toggleCatalogNewBatch() {
-  catalogScope = catalogScope === 'new-batch' ? 'all' : 'new-batch';
-  refreshNarrowFilterChips();
-  render();
-}
-function toggleGenreFilter(value) {
-  activeGenre = activeGenre === value ? null : value;
+function toggleNarrowFilter(value) {
+  activeFilter = activeFilter === value ? null : value;
   refreshNarrowFilterChips();
   render();
 }
 function setGenre(value) {
-  activeGenre = value;
+  activeFilter = value;
   refreshNarrowFilterChips();
   render();
 }
@@ -1458,14 +1453,10 @@ if (narrowFilterRow) {
     const chip = document.createElement('div');
     chip.className = 'chip';
     chip.textContent = opt.label;
-    chip.dataset.filterKind = opt.kind;
     chip.dataset.filterValue = opt.value;
     chip.setAttribute('role', 'button');
     chip.tabIndex = 0;
-    const activate = function() {
-      if (opt.kind === 'catalog') toggleCatalogNewBatch();
-      else toggleGenreFilter(opt.value);
-    };
+    const activate = function() { toggleNarrowFilter(opt.value); };
     chip.addEventListener('click', activate);
     chip.addEventListener('keydown', function(e) {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
@@ -1541,8 +1532,8 @@ function refreshStatusChips() {
 
 function updateFilterSummary() {
   const parts = [];
-  if (catalogScope === 'new-batch') parts.push('新着');
-  if (activeGenre) parts.push(activeGenre);
+  if (activeFilter === 'new-batch') parts.push('新着');
+  else if (activeFilter) parts.push(activeFilter);
   if (activeGyo) parts.push(`${activeGyo}行${activeKana ? '・' + activeKana : ''}`);
   if (searchTarget === 'title') parts.unshift('曲名');
   else if (searchTarget === 'artist') parts.unshift('アーティスト');
@@ -1601,7 +1592,7 @@ function isFlatListMode(q) {
     newOnly: newOnly,
     activeMark: activeMark,
     activeTagsSize: activeTags.size,
-    catalogScope: catalogScope,
+    activeFilter: activeFilter,
   });
 }
 
@@ -1665,11 +1656,8 @@ function render() {
       if (activeKana) filtered = filtered.filter(s => norm(s.k) === norm(activeKana));
     }
   }
-  if (catalogScope === 'new-batch') {
-    filtered = filtered.filter(s => songMatchesCatalogFilter(s));
-  }
-  if (activeGenre) {
-    filtered = filtered.filter(s => songMatchesGenreFilter(s));
+  if (activeFilter) {
+    filtered = filtered.filter(s => songMatchesNarrowFilter(s));
   }
   if (q) {
     const nq = norm(q);

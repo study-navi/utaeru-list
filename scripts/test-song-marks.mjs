@@ -30,9 +30,16 @@ async function selectSong(page, songTitle) {
 async function openSongSettings(page, songTitle) {
   await page.click('#editTabSongs');
   await page.waitForTimeout(100);
-  await page.fill('#searchInput', songTitle);
-  await page.waitForTimeout(120);
-  const row = page.locator('.song-item').filter({ hasText: songTitle }).first();
+  await page.evaluate((title) => {
+    setSearchTarget('title');
+    searchInput.value = title;
+    searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+  }, songTitle);
+  await page.waitForTimeout(150);
+  const row = page.locator('.song-item').filter({
+    has: page.locator('.song-title', { hasText: new RegExp(`^${songTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`) }),
+  }).first();
+  await row.waitFor({ timeout: 5000 });
   const settingsBtn = row.locator('.song-settings-btn');
   const expanded = await settingsBtn.getAttribute('aria-expanded');
   if (expanded !== 'true') {
@@ -44,15 +51,26 @@ async function openSongSettings(page, songTitle) {
 
 async function setMarksViaUi(page, songTitle, marks) {
   await openSongSettings(page, songTitle);
-  await page.evaluate((wanted) => {
-    const panel = document.querySelector('.song-meta-panel');
-    if (!panel) throw new Error('settings panel missing');
-    panel.querySelectorAll('.mark-btn').forEach((btn) => {
-      const on = wanted.includes(btn.dataset.value);
-      if (btn.classList.contains('active') !== on) btn.click();
-    });
-  }, marks);
-  await page.waitForTimeout(80);
+  for (const value of ['signature', 'favorite', 'learning']) {
+    const shouldBeOn = marks.includes(value);
+    const btn = page.locator(`.song-meta-panel .mark-btn[data-value="${value}"]`);
+    if (!(await btn.count())) continue;
+    const isActive = await btn.evaluate((el) => el.classList.contains('active'));
+    if (isActive !== shouldBeOn) {
+      await btn.click();
+      await page.waitForTimeout(120);
+    }
+  }
+}
+
+async function readDraftMarks(page, songTitle) {
+  return page.evaluate((title) => {
+    const song = MASTER_SONGS.find((s) => s.t === title);
+    if (!song) return null;
+    const key = song.a + '\u0001' + song.t;
+    const payload = buildDraftDataPayload();
+    return payload.songMeta[key]?.marks || [];
+  }, songTitle);
 }
 
 async function setMarks(page, songTitle, marks) {
@@ -159,9 +177,16 @@ async function runViewport(label, width, height) {
   else ok(`${label}: 3つすべて`);
 
   await setMarksViaUi(page, songA, ['signature']);
-  const uiMarks = await readMarks(page, songA);
-  if (!uiMarks.includes('signature') || uiMarks.length !== 1) fail(`${label}: UIトグル`, JSON.stringify(uiMarks));
-  else ok(`${label}: UIトグル ON/OFF`);
+  let uiMarks = await readMarks(page, songA);
+  let draftMarks = await readDraftMarks(page, songA);
+  if (uiMarks.includes('signature') && uiMarks.length === 1 && draftMarks.includes('signature') && draftMarks.length === 1) ok(`${label}: UIトグル ON 保存`);
+  else fail(`${label}: UIトグル ON`, JSON.stringify({ uiMarks, draftMarks }));
+
+  await setMarksViaUi(page, songA, []);
+  uiMarks = await readMarks(page, songA);
+  draftMarks = await readDraftMarks(page, songA);
+  if (!uiMarks.length && !draftMarks.length) ok(`${label}: UIトグル OFF 保存`);
+  else fail(`${label}: UIトグル OFF`, JSON.stringify({ uiMarks, draftMarks }));
 
   await setMarks(page, songA, ['signature', 'learning']);
   await page.click('#editTabPreview');
@@ -181,18 +206,32 @@ async function runViewport(label, width, height) {
   else ok(`${label}: ❤️ お気に入り 表記`);
 
   await page.click('#editTabSongs');
-  await page.waitForTimeout(80);
+  await page.waitForTimeout(100);
+  await page.click('.view-tab[data-view="selected"]');
+  await page.waitForTimeout(120);
+  await page.waitForSelector('.song-item .song-title', { timeout: 5000 });
   const layout = await page.evaluate(() => {
-    const row = [...document.querySelectorAll('.song-item')].find((el) => el.textContent.includes('カブトムシ'));
-    const rect = row?.getBoundingClientRect();
+    const row = document.querySelector('.song-item');
+    const settingsBtn = row?.querySelector('.song-settings-btn');
+    const title = row?.querySelector('.song-title');
+    const artist = row?.querySelector('.song-artist');
+    const bodyRect = row?.querySelector('.song-row-body')?.getBoundingClientRect();
+    const btnRect = settingsBtn?.getBoundingClientRect();
     return {
       docScroll: document.documentElement.scrollWidth > document.documentElement.clientWidth,
-      rowScroll: row ? row.scrollWidth > row.clientWidth + 1 : false,
-      rowWidth: rect?.width ?? 0,
+      hasTitle: !!title,
+      hasArtist: !!artist,
+      settingsRight: btnRect && bodyRect ? btnRect.left >= bodyRect.right - 12 : false,
+      settingsTapW: settingsBtn ? settingsBtn.offsetWidth + 12 : 0,
+      settingsTapH: settingsBtn ? settingsBtn.offsetHeight + 20 : 0,
     };
   });
-  if (layout.docScroll || (layout.rowScroll && width <= 430)) fail(`${label}: 横スクロール`, JSON.stringify(layout));
-  else ok(`${label}: 横スクロールなし`);
+  if (layout.hasTitle && layout.hasArtist && layout.settingsRight) ok(`${label}: 曲行レイアウト（曲名/アーティスト/右設定）`);
+  else fail(`${label}: 曲行レイアウト`, JSON.stringify(layout));
+  if (layout.settingsTapW >= 44 && layout.settingsTapH >= 44) ok(`${label}: 設定ボタンタップ領域`);
+  else fail(`${label}: 設定ボタンタップ`, JSON.stringify(layout));
+  if (!layout.docScroll) ok(`${label}: 横スクロールなし`);
+  else fail(`${label}: 横スクロール`, JSON.stringify(layout));
 
   if (errors.length) fail(`${label}: JSエラー`, errors.join('; '));
   else ok(`${label}: JSエラーなし`);
