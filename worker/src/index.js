@@ -50,6 +50,8 @@ export default {
         response = await handleAuthLogout();
       } else if (path === '/api/auth/me' && request.method === 'GET') {
         response = await handleAuthMe(request, env);
+      } else if (path === '/api/auth/account' && request.method === 'DELETE') {
+        response = await handleDeleteAccount(request, env);
       } else if (path.startsWith('/api/streamer/') && path.endsWith('/claim') && request.method === 'POST') {
         response = await handleClaim(request, path, env);
       } else if (path.startsWith('/api/streamer/') && path.endsWith('/create-anonymous') && request.method === 'POST') {
@@ -58,6 +60,10 @@ export default {
         response = await handleVerifyEditKey(request, path, env);
       } else if (path.startsWith('/api/streamer/') && path.endsWith('/link-google') && request.method === 'POST') {
         response = await handleLinkGoogle(request, path, env);
+      } else if (path.startsWith('/api/streamer/') && path.endsWith('/detach-google') && request.method === 'POST') {
+        response = await handleDetachGoogle(request, path, env);
+      } else if (path.startsWith('/api/streamer/') && path.endsWith('/release-google-ownership') && request.method === 'POST') {
+        response = await handleReleaseGoogleOwnership(request, path, env);
       } else if (path.startsWith('/api/streamer/') && request.method === 'DELETE') {
         response = await handleDeleteStreamer(request, path, env);
       } else if (path === '/api/admin/stats' && request.method === 'GET') {
@@ -244,6 +250,144 @@ async function handleAuthMe(request, env) {
   const ownedStreamerIds = (results || []).map((row) => row.streamer_id);
 
   return json({ email: user.email, ownedStreamerIds }, 200);
+}
+
+async function getAuthenticatedUser(request, env) {
+  const session = await getSession(request, env.SESSION_SECRET);
+  if (!session) return null;
+  return env.DB.prepare(
+    'SELECT user_id, email, google_sub FROM users WHERE google_sub = ?',
+  ).bind(session.sub).first();
+}
+
+async function requireOwnedStreamer(userId, streamerId, env) {
+  const owner = await env.DB.prepare(
+    'SELECT user_id FROM streamer_owners WHERE streamer_id = ?',
+  ).bind(streamerId).first();
+  if (!owner || owner.user_id !== userId) return false;
+  return true;
+}
+
+async function handleDeleteAccount(request, env) {
+  const rl = await checkRateLimit(env, 'RL_WRITE_AUTH', rateLimitClientKey(request, 'delete-account'));
+  if (!rl.ok) {
+    return json({ error: 'rate_limited' }, 429);
+  }
+
+  const user = await getAuthenticatedUser(request, env);
+  if (!user) {
+    return json({ error: 'unauthorized' }, 401);
+  }
+
+  const owned = await env.DB.prepare(
+    'SELECT COUNT(*) AS c FROM streamer_owners WHERE user_id = ?',
+  ).bind(user.user_id).first();
+
+  if (owned && Number(owned.c) > 0) {
+    return json({ error: 'owned_pages_remain', ownedCount: Number(owned.c) }, 409);
+  }
+
+  await env.DB.prepare(
+    'DELETE FROM users WHERE user_id = ?',
+  ).bind(user.user_id).run();
+
+  const response = json({ ok: true }, 200);
+  clearSessionCookie(response);
+  return response;
+}
+
+async function handleDetachGoogle(request, path, env) {
+  const streamerId = extractStreamerPathId(path, '/detach-google');
+  if (!isValidStreamerId(streamerId)) {
+    return json({ error: streamerIdError(streamerId) }, 400);
+  }
+
+  const rl = await checkRateLimit(env, 'RL_WRITE_AUTH', rateLimitClientKey(request, 'detach-google'));
+  if (!rl.ok) {
+    return json({ error: 'rate_limited' }, 429);
+  }
+
+  const user = await getAuthenticatedUser(request, env);
+  if (!user) {
+    return json({ error: 'unauthorized' }, 401);
+  }
+
+  if (!(await requireOwnedStreamer(user.user_id, streamerId, env))) {
+    return json({ error: 'forbidden' }, 403);
+  }
+
+  const streamer = await env.DB.prepare(
+    'SELECT deleted_at FROM streamers WHERE streamer_id = ?',
+  ).bind(streamerId).first();
+
+  if (!streamer) {
+    return json({ error: 'not_published', message: 'Use release-google-ownership for reserved IDs.' }, 409);
+  }
+
+  if (streamer.deleted_at) {
+    return json({ error: 'page_unpublished', message: 'Use release-google-ownership for unpublished pages.' }, 409);
+  }
+
+  const editKey = generateEditKey();
+  const keyHash = await hashEditKey(editKey, env.SESSION_SECRET);
+  const now = new Date().toISOString();
+
+  await env.DB.batch([
+    env.DB.prepare(
+      'DELETE FROM streamer_owners WHERE streamer_id = ? AND user_id = ?',
+    ).bind(streamerId, user.user_id),
+    env.DB.prepare(
+      'UPDATE streamer_edit_keys SET revoked_at = ? WHERE streamer_id = ? AND revoked_at IS NULL',
+    ).bind(now, streamerId),
+    env.DB.prepare(`
+      INSERT INTO streamer_edit_keys (streamer_id, key_hash, created_at, revoked_at)
+      VALUES (?, ?, ?, NULL)
+      ON CONFLICT(streamer_id) DO UPDATE SET
+        key_hash = excluded.key_hash,
+        created_at = excluded.created_at,
+        revoked_at = NULL
+    `).bind(streamerId, keyHash, now),
+  ]);
+
+  return json({ streamerId, ok: true, editKey }, 200);
+}
+
+async function handleReleaseGoogleOwnership(request, path, env) {
+  const streamerId = extractStreamerPathId(path, '/release-google-ownership');
+  if (!isValidStreamerId(streamerId)) {
+    return json({ error: streamerIdError(streamerId) }, 400);
+  }
+
+  const rl = await checkRateLimit(env, 'RL_WRITE_AUTH', rateLimitClientKey(request, 'release-google-ownership'));
+  if (!rl.ok) {
+    return json({ error: 'rate_limited' }, 429);
+  }
+
+  const user = await getAuthenticatedUser(request, env);
+  if (!user) {
+    return json({ error: 'unauthorized' }, 401);
+  }
+
+  if (!(await requireOwnedStreamer(user.user_id, streamerId, env))) {
+    return json({ error: 'forbidden' }, 403);
+  }
+
+  const streamer = await env.DB.prepare(
+    'SELECT deleted_at FROM streamers WHERE streamer_id = ?',
+  ).bind(streamerId).first();
+
+  if (streamer && !streamer.deleted_at) {
+    return json({
+      error: 'active_page_needs_detach',
+      message: 'Published pages must be migrated to edit-key ownership first.',
+    }, 409);
+  }
+
+  await env.DB.prepare(
+    'DELETE FROM streamer_owners WHERE streamer_id = ? AND user_id = ?',
+  ).bind(streamerId, user.user_id).run();
+
+  return json({ streamerId, ok: true }, 200);
 }
 
 async function handleClaim(request, path, env) {

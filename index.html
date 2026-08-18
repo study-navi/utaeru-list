@@ -1693,6 +1693,25 @@
     margin: 0 0 10px;
   }
   .owned-pages-list { display: flex; flex-direction: column; gap: 10px; }
+  .delete-account-owned-list {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .delete-account-owned-list li {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+  .delete-account-owned-list .owned-id { font-weight: 700; color: var(--text-primary); }
+  .delete-account-owned-list .owned-status { font-size: 12px; color: var(--text-muted); }
   .owned-pages-empty { margin: 0; }
   .owned-page-item {
     display: flex;
@@ -2277,6 +2296,12 @@
         <p class="claim-status" id="claimStatus">基本情報で公開ページIDを入力し、Googleでログインしてください。</p>
       </div>
       <div class="account-divider"></div>
+      <div class="account-block" id="googleAccountSettingsBlock">
+        <p class="account-block-title">アカウント設定</p>
+        <p class="hint">ログアウトは端末上のログイン状態を解除するだけです。うたエモに保存されたGoogleアカウント情報を削除する場合は、下のボタンを使います。</p>
+        <button type="button" class="ui-btn ui-btn-danger" id="deleteGoogleAccountBtn">アカウント情報を削除</button>
+      </div>
+      <div class="account-divider"></div>
       <button type="button" class="ui-btn ui-btn-danger" id="logoutBtn">ログアウト</button>
     </div>
   </div>
@@ -2397,6 +2422,22 @@
     <div class="modal-actions ui-stack" style="margin-top:14px;">
       <button type="button" class="ui-btn ui-btn-secondary" id="deleteCancelBtn">キャンセル</button>
       <button type="button" class="ui-btn ui-btn-danger" id="deleteConfirmBtn" disabled>削除する</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="deleteGoogleAccountModal" hidden aria-modal="true">
+  <div class="modal-card" role="dialog" aria-labelledby="deleteGoogleAccountTitle">
+    <h3 id="deleteGoogleAccountTitle">アカウント情報を削除しますか？</h3>
+    <p class="hint">Googleログインに使用しているうたエモのアカウント情報を削除します。この操作は取り消せません。</p>
+    <p class="hint">端末内の下書きは削除されません。</p>
+    <div id="deleteAccountOwnedBlock" class="ui-box ui-box-soft" hidden>
+      <p class="hint" style="margin-top:0"><strong>所有している公開ページがあります。</strong> アカウント情報を削除する前に、各ページのGoogle管理を解除してください。</p>
+      <ul id="deleteAccountOwnedList" class="delete-account-owned-list"></ul>
+    </div>
+    <div class="modal-actions ui-stack" style="margin-top:14px;">
+      <button type="button" class="ui-btn ui-btn-secondary" id="deleteGoogleAccountCancel">キャンセル</button>
+      <button type="button" class="ui-btn ui-btn-danger" id="deleteGoogleAccountConfirm" disabled>アカウント情報を削除</button>
     </div>
   </div>
 </div>
@@ -5576,6 +5617,159 @@ async function logoutUser() {
   }
 }
 
+async function classifyOwnedPageStatus(streamerId) {
+  try {
+    const { res } = await apiFetch('/api/public/' + encodeURIComponent(streamerId));
+    if (res.status === 200) return 'active';
+    if (res.status === 410) return 'unpublished';
+    if (res.status === 404) return 'reserved';
+  } catch (err) { /* ignore */ }
+  return 'unknown';
+}
+
+function updateDeleteAccountConfirmState() {
+  const confirmBtn = document.getElementById('deleteGoogleAccountConfirm');
+  const ownedBlock = document.getElementById('deleteAccountOwnedBlock');
+  const owned = authUser?.ownedStreamerIds || [];
+  if (ownedBlock) ownedBlock.hidden = owned.length === 0;
+  if (confirmBtn) confirmBtn.disabled = authLoading || owned.length > 0;
+}
+
+async function renderDeleteAccountOwnedList() {
+  const listEl = document.getElementById('deleteAccountOwnedList');
+  if (!listEl || !authUser) return;
+  const owned = [...(authUser.ownedStreamerIds || [])];
+  listEl.innerHTML = '';
+  if (!owned.length) {
+    updateDeleteAccountConfirmState();
+    return;
+  }
+  for (const sid of owned) {
+    const status = await classifyOwnedPageStatus(sid);
+    const li = document.createElement('li');
+    const statusLabel = status === 'active'
+      ? '公開中 — 編集キー方式へ移行が必要です'
+      : status === 'unpublished'
+        ? '削除済み — Google管理の解除のみ可能です'
+        : status === 'reserved'
+          ? 'ID予約中 — Google管理の解除のみ可能です'
+          : '状態を確認できません';
+    li.innerHTML = `<span class="owned-id">${escapeHtml(sid)}</span><span class="owned-status">${escapeHtml(statusLabel)}</span>`;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ui-btn ui-btn-secondary';
+    if (status === 'active') {
+      btn.textContent = '編集キーを発行してGoogle管理を解除';
+      btn.addEventListener('click', () => detachOwnedPageToEditKey(sid));
+    } else if (status === 'unpublished' || status === 'reserved') {
+      btn.textContent = 'Google管理を解除';
+      btn.addEventListener('click', () => releaseOwnedPageGoogleOwnership(sid));
+    } else {
+      btn.textContent = '再読み込み';
+      btn.addEventListener('click', () => renderDeleteAccountOwnedList());
+    }
+    li.appendChild(btn);
+    listEl.appendChild(li);
+  }
+  updateDeleteAccountConfirmState();
+}
+
+async function openDeleteGoogleAccountModal() {
+  if (!authUser) return;
+  await refreshAuthMe();
+  const modal = document.getElementById('deleteGoogleAccountModal');
+  if (modal) modal.hidden = false;
+  await renderDeleteAccountOwnedList();
+}
+
+function closeDeleteGoogleAccountModal() {
+  const modal = document.getElementById('deleteGoogleAccountModal');
+  if (modal) modal.hidden = true;
+}
+
+async function detachOwnedPageToEditKey(streamerId) {
+  if (!authUser || authLoading) return;
+  authLoading = true;
+  updateAuthUI();
+  try {
+    const { res, data } = await apiFetch('/api/streamer/' + encodeURIComponent(streamerId) + '/detach-google', {
+      method: 'POST',
+      body: '{}',
+    });
+    if (!res.ok) {
+      showAuthMessage(apiErrorMessage(res.status, data), 'error');
+      return;
+    }
+    if (data?.editKey) {
+      setStoredEditKey(streamerId, data.editKey);
+      showEditKeyIssuedModal(data.editKey);
+      showAuthMessage(`「${streamerId}」を編集キー方式へ移行しました。編集キーを安全な場所に保管してください。`, 'success');
+    }
+    await refreshAuthMe();
+    await renderDeleteAccountOwnedList();
+  } catch (err) {
+    showAuthMessage('編集キー方式への移行に失敗しました。', 'error');
+  } finally {
+    authLoading = false;
+    updateAuthUI();
+    updateDeleteAccountConfirmState();
+  }
+}
+
+async function releaseOwnedPageGoogleOwnership(streamerId) {
+  if (!authUser || authLoading) return;
+  authLoading = true;
+  updateAuthUI();
+  try {
+    const { res, data } = await apiFetch('/api/streamer/' + encodeURIComponent(streamerId) + '/release-google-ownership', {
+      method: 'POST',
+      body: '{}',
+    });
+    if (!res.ok) {
+      showAuthMessage(apiErrorMessage(res.status, data), 'error');
+      return;
+    }
+    if (activeOwnedStreamerId === streamerId) clearGoogleActiveEditContext();
+    showAuthMessage(`「${streamerId}」のGoogle管理を解除しました。`, 'success');
+    await refreshAuthMe();
+    await renderDeleteAccountOwnedList();
+  } catch (err) {
+    showAuthMessage('Google管理の解除に失敗しました。', 'error');
+  } finally {
+    authLoading = false;
+    updateAuthUI();
+    updateDeleteAccountConfirmState();
+  }
+}
+
+async function deleteGoogleAccountAction() {
+  if (!authUser || authLoading) return;
+  if ((authUser.ownedStreamerIds || []).length > 0) {
+    showAuthMessage('所有している公開ページがあるため、アカウント情報を削除できません。', 'error');
+    return;
+  }
+  authLoading = true;
+  updateAuthUI();
+  try {
+    const { res, data } = await apiFetch('/api/auth/account', { method: 'DELETE', body: '{}' });
+    if (!res.ok) {
+      showAuthMessage(apiErrorMessage(res.status, data), 'error');
+      return;
+    }
+    setStoredAccessToken(null);
+    authUser = null;
+    clearGoogleActiveEditContext();
+    googleEditSessionInitialized = false;
+    closeDeleteGoogleAccountModal();
+    showAuthMessage('アカウント情報を削除しました。', 'success');
+  } catch (err) {
+    showAuthMessage('アカウント情報の削除に失敗しました。', 'error');
+  } finally {
+    authLoading = false;
+    updateAuthUI();
+  }
+}
+
 async function claimStreamerIdAction() {
   const sid = streamerIdInput.value.trim();
   const check = validateStreamerId(sid);
@@ -5917,6 +6111,12 @@ document.getElementById('manageModeModal').addEventListener('click', (e) => {
 });
 
 document.getElementById('logoutBtn').addEventListener('click', logoutUser);
+document.getElementById('deleteGoogleAccountBtn')?.addEventListener('click', openDeleteGoogleAccountModal);
+document.getElementById('deleteGoogleAccountCancel')?.addEventListener('click', closeDeleteGoogleAccountModal);
+document.getElementById('deleteGoogleAccountConfirm')?.addEventListener('click', deleteGoogleAccountAction);
+document.getElementById('deleteGoogleAccountModal')?.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('deleteGoogleAccountModal')) closeDeleteGoogleAccountModal();
+});
 document.getElementById('claimBtn').addEventListener('click', claimStreamerIdAction);
 document.getElementById('ownedPagesList')?.addEventListener('click', (e) => {
   const btn = e.target.closest('.owned-page-edit');
@@ -5985,6 +6185,7 @@ document.addEventListener('keydown', (e) => {
   else if (!document.getElementById('googleDraftChoiceModal')?.hidden) closeGoogleDraftChoiceModal();
   else if (!document.getElementById('googlePagePickModal')?.hidden) closeGooglePagePickModal();
   else if (!document.getElementById('loadPublicDataModal')?.hidden) closeLoadPublicDataModal();
+  else if (!document.getElementById('deleteGoogleAccountModal')?.hidden) closeDeleteGoogleAccountModal();
   else if (!document.getElementById('deletePageModal')?.hidden) closeDeletePageModal();
   else if (!document.getElementById('publishSuccessModal')?.hidden) closePublishSuccessModal();
   else if (!document.getElementById('editKeyIssuedModal')?.hidden) clearIssuedEditKeyDisplay();

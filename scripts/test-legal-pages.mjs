@@ -34,7 +34,7 @@ async function checkPage(page, spec, width) {
   await page.setViewportSize({ width, height: 800 });
   await page.goto(fileUrl(spec.file), { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   if (!overflow) ok(`${label}: 横スクロールなし`);
   else fail(`${label}: 横スクロールなし`);
 
@@ -75,8 +75,8 @@ async function checkContent() {
 
   if (!privacy.includes('法務専門家')) ok('privacy: ドラフト免責なし');
   else fail('privacy: ドラフト免責なし');
-  if (privacy.includes('utalis_draft_v1') && privacy.includes('Google クラウド下書きではありません') && privacy.includes('utaeru_session')) ok('privacy: ストレージ記載');
-  else fail('privacy: ストレージ記載');
+  if (privacy.includes('DELETE /api/auth/account') && privacy.includes('Google クラウド下書きではありません') && privacy.includes('utaeru_session')) ok('privacy: ストレージ・削除API記載');
+  else fail('privacy: ストレージ・削除API記載');
   if (privacy.includes('google_sub') || privacy.includes('Google アカウント ID（sub）')) ok('privacy: Google sub');
   else fail('privacy: Google sub');
   if (privacy.includes('Google Analytics') && privacy.includes('利用していません')) ok('privacy: 解析なし');
