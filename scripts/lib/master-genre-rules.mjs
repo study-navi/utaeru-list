@@ -3,7 +3,10 @@
  *
  * Phase 1: アニソン・ボカロ（保守的）
  * Phase 2: 一般邦楽への J-POP 付与（除外リスト付き）
+ * Phase 4: アニソン分類拡充（曲単位・確信度 A のみ）
  */
+
+import { ANIME_VERIFIED_PHASE4, GENRE_CORRECTIONS_PHASE4 } from '../data/anime-verified-phase4.mjs';
 
 export const MASTER_GENRE_LABELS = ['J-POP', 'アニソン', 'ボカロ'];
 
@@ -138,7 +141,6 @@ export const JPOP_EXCLUDE_CONTENT_RES = [
 
 export const VERIFIED_GENRES_BY_ID = {
   1863: ['J-POP', 'ボカロ'],
-  1864: ['ボカロ'],
   191: ['ボカロ'],
   192: ['ボカロ'],
   193: ['ボカロ'],
@@ -192,6 +194,19 @@ export const VERIFIED_GENRES_BY_ID = {
   1441: ['J-POP', 'アニソン'], // ヒグチアイ / 悪魔の子
 };
 
+function getVerifiedGenresById(id) {
+  if (GENRE_CORRECTIONS_PHASE4[id]) {
+    return normalizeGenreList(GENRE_CORRECTIONS_PHASE4[id].genres);
+  }
+  if (ANIME_VERIFIED_PHASE4[id]) {
+    return normalizeGenreList(ANIME_VERIFIED_PHASE4[id].genres);
+  }
+  if (VERIFIED_GENRES_BY_ID[id]) {
+    return normalizeGenreList(VERIFIED_GENRES_BY_ID[id]);
+  }
+  return null;
+}
+
 function isVocaloidOnlyProducerArtist(artist) {
   if (VOCALOID_ONLY_ARTISTS.has(artist)) return true;
   for (const name of VOCALOID_ONLY_ARTISTS) {
@@ -237,9 +252,8 @@ export function isExcludedFromJPop(song) {
 
 /** Phase 1: アニソン・ボカロ */
 export function classifyBaseGenres(song) {
-  if (VERIFIED_GENRES_BY_ID[song.id]) {
-    return normalizeGenreList(VERIFIED_GENRES_BY_ID[song.id]);
-  }
+  const verified = getVerifiedGenresById(song.id);
+  if (verified) return verified;
 
   const genres = [];
   const combined = `${song.a} ${song.t}`;
@@ -260,9 +274,8 @@ export function classifyBaseGenres(song) {
 
 /** Phase 2: 未分類の一般邦楽へ J-POP を付与 */
 export function enrichWithJPop(song, genres) {
-  if (VERIFIED_GENRES_BY_ID[song.id]) {
-    return normalizeGenreList(VERIFIED_GENRES_BY_ID[song.id]);
-  }
+  const verified = getVerifiedGenresById(song.id);
+  if (verified) return verified;
 
   if (genres.includes('ボカロ') && !genres.includes('J-POP')) {
     return genres;

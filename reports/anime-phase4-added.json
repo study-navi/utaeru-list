@@ -1,0 +1,815 @@
+{
+  "generatedAt": "2026-08-18T11:18:49.061Z",
+  "baseline": {
+    "jpop": 1644,
+    "anime": 45,
+    "vocaloid": 197,
+    "unclassified": 114,
+    "multi": 48,
+    "total": 1952
+  },
+  "after": {
+    "total": 1952,
+    "jpop": 1644,
+    "anime": 84,
+    "vocaloid": 196,
+    "multi": 79,
+    "unclassified": 107
+  },
+  "newlyAnime": [
+    {
+      "id": 247,
+      "artist": "UVERworld",
+      "title": "Touch off",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "約束のネバーランド",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 249,
+      "artist": "UVERworld",
+      "title": "Colors of the Heart",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "BLOOD+",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 269,
+      "artist": "EGOIST",
+      "title": "The Everlasting Guilty Crown",
+      "before": [],
+      "after": [
+        "アニソン"
+      ],
+      "genres": [
+        "アニソン"
+      ],
+      "work": "ギルティクラウン",
+      "role": "挿入歌",
+      "confidence": "A"
+    },
+    {
+      "id": 270,
+      "artist": "EGOIST",
+      "title": "名前のない怪物",
+      "before": [],
+      "after": [
+        "アニソン"
+      ],
+      "genres": [
+        "アニソン"
+      ],
+      "work": "ギルティクラウン",
+      "role": "ED",
+      "confidence": "A"
+    },
+    {
+      "id": 271,
+      "artist": "EGOIST",
+      "title": "英雄 運命の詩",
+      "before": [],
+      "after": [
+        "アニソン"
+      ],
+      "genres": [
+        "アニソン"
+      ],
+      "work": "ギルティクラウン",
+      "role": "挿入歌",
+      "confidence": "A"
+    },
+    {
+      "id": 272,
+      "artist": "EGOIST",
+      "title": "Departures～あなたにおくるアイの歌～",
+      "before": [],
+      "after": [
+        "アニソン"
+      ],
+      "genres": [
+        "アニソン"
+      ],
+      "work": "ギルティクラウン",
+      "role": "挿入歌",
+      "confidence": "A"
+    },
+    {
+      "id": 273,
+      "artist": "EGOIST",
+      "title": "Planetes",
+      "before": [],
+      "after": [
+        "アニソン"
+      ],
+      "genres": [
+        "アニソン"
+      ],
+      "work": "ギルティクラウン",
+      "role": "劇伴/テーマ",
+      "confidence": "A"
+    },
+    {
+      "id": 274,
+      "artist": "EGOIST",
+      "title": "咲かせや咲かせ",
+      "before": [],
+      "after": [
+        "アニソン"
+      ],
+      "genres": [
+        "アニソン"
+      ],
+      "work": "ギルティクラウン",
+      "role": "挿入歌",
+      "confidence": "A"
+    },
+    {
+      "id": 275,
+      "artist": "EGOIST",
+      "title": "Ghost of a smile",
+      "before": [],
+      "after": [
+        "アニソン"
+      ],
+      "genres": [
+        "アニソン"
+      ],
+      "work": "ギルティクラウン",
+      "role": "挿入歌",
+      "confidence": "A"
+    },
+    {
+      "id": 290,
+      "artist": "Aimer",
+      "title": "I beq you",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "Fate/stay night [Heaven's Feel] II.lost butterfly",
+      "role": "映画主題歌",
+      "confidence": "A"
+    },
+    {
+      "id": 295,
+      "artist": "Aimer",
+      "title": "春はゆく",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "Fate/stay night [Heaven's Feel] III.spring song",
+      "role": "映画主題歌",
+      "confidence": "A"
+    },
+    {
+      "id": 298,
+      "artist": "Aimer",
+      "title": "Ref:rain",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "恋は雨上がりのように",
+      "role": "ED",
+      "confidence": "A"
+    },
+    {
+      "id": 299,
+      "artist": "Aimer",
+      "title": "六等星の夜",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "NO.6",
+      "role": "ED",
+      "confidence": "A"
+    },
+    {
+      "id": 421,
+      "artist": "KANA-BOON",
+      "title": "シルエット",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "NARUTO-ナルト- 疾風伝",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 466,
+      "artist": "キタニタツヤ",
+      "title": "青のすみか",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "呪術廻戦 懐玉・玉折",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 535,
+      "artist": "ClariS",
+      "title": "コネクト",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "魔法少女まどか☆マギカ",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 536,
+      "artist": "ClariS",
+      "title": "ヒトリゴト",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "エロマンガ先生",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 553,
+      "artist": "Creepy Nuts(R-指定&DJ松永)",
+      "title": "オトノケ",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "ダンダダン",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 727,
+      "artist": "シド",
+      "title": "嘘",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "鋼の錬金術師 FULLMETAL ALCHEMIST",
+      "role": "ED",
+      "confidence": "A"
+    },
+    {
+      "id": 728,
+      "artist": "シド",
+      "title": "V.I.P",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "マギ The labyrinth of magic",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 729,
+      "artist": "シド",
+      "title": "レイン",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "鋼の錬金術師 FULLMETAL ALCHEMIST",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 730,
+      "artist": "シド",
+      "title": "モノクロのキス",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "黒執事",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 734,
+      "artist": "シド",
+      "title": "硝子の瞳",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "黒執事 Book of the Atlantic",
+      "role": "映画主題歌",
+      "confidence": "A"
+    },
+    {
+      "id": 735,
+      "artist": "シド",
+      "title": "ANNIVERSARY",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "マギ The kingdom of magic",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 737,
+      "artist": "シド",
+      "title": "ENAMEL",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "黒執事 Book of Circus",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 738,
+      "artist": "シド",
+      "title": "乱舞のメロディ",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "BLEACH",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 850,
+      "artist": "鈴木このみ",
+      "title": "This game",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "ノーゲーム・ノーライフ",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 851,
+      "artist": "鈴木このみ",
+      "title": "Redo",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "Re:ゼロから始める異世界生活",
+      "role": "ED",
+      "confidence": "A"
+    },
+    {
+      "id": 855,
+      "artist": "涼宮ハルヒ(C.V.平野綾)",
+      "title": "God knows…",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "アニソン"
+      ],
+      "genres": [
+        "アニソン"
+      ],
+      "work": "涼宮ハルヒの憂鬱",
+      "role": "挿入歌",
+      "confidence": "A"
+    },
+    {
+      "id": 1037,
+      "artist": "T.M.Revolution",
+      "title": "ignited-イグナイテッド-",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "機動戦士ガンダムSEED DESTINY",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 1038,
+      "artist": "T.M.Revolution",
+      "title": "INVOKE -インヴォーク-",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "機動戦士ガンダムSEED",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 1040,
+      "artist": "TK from 凛として時雨",
+      "title": "unravel",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "東京喰種トーキョーグール",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 1601,
+      "artist": "ポルノグラフィティ",
+      "title": "メリッサ",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "鋼の錬金術師",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 1605,
+      "artist": "ポルノグラフィティ",
+      "title": "ヒトリノ夜",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "GTO",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 1609,
+      "artist": "ポルノグラフィティ",
+      "title": "THE DAY",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "僕のヒーローアカデミア",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 1668,
+      "artist": "MAN WITH A MISSION × milet",
+      "title": "絆ノ奇跡",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "鬼滅の刃 刀鍛冶の里編",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 1853,
+      "artist": "米倉千尋",
+      "title": "フェアリーテイル ～約束の日～",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "FAIRY TAIL",
+      "role": "OP",
+      "confidence": "A"
+    },
+    {
+      "id": 1914,
+      "artist": "RADWIMPS",
+      "title": "前前前世(movie ver.)",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "君の名は。",
+      "role": "映画主題歌",
+      "confidence": "A"
+    },
+    {
+      "id": 1985,
+      "artist": "ReoNa",
+      "title": "ANIMA",
+      "before": [
+        "J-POP"
+      ],
+      "after": [
+        "J-POP",
+        "アニソン"
+      ],
+      "genres": [
+        "J-POP",
+        "アニソン"
+      ],
+      "work": "ソードアート・オンライン Alicization",
+      "role": "OP",
+      "confidence": "A"
+    }
+  ],
+  "corrections": [
+    {
+      "id": 1864,
+      "artist": "米津玄師",
+      "title": "ゴーゴー幽霊船",
+      "before": [
+        "ボカロ"
+      ],
+      "after": [
+        "J-POP"
+      ],
+      "genres": [
+        "J-POP"
+      ],
+      "work": "米津玄師 1st「diorama」本人歌唱",
+      "role": "本人リリース",
+      "confidence": "A",
+      "note": "ハチ名義VOCALOID版ではなく米津玄師本人歌唱としてカタログ登録"
+    }
+  ],
+  "bCandidatesCount": 6,
+  "bCandidatesSample": [
+    {
+      "id": 1210,
+      "artist": "ナナヲアカリ",
+      "title": "ディスコミュ星人(2022 ver.)",
+      "genres": [
+        "J-POP"
+      ],
+      "confidence": "C",
+      "reason": "タイトルにTV/OP/ED表記"
+    },
+    {
+      "id": 1662,
+      "artist": "まるりとりゅうが",
+      "title": "ま,まるりとりゅうが,嫉妬 (Album ver.)",
+      "genres": [
+        "J-POP"
+      ],
+      "confidence": "C",
+      "reason": "タイトルにTV/OP/ED表記"
+    },
+    {
+      "id": 1709,
+      "artist": "Mrs.GREEN APPLE",
+      "title": "PRESENT(Japanese ver.)",
+      "genres": [
+        "J-POP"
+      ],
+      "confidence": "C",
+      "reason": "タイトルにTV/OP/ED表記"
+    },
+    {
+      "id": 1915,
+      "artist": "RADWIMPS",
+      "title": "なんでもないや(movie ver.)",
+      "genres": [
+        "J-POP"
+      ],
+      "confidence": "C",
+      "reason": "タイトルにTV/OP/ED表記"
+    },
+    {
+      "id": 1921,
+      "artist": "RADWIMPS",
+      "title": "スパークル(movie ver.)",
+      "genres": [
+        "J-POP"
+      ],
+      "confidence": "C",
+      "reason": "タイトルにTV/OP/ED表記"
+    },
+    {
+      "id": 1960,
+      "artist": "LiSA×Uru",
+      "title": "再会 (produced by Ayase)",
+      "genres": [
+        "J-POP"
+      ],
+      "confidence": "C",
+      "reason": "タイトルにTV/OP/ED表記"
+    }
+  ]
+}
