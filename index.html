@@ -927,7 +927,8 @@
     transition: transform 0.15s;
   }
   details.artist-group[open] > summary.artist-head::after { transform: rotate(180deg); }
-  details.artist-group .song-list { border-top: 1px solid var(--grid); }
+  details.artist-group .song-list { border-top: 1px solid var(--grid); margin: 0; }
+  details.artist-group .song-list .song-item:first-child { border-top: none; }
 
   .preview-shell-label {
     font-size: 13px;
@@ -1658,47 +1659,66 @@
 
   ul.song-list { list-style: none; margin: 0; padding: 0; }
   .song-item {
-    padding: 10px 6px;
+    padding: 9px 8px;
     border-bottom: 1px solid var(--grid);
-    background: transparent;
+    background: var(--surface);
+  }
+  ul.song-list.flat-list .song-item,
+  details.artist-group .song-list .song-item {
+    background: color-mix(in srgb, var(--page) 55%, var(--surface));
   }
   .song-item:first-child { border-top: 1px solid var(--grid); }
   .song-item:has(.song-check:checked) { background: var(--accent-wash); }
-  .song-item.is-expanded { background: color-mix(in srgb, var(--accent) 5%, var(--page)); }
+  .song-item.is-expanded {
+    background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+    padding-bottom: 0;
+  }
+  .song-item.is-expanded:has(.song-check:checked) {
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  }
   .song-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    column-gap: 6px;
+    row-gap: 1px;
+    align-items: start;
   }
   .song-row.is-tappable { cursor: pointer; }
-  .song-row-body {
-    flex: 1 1 auto;
-    min-width: 0;
+  .song-row-body { display: contents; }
+  .song-check-cell {
+    grid-column: 1;
+    grid-row: 1 / -1;
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: flex-start;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
     padding-top: 1px;
+    box-sizing: border-box;
   }
   .song-row-actions {
-    flex: 0 0 auto;
+    grid-column: 3;
+    grid-row: 1 / -1;
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
     gap: 4px;
     align-self: center;
+    flex: 0 0 auto;
   }
-  ul.song-list li input[type="checkbox"] {
+  ul.song-list li input[type="checkbox"].song-check {
     width: 18px;
     height: 18px;
     flex: 0 0 auto;
     accent-color: var(--accent);
-    margin: 2px 0 0;
-    align-self: flex-start;
+    margin: 11px 0 0;
+    cursor: pointer;
   }
   ul.song-list li label { cursor: pointer; }
   .song-title,
   .song-row-body .song-label {
+    grid-column: 2;
+    grid-row: 1;
     display: block;
     min-width: 0;
     overflow-wrap: anywhere;
@@ -1709,6 +1729,8 @@
     color: var(--text-primary);
   }
   .song-artist {
+    grid-column: 2;
+    grid-row: 2;
     display: block;
     font-size: 12.5px;
     font-weight: 400;
@@ -1718,6 +1740,8 @@
     word-break: break-word;
   }
   .song-row-body .song-badges {
+    grid-column: 2;
+    grid-row: 3;
     display: inline-flex;
     flex-wrap: wrap;
     gap: 4px;
@@ -2225,12 +2249,13 @@
   .empty-state-action { margin-top: 12px; }
 
   .song-meta-panel {
-    margin: 8px 0 2px 28px;
-    padding: 10px 12px;
-    background: var(--surface-2);
+    margin: 8px -8px 0;
+    padding: 10px 10px 10px 50px;
+    background: color-mix(in srgb, var(--surface-2) 75%, var(--surface));
     border: none;
-    border-left: 2px solid var(--grid);
-    border-radius: 0 8px 8px 0;
+    border-top: 1px solid var(--grid);
+    border-bottom: 1px solid var(--grid);
+    border-radius: 0;
   }
   .meta-block { margin-bottom: 8px; }
   .meta-block:last-child { margin-bottom: 0; }
@@ -3715,7 +3740,9 @@ function songItemHtml(s, q) {
   return `
     <li class="song-item${expanded ? ' is-expanded' : ''}" data-key="${escapeHtml(key)}">
       <div class="song-row${tappable}">
-        <input type="checkbox" class="song-check" id="sc-${s.id}" data-key="${escapeHtml(key)}" ${selectedKeys.has(key) ? 'checked' : ''} />
+        <div class="song-check-cell">
+          <input type="checkbox" class="song-check" id="sc-${s.id}" data-key="${escapeHtml(key)}" ${selectedKeys.has(key) ? 'checked' : ''} />
+        </div>
         <div class="song-row-body">
           <label for="sc-${s.id}" class="song-title">${highlightFor('title', s.t, q)}</label>
           <span class="song-artist">${highlightFor('artist', s.a, q)}</span>
@@ -4175,7 +4202,9 @@ function flatSongItemHtml(s, q) {
   return `
     <li class="song-item${expanded ? ' is-expanded' : ''}" data-key="${escapeHtml(key)}">
       <div class="song-row${tappable}">
-        <input type="checkbox" class="song-check" id="sc-${s.id}" data-key="${escapeHtml(key)}" ${selectedKeys.has(key) ? 'checked' : ''} />
+        <div class="song-check-cell">
+          <input type="checkbox" class="song-check" id="sc-${s.id}" data-key="${escapeHtml(key)}" ${selectedKeys.has(key) ? 'checked' : ''} />
+        </div>
         <div class="song-row-body">
           <label for="sc-${s.id}" class="song-title">${highlightFor('title', s.t, q)}</label>
           <span class="song-artist">${highlightFor('artist', s.a, q)}</span>
