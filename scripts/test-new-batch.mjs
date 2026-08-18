@@ -115,6 +115,7 @@ async function uiTests(browser) {
     await page.goto(url, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => document.getElementById('statSongs')?.textContent !== '-');
     await page.evaluate(() => {
+      setSearchPanelExpanded(true);
       [...document.querySelectorAll('#narrowFilterRow .chip')].find((c) => c.textContent === '新着')?.click();
     });
     await page.waitForTimeout(200);
@@ -140,8 +141,11 @@ async function uiTests(browser) {
     await page.goto(url, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => document.getElementById('statSongs')?.textContent !== '-');
     await page.evaluate(() => {
+      setSearchPanelExpanded(true);
       [...document.querySelectorAll('#narrowFilterRow .chip')].find((c) => c.textContent === '新着')?.click();
     });
+    await page.waitForTimeout(120);
+    await page.evaluate(() => setSearchPanelExpanded(true));
     await page.waitForTimeout(120);
     await page.evaluate(() => {
       [...document.querySelectorAll('#narrowFilterRow .chip')].find((c) => c.textContent === 'ボカロ')?.click();
@@ -165,6 +169,8 @@ async function uiTests(browser) {
     const page = await browser.newPage({ viewport: { width: w, height: 800 } });
     await page.goto(url, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#narrowFilterRow');
+    await page.evaluate(() => { setSearchPanelExpanded(true); applySearchPanelState(); });
+    await page.waitForTimeout(120);
     const h = await page.locator('#narrowFilterRow .chip').first().evaluate((el) => el.offsetHeight);
     if (h >= 34) ok(`${w}px: narrow chip h=${h}`);
     else fail(`${w}px chip height`, String(h));

@@ -769,6 +769,104 @@
     opacity: 0.5;
   }
 
+  .song-search-panel {
+    background: var(--surface);
+    border: 1px solid var(--grid);
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(21, 32, 43, 0.04);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .song-search-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 10px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+  }
+  .song-search-panel-header:hover { background: color-mix(in srgb, var(--accent) 4%, transparent); }
+  .song-search-panel-header:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+  .song-search-panel-leading {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .song-search-panel-icon { font-size: 14px; line-height: 1; }
+  .song-search-panel-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+  .song-search-panel-summary {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+  }
+  .song-search-panel.is-expanded .song-search-panel-summary { display: none; }
+  .song-search-panel-chevron {
+    flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    padding-left: 4px;
+  }
+  .song-search-panel-body {
+    border-top: 1px solid var(--grid);
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+  }
+  .song-search-panel.is-collapsed .song-search-panel-body {
+    max-height: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .song-search-panel.is-expanded .song-search-panel-body {
+    max-height: 2400px;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .song-search-panel-body {
+      transition: max-height 0.22s ease, opacity 0.16s ease;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .song-search-panel-body { transition: none; }
+  }
+  .song-search-panel-body .ui-section-soft,
+  .song-search-panel-body .ui-field-group.song-search-block {
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    margin-bottom: 0;
+  }
+  .song-search-panel-body .song-search-block { padding-top: 10px; }
+  .song-search-panel-body .song-filter-block { margin-top: 0; }
+
   .song-narrow-filter-block {
     padding: 8px 10px;
     margin-bottom: 8px;
@@ -2793,6 +2891,16 @@
         <button type="button" class="view-tab active" id="viewTabAll" data-view="all">すべて</button>
         <button type="button" class="view-tab" id="viewTabSelected" data-view="selected">選択中（<span id="viewTabSelectedCount">0</span>）</button>
       </div>
+      <div class="song-search-panel song-search-panel--editor is-expanded" id="songSearchPanel">
+        <button type="button" class="song-search-panel-header" id="songSearchPanelToggle" aria-expanded="true" aria-controls="songSearchPanelBody">
+          <span class="song-search-panel-leading">
+            <span class="song-search-panel-icon" aria-hidden="true">🔍</span>
+            <span class="song-search-panel-title">曲を探す</span>
+          </span>
+          <span class="song-search-panel-summary" id="songSearchPanelSummary" aria-live="polite"></span>
+          <span class="song-search-panel-chevron" id="songSearchPanelChevron">▲ 閉じる</span>
+        </button>
+        <div class="song-search-panel-body" id="songSearchPanelBody">
       <div class="ui-field-group song-search-block">
         <div class="search-mode-segment" role="tablist" aria-label="検索モード">
           <button type="button" class="search-mode-tab" id="searchTargetTitle" data-target="title" aria-selected="false">曲名から探す</button>
@@ -2817,6 +2925,8 @@
       <div class="ui-section-soft song-filter-block song-narrow-filter-block" id="narrowFilterBlock">
         <div class="narrow-filter-label">絞り込み</div>
         <div class="narrow-filter-row" id="narrowFilterRow" role="group" aria-label="絞り込み"></div>
+      </div>
+        </div>
       </div>
       <div class="ui-section-soft ui-section-soft--compact song-bulk-block">
         <div class="bulk-row" id="bulkRowPrimary">
@@ -4307,6 +4417,53 @@ if (narrowFilterRow) {
     narrowFilterRow.appendChild(chip);
   });
 }
+
+const songSearchPanel = document.getElementById('songSearchPanel');
+const songSearchPanelToggle = document.getElementById('songSearchPanelToggle');
+const songSearchPanelSummary = document.getElementById('songSearchPanelSummary');
+const songSearchPanelChevron = document.getElementById('songSearchPanelChevron');
+const songSearchPanelBody = document.getElementById('songSearchPanelBody');
+let searchPanelExpanded = null;
+function getSearchPanelDefaultExpanded() { return true; }
+function isSearchPanelExpanded() {
+  if (searchPanelExpanded !== null) return searchPanelExpanded;
+  return getSearchPanelDefaultExpanded();
+}
+function buildSearchPanelSummary() {
+  const parts = [];
+  const q = searchInput.value.trim();
+  if (q) parts.push(`${searchTarget === 'title' ? '曲名' : 'アーティスト'}「${q}」`);
+  else parts.push(searchTarget === 'title' ? '曲名' : 'アーティスト');
+  if (activeGyo) parts.push(activeKana ? `${activeGyo}行・${activeKana}` : `${activeGyo}行`);
+  if (activeFilter === 'new-batch') parts.push('新着');
+  else if (activeFilter) parts.push(activeFilter);
+  const sortOpt = SORT_OPTIONS.find(function(o) { return o.value === sortMode; });
+  if (sortOpt) parts.push(sortOpt.label);
+  return parts.join(' ・ ');
+}
+function applySearchPanelState() {
+  if (!songSearchPanel) return;
+  const expanded = isSearchPanelExpanded();
+  songSearchPanel.classList.toggle('is-expanded', expanded);
+  songSearchPanel.classList.toggle('is-collapsed', !expanded);
+  if (songSearchPanelToggle) songSearchPanelToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  if (songSearchPanelBody) songSearchPanelBody.hidden = false;
+  if (songSearchPanelChevron) songSearchPanelChevron.textContent = expanded ? '▲ 閉じる' : '▼ 開く';
+  if (songSearchPanelSummary) songSearchPanelSummary.textContent = buildSearchPanelSummary();
+}
+function setSearchPanelExpanded(expanded) {
+  searchPanelExpanded = expanded;
+  applySearchPanelState();
+}
+function updateSearchPanelSummary() {
+  if (songSearchPanelSummary) songSearchPanelSummary.textContent = buildSearchPanelSummary();
+}
+if (songSearchPanelToggle) {
+  songSearchPanelToggle.addEventListener('click', function() {
+    setSearchPanelExpanded(!isSearchPanelExpanded());
+  });
+}
+
 const allChip = document.createElement('div');
 allChip.className = 'chip active';
 allChip.textContent = 'すべて';
@@ -4435,6 +4592,7 @@ function render() {
   const artistCount = new Set(filtered.map(s => s.a)).size;
   const viewLabel = songListView === 'selected' ? '選択中' : '表示中';
   resultMeta.textContent = `${filtered.length}曲 / ${artistCount}組 を${viewLabel}`;
+  updateSearchPanelSummary();
 
   if (filtered.length === 0) {
     const emptyMsg = songListView === 'selected'
@@ -6753,6 +6911,7 @@ if (typeof ResizeObserver !== 'undefined') {
 initEditTabs();
 initSearchTargetTabs();
 initSortSelect();
+applySearchPanelState();
 document.getElementById('startGuestBtn')?.addEventListener('click', () => {
   setStartChoiceGuest();
   enterEditorFromStart({ restoreDraft: true, restoreSongRemovalUndo: true });

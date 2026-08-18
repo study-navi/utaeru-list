@@ -102,6 +102,7 @@ async function testViewerNoTagUi(browser) {
   else fail('viewer: v-tag表示', String(ui.vTags));
   if (ui.stat === '2') ok('viewer: 全曲表示');
   else fail('viewer: 曲数', ui.stat);
+  await page.evaluate(() => setSearchPanelExpanded(true));
   await page.locator('#narrowFilterRow .chip', { hasText: '新着' }).click();
   await page.locator('#statusFilterRow .chip', { hasText: '❤️' }).click();
   await page.waitForTimeout(200);

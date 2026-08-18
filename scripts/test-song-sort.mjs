@@ -202,12 +202,21 @@ function buildViewerFixture(name, { songs, songMeta = {} }) {
   return `file://${p}`;
 }
 
+async function openSearchPanel(page) {
+  await page.evaluate(() => {
+    if (typeof setSearchPanelExpanded === 'function') setSearchPanelExpanded(true);
+  });
+  await page.waitForTimeout(120);
+}
+
 async function setSort(page, value) {
+  await openSearchPanel(page);
   await page.selectOption('#sortSelect', value);
   await page.waitForTimeout(150);
 }
 
 async function setSearchTarget(page, target) {
+  await openSearchPanel(page);
   await page.evaluate((t) => {
     document.getElementById(t === 'artist' ? 'searchTargetArtist' : 'searchTargetTitle')?.click();
   }, target);
@@ -305,6 +314,7 @@ async function runViewerUiTests(browser) {
 
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => document.getElementById('statSongs')?.textContent !== '-');
+  await openSearchPanel(page);
 
   const initialSort = await page.locator('#sortSelect').inputValue();
   if (initialSort === 'artist-asc') ok(`viewer: 初期ソート ${initialSort}`);
@@ -375,6 +385,7 @@ async function runFilterComboTests(browser) {
   const page = await browser.newPage({ viewport: { width: 390, height: 800 } });
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => document.getElementById('statSongs')?.textContent !== '-');
+  await openSearchPanel(page);
 
   await setSort(page, 'title-desc');
   await page.evaluate(() => {
@@ -409,6 +420,7 @@ async function runEmptySingleTests(browser) {
   const singleUrl = buildViewerFixture('single', { songs: [{ k: 'あ', y: 'あ', a: 'Solo', t: 'Only', ty: 'おんりー' }] });
   const page2 = await browser.newPage({ viewport: { width: 390, height: 800 } });
   await page2.goto(singleUrl, { waitUntil: 'domcontentloaded' });
+  await openSearchPanel(page2);
   await setSort(page2, 'title-asc');
   const one = await getFlatTitles(page2);
   if (one.join(',') === 'Only') ok('1曲: ソート');

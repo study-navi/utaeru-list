@@ -38,7 +38,16 @@ function buildViewerFixture(name, { songs, songMeta = {} }) {
   return `file://${p}`;
 }
 
+async function ensureSearchPanelOpen(page) {
+  const expanded = await page.evaluate(() => document.getElementById('songSearchPanel')?.classList.contains('is-expanded'));
+  if (expanded === false) {
+    await page.click('#songSearchPanelToggle');
+    await page.waitForTimeout(220);
+  }
+}
+
 async function clickNarrow(page, label) {
+  await ensureSearchPanelOpen(page);
   await page.locator('#narrowFilterRow .chip', { hasText: label }).click();
   await page.waitForTimeout(180);
 }
@@ -107,7 +116,10 @@ async function chipLayoutSnapshot(page) {
 
 async function checkChipLayout(page, label, width) {
   await page.setViewportSize({ width, height: width <= 430 ? 844 : 900 });
+  await page.evaluate(() => { if (typeof applySearchPanelState === 'function') applySearchPanelState(); });
   await page.waitForTimeout(120);
+  const hasPanel = await page.evaluate(() => !!document.getElementById('songSearchPanel'));
+  if (hasPanel) await ensureSearchPanelOpen(page);
   const lay = await chipLayoutSnapshot(page);
   const rowDesc = lay.rows.map((r) => r.join('+')).join(' / ');
   if (!lay.sixPlusOne && !lay.orphanOtherLeft) ok(`${label}: chip配置 ${rowDesc}`);

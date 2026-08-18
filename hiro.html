@@ -173,6 +173,107 @@
     padding: 6px 0 8px;
     margin-bottom: 4px;
   }
+  .song-search-panel {
+    background: var(--surface);
+    border: 1px solid var(--grid);
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(21, 32, 43, 0.04);
+    overflow: hidden;
+  }
+  .song-search-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 10px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+  }
+  .song-search-panel-header:hover { background: color-mix(in srgb, var(--accent) 4%, transparent); }
+  .song-search-panel-header:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+  .song-search-panel-leading {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .song-search-panel-icon { font-size: 14px; line-height: 1; }
+  .song-search-panel-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+  .song-search-panel-summary {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+  }
+  .song-search-panel.is-expanded .song-search-panel-summary { display: none; }
+  .song-search-panel-chevron {
+    flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    padding-left: 4px;
+  }
+  .song-search-panel-body {
+    border-top: 1px solid var(--grid);
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+  }
+  .song-search-panel.is-collapsed .song-search-panel-body {
+    max-height: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .song-search-panel.is-expanded .song-search-panel-body {
+    max-height: 2400px;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .song-search-panel-body {
+      transition: max-height 0.22s ease, opacity 0.16s ease;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .song-search-panel-body { transition: none; }
+  }
+  .song-search-panel .search-shell {
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 10px 10px 8px;
+    background: transparent;
+  }
+  .song-search-panel-section { margin-top: 8px; }
+  .song-search-panel-section .filter-row {
+    margin: 4px 0 0;
+    padding: 0;
+    flex-wrap: wrap;
+    overflow-x: hidden;
+  }
   .search-shell {
     padding: 8px;
     border-radius: 12px;
@@ -667,31 +768,45 @@
     <span class="utalis-mark" aria-hidden="true">UTAEMO</span>
   </header>
 
-  <div class="search-bar">
-    <div class="search-shell">
-      <div class="search-mode-segment" role="tablist" aria-label="検索モード">
-        <button type="button" class="search-mode-tab" id="searchTargetTitle" data-target="title" aria-selected="false">曲名から探す</button>
-        <button type="button" class="search-mode-tab active" id="searchTargetArtist" data-target="artist" aria-selected="true">アーティストから探す</button>
-      </div>
-      <label class="search-label" for="searchInput">検索</label>
-      <div class="search-input-row">
-        <input type="search" id="searchInput" placeholder="アーティスト名を入力" autocomplete="off" />
-        <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
-      </div>
-      <div class="gyo-row" id="gyoRow"></div>
-      <div class="gyo-row gyo-sub-row" id="gyoSubRow" hidden aria-label="五十音 1文字"></div>
-      <div class="sort-control-row">
-        <label class="sort-control-label" for="sortSelect">並び替え</label>
-        <select class="sort-control-select" id="sortSelect" aria-label="並び替え"></select>
-      </div>
-      <div class="narrow-filter-block">
-        <div class="narrow-filter-label">絞り込み</div>
-        <div class="narrow-filter-row" id="narrowFilterRow" role="group" aria-label="絞り込み"></div>
+  <div class="search-bar" id="songSearchBar">
+    <div class="song-search-panel is-collapsed" id="songSearchPanel">
+      <button type="button" class="song-search-panel-header" id="songSearchPanelToggle" aria-expanded="false" aria-controls="songSearchPanelBody">
+        <span class="song-search-panel-leading">
+          <span class="song-search-panel-icon" aria-hidden="true">🔍</span>
+          <span class="song-search-panel-title">曲を探す</span>
+        </span>
+        <span class="song-search-panel-summary" id="songSearchPanelSummary" aria-live="polite"></span>
+        <span class="song-search-panel-chevron" id="songSearchPanelChevron">▼ 開く</span>
+      </button>
+      <div class="song-search-panel-body" id="songSearchPanelBody">
+        <div class="search-shell">
+          <div class="search-mode-segment" role="tablist" aria-label="検索モード">
+            <button type="button" class="search-mode-tab" id="searchTargetTitle" data-target="title" aria-selected="false">曲名から探す</button>
+            <button type="button" class="search-mode-tab active" id="searchTargetArtist" data-target="artist" aria-selected="true">アーティストから探す</button>
+          </div>
+          <label class="search-label" for="searchInput">検索</label>
+          <div class="search-input-row">
+            <input type="search" id="searchInput" placeholder="アーティスト名を入力" autocomplete="off" />
+            <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
+          </div>
+          <div class="gyo-row" id="gyoRow"></div>
+          <div class="gyo-row gyo-sub-row" id="gyoSubRow" hidden aria-label="五十音 1文字"></div>
+          <div class="sort-control-row">
+            <label class="sort-control-label" for="sortSelect">並び替え</label>
+            <select class="sort-control-select" id="sortSelect" aria-label="並び替え"></select>
+          </div>
+          <div class="narrow-filter-block">
+            <div class="narrow-filter-label">絞り込み</div>
+            <div class="narrow-filter-row" id="narrowFilterRow" role="group" aria-label="絞り込み"></div>
+          </div>
+          <div class="song-search-panel-section">
+            <div class="narrow-filter-label">マーク</div>
+            <div class="filter-row" id="statusFilterRow"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-
-  <div class="filter-row" id="statusFilterRow"></div>
 
   <div class="random-row">
     <button class="random-btn" id="randomBtn">🎲 表示中からランダム</button>
@@ -1172,6 +1287,57 @@ const resultsEl = document.getElementById('results');
 const resultMeta = document.getElementById('resultMeta');
 const filterSummaryEl = document.getElementById('filterSummary');
 const statusFilterRow = document.getElementById('statusFilterRow');
+const songSearchPanel = document.getElementById('songSearchPanel');
+const songSearchPanelToggle = document.getElementById('songSearchPanelToggle');
+const songSearchPanelSummary = document.getElementById('songSearchPanelSummary');
+const songSearchPanelChevron = document.getElementById('songSearchPanelChevron');
+const songSearchPanelBody = document.getElementById('songSearchPanelBody');
+let searchPanelExpanded = null;
+
+function getSearchPanelDefaultExpanded() {
+  return window.matchMedia('(min-width: 641px)').matches;
+}
+function isSearchPanelExpanded() {
+  if (searchPanelExpanded !== null) return searchPanelExpanded;
+  return getSearchPanelDefaultExpanded();
+}
+function buildSearchPanelSummary() {
+  const parts = [];
+  const q = searchInput.value.trim();
+  if (q) parts.push(`${searchTarget === 'title' ? '曲名' : 'アーティスト'}「${q}」`);
+  else parts.push(searchTarget === 'title' ? '曲名' : 'アーティスト');
+  if (activeGyo) parts.push(activeKana ? `${activeGyo}行・${activeKana}` : `${activeGyo}行`);
+  if (activeFilter === 'new-batch') parts.push('新着');
+  else if (activeFilter) parts.push(activeFilter);
+  if (activeMark && MARK_LABELS[activeMark]) parts.push(MARK_LABELS[activeMark].label);
+  if (newOnly) parts.push('🆕 最近追加');
+  const sortOpt = SORT_OPTIONS.find(function(o) { return o.value === sortMode; });
+  if (sortOpt) parts.push(sortOpt.label);
+  return parts.join(' ・ ');
+}
+function applySearchPanelState() {
+  if (!songSearchPanel) return;
+  const expanded = isSearchPanelExpanded();
+  songSearchPanel.classList.toggle('is-expanded', expanded);
+  songSearchPanel.classList.toggle('is-collapsed', !expanded);
+  if (songSearchPanelToggle) songSearchPanelToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  if (songSearchPanelBody) songSearchPanelBody.hidden = false;
+  if (songSearchPanelChevron) songSearchPanelChevron.textContent = expanded ? '▲ 閉じる' : '▼ 開く';
+  if (songSearchPanelSummary) songSearchPanelSummary.textContent = buildSearchPanelSummary();
+}
+function setSearchPanelExpanded(expanded) {
+  searchPanelExpanded = expanded;
+  applySearchPanelState();
+}
+function updateSearchPanelSummary() {
+  if (songSearchPanelSummary) songSearchPanelSummary.textContent = buildSearchPanelSummary();
+}
+if (songSearchPanelToggle) {
+  songSearchPanelToggle.addEventListener('click', function() {
+    setSearchPanelExpanded(!isSearchPanelExpanded());
+  });
+}
+
 const randomBtn = document.getElementById('randomBtn');
 const randomPick = document.getElementById('randomPick');
 
@@ -1291,21 +1457,10 @@ function refreshStatusChips() {
 }
 
 function updateFilterSummary() {
-  const parts = [];
-  if (activeFilter === 'new-batch') parts.push('新着');
-  else if (activeFilter) parts.push(activeFilter);
-  if (activeGyo) parts.push(`${activeGyo}行${activeKana ? '・' + activeKana : ''}`);
-  if (searchTarget === 'title') parts.unshift('曲名');
-  else if (searchTarget === 'artist') parts.unshift('アーティスト');
-  if (activeMark && MARK_LABELS[activeMark]) parts.push(MARK_LABELS[activeMark].label);
-  if (newOnly) parts.push('🆕 最近追加');
-  if (parts.length === 0) {
-    filterSummaryEl.style.display = 'none';
-    filterSummaryEl.textContent = '';
-  } else {
-    filterSummaryEl.style.display = 'block';
-    filterSummaryEl.textContent = `絞り込み中: ${parts.join(' ・ ')}`;
-  }
+  updateSearchPanelSummary();
+  if (!filterSummaryEl) return;
+  filterSummaryEl.style.display = 'none';
+  filterSummaryEl.textContent = '';
 }
 
 function songRowHtml(s, q) {
@@ -1511,6 +1666,7 @@ document.getElementById('statArtists').textContent = new Set(SONGS.map(s => s.a)
 document.getElementById('statUpdated').textContent = '2026/7/28';
 
 initSortSelect();
+applySearchPanelState();
 render();
 </script>
 </body>

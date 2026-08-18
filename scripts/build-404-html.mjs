@@ -15,9 +15,9 @@ const cssMatch = hiro.match(/<style>([\s\S]*?)<\/style>/);
 if (!cssMatch) throw new Error('hiro.html style block not found');
 const css = cssMatch[1];
 
-const searchBarMatch = hiro.match(/<div class="search-bar">[\s\S]*?<\/div>\s*\n\s*\n\s*<div class="filter-row" id="statusFilterRow"/);
+const searchBarMatch = hiro.match(/<div class="search-bar" id="songSearchBar">[\s\S]*?<\/div>\s*\n\s*\n\s*<div class="random-row">/);
 if (!searchBarMatch) throw new Error('search-bar block not found in hiro.html');
-const searchBarHtml = searchBarMatch[0].replace(/\n\s*\n\s*<div class="filter-row" id="statusFilterRow"$/, '');
+const searchBarHtml = searchBarMatch[0].replace(/\n\s*\n\s*<div class="random-row">$/, '');
 
 const viewerStart = hiro.indexOf('// @genre-lookup-inject');
 const viewerEnd = hiro.lastIndexOf('render();');
@@ -86,8 +86,6 @@ ${css}
   </header>
 
   ${searchBarHtml}
-
-  <div class="filter-row" id="statusFilterRow"></div>
 
   <div class="random-row">
     <button class="random-btn" id="randomBtn">🎲 表示中からランダム</button>
