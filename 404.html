@@ -736,6 +736,23 @@
   .site-footer-nav a:hover { color: var(--accent); text-decoration: underline; }
   .catalog-footer { border-top: none; padding-top: 0; margin-top: 0; font-size: 11.5px; }
 
+  .song-data-credit {
+    margin: 18px 0 0;
+    padding: 12px 0 0;
+    border-top: 1px solid var(--grid);
+    font-size: 11px;
+    line-height: 1.55;
+    color: var(--text-muted);
+  }
+  .song-data-credit-line { margin: 0; }
+  .song-data-credit-line + .song-data-credit-line { margin-top: 2px; }
+  .song-data-credit a {
+    color: var(--text-secondary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .song-data-credit a:hover { color: var(--accent); }
+
   @media (max-width: 430px) {
     .wrap { padding: 14px 14px 48px; }
     h1 { font-size: 19px; }
@@ -834,6 +851,11 @@
   <div class="filter-summary" id="filterSummary" style="display:none;"></div>
 
   <div id="results"></div>
+
+  <aside class="song-data-credit" aria-label="楽曲データの出典">
+    <p class="song-data-credit-line">楽曲データ協力：真君</p>
+    <p class="song-data-credit-line">データ元：<a href="https://separated-windscreen-557.notion.site/15b0f290a47d80a7a8ccdd12f67e530d?v=1740f290a47d802aa07f000c735a0c76" target="_blank" rel="noopener noreferrer">楽曲リスト（Notion）</a></p>
+  </aside>
 
   <nav class="site-footer-nav" aria-label="うたエモ">
     <span class="site-footer-brand">UTAEMO</span>

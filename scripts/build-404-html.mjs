@@ -19,6 +19,10 @@ const searchBarMatch = hiro.match(/<div class="search-bar" id="songSearchBar">[\
 if (!searchBarMatch) throw new Error('search-bar block not found in hiro.html');
 const searchBarHtml = searchBarMatch[0].replace(/\n\s*\n\s*<div class="random-row">$/, '');
 
+const creditMatch = hiro.match(/<aside class="song-data-credit"[\s\S]*?<\/aside>/);
+if (!creditMatch) throw new Error('song-data-credit block not found in hiro.html');
+const songDataCreditHtml = creditMatch[0];
+
 const viewerStart = hiro.indexOf('// @genre-lookup-inject');
 const viewerEnd = hiro.lastIndexOf('render();');
 if (viewerStart < 0 || viewerEnd < 0) throw new Error('viewer script block not found in hiro.html');
@@ -97,6 +101,8 @@ ${css}
   <div class="filter-summary" id="filterSummary" style="display:none;"></div>
 
   <div id="results"></div>
+
+  ${songDataCreditHtml}
 
   <nav class="site-footer-nav" aria-label="うたエモ">
     <span class="site-footer-brand">UTAEMO</span>

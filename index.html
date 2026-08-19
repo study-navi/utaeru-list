@@ -621,6 +621,24 @@
     text-decoration: none;
   }
   .site-footer a:hover { color: var(--accent); text-decoration: underline; }
+
+  .song-data-credit {
+    margin: 16px 0 0;
+    padding: 12px 0 0;
+    border-top: 1px solid var(--grid);
+    font-size: 11px;
+    line-height: 1.55;
+    color: var(--text-muted);
+  }
+  .song-data-credit-line { margin: 0; }
+  .song-data-credit-line + .song-data-credit-line { margin-top: 2px; }
+  .song-data-credit a {
+    color: var(--text-secondary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .song-data-credit a:hover { color: var(--accent); }
+
   .publish-success-title {
     margin: 0 0 8px;
     font-size: 18px;
@@ -2943,6 +2961,10 @@
         <div class="result-meta" id="resultMeta"></div>
         <div id="results"></div>
       </div>
+      <aside class="song-data-credit" aria-label="楽曲データの出典">
+        <p class="song-data-credit-line">楽曲データ協力：真君</p>
+        <p class="song-data-credit-line">データ元：<a href="https://separated-windscreen-557.notion.site/15b0f290a47d80a7a8ccdd12f67e530d?v=1740f290a47d802aa07f000c735a0c76" target="_blank" rel="noopener noreferrer">楽曲リスト（Notion）</a></p>
+      </aside>
     </section>
 
     <section class="edit-panel" role="tabpanel" id="panelDesign" data-tab-panel="design" aria-labelledby="editTabDesign" hidden>
