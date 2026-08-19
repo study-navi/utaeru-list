@@ -26,7 +26,7 @@
     <a href="guide.html">使い方</a>
     <a href="terms.html" aria-current="page">利用規約</a>
     <a href="privacy.html">プライバシー</a>
-    <a href="contact.html">お問い合わせ</a>
+    <a class="contact-form-link" href="contact.html">お問い合わせ</a>
   </nav>
 
   <p>本利用規約（以下「本規約」）は、うたエモ（UTAEMO）（以下「本サービス」）の利用条件を定めるものです。本サービスを利用する方（以下「利用者」）は、本規約に同意したうえでご利用ください。</p>
@@ -123,8 +123,46 @@
     <a href="guide.html">使い方</a>
     <a href="terms.html">利用規約</a>
     <a href="privacy.html">プライバシー</a>
-    <a href="contact.html">お問い合わせ</a>
+    <a class="contact-form-link" href="contact.html">お問い合わせ</a>
   </footer>
 </div>
+<script>
+// @contact-form-inject
+const CONTACT_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfFMY4unRXIsYLiPh3-lgr3vFpX4DcYgvWKtq38BDNOa1NY9g/viewform";
+function isGoogleFormUrl(url) {
+  return /^https:\/\/(docs\.google\.com\/forms\/|forms\.gle\/)/i.test(String(url || '').trim());
+}
+function applyContactFormLinks() {
+  const url = String(CONTACT_FORM_URL || '').trim();
+  const valid = isGoogleFormUrl(url);
+  document.querySelectorAll('a.contact-form-link').forEach((a) => {
+    const optional = a.getAttribute('data-contact-form-optional') === '1';
+    if (valid) {
+      a.setAttribute('href', url);
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.hidden = false;
+      a.removeAttribute('hidden');
+      a.setAttribute('aria-label', 'お問い合わせ（新しいタブで開きます）');
+    } else if (optional) {
+      a.hidden = true;
+      a.removeAttribute('href');
+      a.removeAttribute('target');
+      a.removeAttribute('rel');
+      a.removeAttribute('aria-label');
+    } else {
+      a.removeAttribute('aria-label');
+    }
+  });
+  document.querySelectorAll('[data-contact-form-only]').forEach((el) => {
+    el.hidden = !valid;
+  });
+  document.querySelectorAll('[data-contact-form-fallback]').forEach((el) => {
+    el.hidden = valid;
+  });
+}
+// @end-contact-form-inject
+applyContactFormLinks();
+</script>
 </body>
 </html>

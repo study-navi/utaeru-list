@@ -30,7 +30,14 @@
   </nav>
 
   <h2>お問い合わせ方法</h2>
-  <p>うたエモは個人運営の無料サービスです。現在、専用の問い合わせフォームやサポートメールは設けていません。次の GitHub Issues からご連絡ください。</p>
+  <div data-contact-form-only hidden>
+    <p>不具合や改善のご連絡は、次のフォームからお願いします。サイトから個人情報や画面の内容を自動送信することはありません。</p>
+    <p><a class="contact-cta contact-form-link" data-contact-form-optional="1" hidden>お問い合わせ</a></p>
+    <p class="hint">削除相談・権利侵害など、フォーム以外のご連絡は GitHub Issues も利用できます。</p>
+  </div>
+  <div data-contact-form-fallback>
+    <p>うたエモは個人運営の無料サービスです。現在、専用の問い合わせフォームやサポートメールは設けていません。次の GitHub Issues からご連絡ください。</p>
+  </div>
 
   <p><a class="contact-cta" href="https://github.com/utalis/utalis.github.io/issues/new" rel="noopener noreferrer">GitHub Issues でお問い合わせを作成する</a></p>
 
@@ -73,8 +80,46 @@
     <a href="guide.html">使い方</a>
     <a href="terms.html">利用規約</a>
     <a href="privacy.html">プライバシー</a>
-    <a href="contact.html">お問い合わせ</a>
+    <a class="contact-form-link" href="contact.html">お問い合わせ</a>
   </footer>
 </div>
+<script>
+// @contact-form-inject
+const CONTACT_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfFMY4unRXIsYLiPh3-lgr3vFpX4DcYgvWKtq38BDNOa1NY9g/viewform";
+function isGoogleFormUrl(url) {
+  return /^https:\/\/(docs\.google\.com\/forms\/|forms\.gle\/)/i.test(String(url || '').trim());
+}
+function applyContactFormLinks() {
+  const url = String(CONTACT_FORM_URL || '').trim();
+  const valid = isGoogleFormUrl(url);
+  document.querySelectorAll('a.contact-form-link').forEach((a) => {
+    const optional = a.getAttribute('data-contact-form-optional') === '1';
+    if (valid) {
+      a.setAttribute('href', url);
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.hidden = false;
+      a.removeAttribute('hidden');
+      a.setAttribute('aria-label', 'お問い合わせ（新しいタブで開きます）');
+    } else if (optional) {
+      a.hidden = true;
+      a.removeAttribute('href');
+      a.removeAttribute('target');
+      a.removeAttribute('rel');
+      a.removeAttribute('aria-label');
+    } else {
+      a.removeAttribute('aria-label');
+    }
+  });
+  document.querySelectorAll('[data-contact-form-only]').forEach((el) => {
+    el.hidden = !valid;
+  });
+  document.querySelectorAll('[data-contact-form-fallback]').forEach((el) => {
+    el.hidden = valid;
+  });
+}
+// @end-contact-form-inject
+applyContactFormLinks();
+</script>
 </body>
 </html>

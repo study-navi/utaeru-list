@@ -6,6 +6,7 @@ import { chromium } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { expectedContactHref } from './lib/contact-form.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const WIDTHS = [320, 375, 390, 430, 1280];
@@ -45,7 +46,7 @@ async function checkPage(page, spec, width) {
   const navLinks = await page.evaluate(() =>
     [...document.querySelectorAll('.legal-nav a')].map((a) => ({ href: a.getAttribute('href'), current: a.getAttribute('aria-current') }))
   );
-  const expected = ['index.html', 'guide.html', 'terms.html', 'privacy.html', 'contact.html'];
+  const expected = ['index.html', 'guide.html', 'terms.html', 'privacy.html', spec.file === 'contact.html' ? 'contact.html' : expectedContactHref()];
   if (navLinks.map((l) => l.href).join(',') === expected.join(',')) ok(`${label}: 上部ナビ`);
   else fail(`${label}: 上部ナビ`, JSON.stringify(navLinks));
 
@@ -102,7 +103,7 @@ async function checkIndexFooter() {
     [...document.querySelectorAll('.site-footer-nav a, footer a, .catalog-footer a')].map((a) => a.getAttribute('href')).filter(Boolean)
   );
   const all = hrefs.join(' ');
-  if (all.includes('terms.html') && all.includes('privacy.html') && all.includes('contact.html')) ok('index: フッターから法務3ページ');
+  if (all.includes('terms.html') && all.includes('privacy.html') && all.includes(expectedContactHref())) ok('index: フッターから法務3ページ');
   else fail('index: フッターから法務3ページ', all);
   await browser.close();
 }

@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { addBypassStart } from './lib/test-bypass-start.mjs';
+import { expectedContactHref } from './lib/contact-form.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const guideUrl = 'file://' + path.join(ROOT, 'guide.html');
@@ -59,7 +60,7 @@ async function runGuideViewport(width) {
   else ok(`${label}: 目次`);
   if (!data.hasSave || !data.hasFaq || data.h2Count < 10) fail(`${label}: セクション`, String(data.h2Count));
   else ok(`${label}: 主要セクション`);
-  if (!data.footerLinks.includes('terms.html') || !data.footerLinks.includes('privacy.html') || !data.footerLinks.includes('contact.html')) {
+  if (!data.footerLinks.includes('terms.html') || !data.footerLinks.includes('privacy.html') || !data.footerLinks.includes(expectedContactHref())) {
     fail(`${label}: 法務リンク`, JSON.stringify(data.footerLinks));
   } else ok(`${label}: 法務リンク`);
 

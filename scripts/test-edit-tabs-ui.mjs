@@ -6,6 +6,7 @@ import { chromium } from 'playwright-core';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { addBypassStart } from './lib/test-bypass-start.mjs';
+import { expectedContactHref } from './lib/contact-form.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const indexUrl = 'file://' + path.join(ROOT, 'index.html');
@@ -102,7 +103,7 @@ async function runViewport(label, width, height) {
   if (init.footerPosition === 'fixed' || init.footerPosition === 'sticky') {
     fail(`${label}: フッター非fixed`, init.footerPosition);
   } else ok(`${label}: フッター非fixed`);
-  if (!init.footerLinks.includes('terms.html') || !init.footerLinks.includes('privacy.html') || !init.footerLinks.includes('contact.html')) {
+  if (!init.footerLinks.includes('terms.html') || !init.footerLinks.includes('privacy.html') || !init.footerLinks.includes(expectedContactHref())) {
     fail(`${label}: 法務3リンク`, JSON.stringify(init.footerLinks));
   } else ok(`${label}: 法務3リンク`);
   if (init.footerCopy !== '© うたエモ') fail(`${label}: © うたエモ`, init.footerCopy);

@@ -6,6 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { contactFormBrowserSnippet } from './lib/contact-form.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -108,7 +109,7 @@ ${css}
     <span class="site-footer-brand">UTAEMO</span>
     <a data-legal="terms.html" href="terms.html">利用規約</a>
     <a data-legal="privacy.html" href="privacy.html">プライバシー</a>
-    <a data-legal="contact.html" href="contact.html">お問い合わせ</a>
+    <a class="contact-form-link" data-legal="contact.html" href="contact.html">お問い合わせ</a>
   </nav>
   <footer class="catalog-footer">
     データ提供元：Mirrativ（ミラティブ）内カラオケアプリ「エモカラ」の楽曲一覧を個人配布しているGoogle Driveより取得（2026/7/28時点のカタログ）。配信者が歌える曲として選択したものを掲載しています。配信状況や仕様変更により、実際に歌える曲は変動する場合があります。
@@ -366,6 +367,7 @@ async function bootstrapPublicViewer() {
 
 function applySiteFooterLinks() {
   document.querySelectorAll('.site-footer-nav a[data-legal]').forEach((a) => {
+    if (a.classList.contains('contact-form-link') && typeof isGoogleFormUrl === 'function' && isGoogleFormUrl(CONTACT_FORM_URL)) return;
     const file = a.getAttribute('data-legal');
     if (file) a.href = SITE_BASE + '/' + file;
   });
@@ -373,7 +375,9 @@ function applySiteFooterLinks() {
 
 ${viewerJs}
 
+${contactFormBrowserSnippet()}
 applySiteFooterLinks();
+applyContactFormLinks();
 bootstrapPublicViewer();
 </script>
 </body>
