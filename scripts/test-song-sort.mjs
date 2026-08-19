@@ -165,6 +165,23 @@ function runUnitTests() {
   if (built[1].songs.map((s) => s.t).join(',') === 'z1,z2') ok('アコーディオン内: 曲名 あ→ん');
   else fail('within group title', built[1].songs.map((s) => s.t).join(','));
 
+  const spaceDup = [
+    { k: 'お', y: 'おおつかあい', a: '大塚 愛', t: '甘えんぼ', ty: 'あまえんぼ' },
+    { k: 'お', y: 'おおつかあい', a: '大塚愛', t: 'さくらんぼ', ty: 'さくらんぼ' },
+  ];
+  const merged = buildArtistGroups(spaceDup, {
+    sortMode: 'artist-asc',
+    sourceList: spaceDup,
+    keyOf,
+    getTitleTy: (s) => s.ty,
+    getArtistY: (s) => s.y,
+    getAddedAt: () => null,
+    getBatchOrder: () => undefined,
+  });
+  if (merged.length === 1 && merged[0].songs.length === 2 && merged[0].artist === '大塚愛') {
+    ok('スペース表記ゆれは1グループ（表示名は最多）');
+  } else fail('space variant group', JSON.stringify(merged.map((g) => [g.artist, g.songs.map((s) => s.a)])));
+
   if (withinGroupSortMode('artist-asc') === 'title-asc') ok('withinGroupSortMode');
   else fail('withinGroupSortMode');
 

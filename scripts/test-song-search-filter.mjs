@@ -173,6 +173,54 @@ async function runViewport(label, width, height) {
   else ok(`${label}: アーティスト名検索 (${artistNameSearch.count}曲)`);
 
   await setSearch(page, '');
+  await setSearch(page, '大塚愛');
+  const ohtsuka = await page.evaluate(() => {
+    const filtered = filterSongsForList(MASTER_SONGS);
+    const grouped = buildArtistGroups(filtered, {
+      sortMode: 'artist-asc',
+      sourceList: MASTER_SONGS,
+      keyOf,
+      getTitleTy: (s) => s.ty || '',
+      getArtistY: (s) => s.y,
+      getAddedAt: () => null,
+      getBatchOrder: () => undefined,
+    });
+    const stored = MASTER_SONGS.filter((s) => s.a === '大塚 愛' || s.a === '大塚愛').map((s) => s.a);
+    return {
+      count: filtered.length,
+      groupCount: grouped.length,
+      groupArtist: grouped[0]?.artist,
+      stored,
+      allMatch: filtered.every((s) => matchesArtistSearch(s, '大塚愛')),
+    };
+  });
+  if (ohtsuka.count !== 9 || !ohtsuka.allMatch || ohtsuka.groupCount !== 1) fail(`${label}: 大塚愛検索9曲`, JSON.stringify(ohtsuka));
+  else ok(`${label}: 大塚愛検索9曲（スペースあり含む）`);
+  if (ohtsuka.stored.includes('大塚 愛') && ohtsuka.stored.includes('大塚愛')) ok(`${label}: 大塚愛の保存表記は変更なし`);
+  else fail(`${label}: 大塚愛表記保持`, ohtsuka.stored.join(','));
+
+  await setSearch(page, '大塚 愛');
+  const ohtsukaSp = await page.evaluate(() => filterSongsForList(MASTER_SONGS).length);
+  if (ohtsukaSp !== 9) fail(`${label}: 大塚 愛検索`, String(ohtsukaSp));
+  else ok(`${label}: 大塚 愛検索も9曲`);
+
+  await setSearch(page, 'いきものがかり');
+  const ikimono = await page.evaluate(() => {
+    const filtered = filterSongsForList(MASTER_SONGS);
+    return {
+      count: filtered.length,
+      artists: [...new Set(filtered.map((s) => s.a))],
+      titles: filtered.map((s) => displaySongTitle(s.t)),
+    };
+  });
+  if (ikimono.count !== 10 || ikimono.artists.join() !== 'いきものがかり') {
+    fail(`${label}: いきものがかり検索`, JSON.stringify(ikimono));
+  } else ok(`${label}: いきものがかり検索10曲`);
+  if (ikimono.titles.includes('コイスルオトメ') && !ikimono.titles.some((t) => t.startsWith('い,いきものがかり'))) {
+    ok(`${label}: コイスルオトメ表示`);
+  } else fail(`${label}: コイスルオトメ表示`, ikimono.titles.join(' / '));
+
+  await setSearch(page, '');
   await clickGyo(page, 'か');
   await clickSubKana(page, 'こ');
   await setSearch(page, 'コブクロ');

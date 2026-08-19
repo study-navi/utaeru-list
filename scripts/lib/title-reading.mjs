@@ -12,7 +12,7 @@ export function norm(str) {
   return toHiragana(str).toLowerCase();
 }
 
-/** カタログ特殊形式: あ,あたらよ,夏霞 → あたらよ夏霞 */
+/** カタログ特殊形式: あ,アーティスト,曲名 → 曲名（読み生成用） */
 export function parseCommaCatalogTitle(t) {
   const parts = t.split(',');
   if (parts.length >= 3 && /^[ぁ-ん]$/.test(parts[0])) {
@@ -24,7 +24,7 @@ export function parseCommaCatalogTitle(t) {
 /** 表示用曲名（検索・キー用 t はそのまま、読み生成用に整形） */
 export function titleForReading(t) {
   const comma = parseCommaCatalogTitle(t);
-  if (comma) return comma.readingPrefix + comma.display;
+  if (comma) return comma.display;
   // 副題括弧を除いた主題部分
   let main = t.split(/\s*[（(]/)[0].trim();
   // feat./CV 等の後半を除去

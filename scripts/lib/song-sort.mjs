@@ -1,6 +1,7 @@
 /**
  * 曲リスト並び替え（編集画面・公開 viewer 共通ロジック）
  */
+import { artistCompareKey, artistNameBrowserSnippet, pickDisplayArtistName } from './artist-name.mjs';
 
 export const SORT_OPTIONS = [
   { value: 'title-asc', label: '曲名 あ→ん' },
@@ -205,13 +206,15 @@ export function buildArtistGroups(songs, opts) {
 
   const byArtist = new Map();
   for (const s of songs) {
-    if (!byArtist.has(s.a)) byArtist.set(s.a, []);
-    byArtist.get(s.a).push(s);
+    const groupKey = artistCompareKey(s.a);
+    if (!byArtist.has(groupKey)) byArtist.set(groupKey, []);
+    byArtist.get(groupKey).push(s);
   }
 
   const withinMode = withinGroupSortMode(sortMode);
-  for (const [artist, list] of byArtist) {
-    byArtist.set(artist, sortSongsList(list, {
+  const groups = [];
+  for (const list of byArtist.values()) {
+    const sorted = sortSongsList(list, {
       sortMode: withinMode,
       sourceList,
       keyOf,
@@ -219,10 +222,9 @@ export function buildArtistGroups(songs, opts) {
       getArtistY,
       getAddedAt,
       getBatchOrder,
-    }));
+    });
+    groups.push({ artist: pickDisplayArtistName(sorted), songs: sorted });
   }
-
-  const groups = [...byArtist.entries()].map(([artist, gSongs]) => ({ artist, songs: gSongs }));
   return sortArtistGroups(groups, { sortMode, getArtistY, getBatchOrder, getAddedAt });
 }
 
@@ -256,6 +258,7 @@ export function shouldUseFlatForAddedSort(searchTarget, sortMode) {
 /** ブラウザ向けインライン JS 断片 */
 export function songSortBrowserSnippet() {
   return `
+${artistNameBrowserSnippet()}
 const SORT_OPTIONS = ${JSON.stringify(SORT_OPTIONS)};
 const DEFAULT_SORT_BY_TARGET = ${JSON.stringify(DEFAULT_SORT_BY_TARGET)};
 const JA_COLLATOR = new Intl.Collator('ja', { sensitivity: 'base', numeric: true });
@@ -413,12 +416,14 @@ function buildArtistGroups(songs, opts) {
   const byArtist = new Map();
   for (var i = 0; i < songs.length; i++) {
     var s = songs[i];
-    if (!byArtist.has(s.a)) byArtist.set(s.a, []);
-    byArtist.get(s.a).push(s);
+    var groupKey = artistCompareKey(s.a);
+    if (!byArtist.has(groupKey)) byArtist.set(groupKey, []);
+    byArtist.get(groupKey).push(s);
   }
   var withinMode = withinGroupSortMode(opts.sortMode);
-  for (var entry of byArtist.entries()) {
-    byArtist.set(entry[0], sortSongsList(entry[1], {
+  var groups = [];
+  for (var entry of byArtist.values()) {
+    var sorted = sortSongsList(entry, {
       sortMode: withinMode,
       sourceList: opts.sourceList,
       keyOf: opts.keyOf,
@@ -426,11 +431,8 @@ function buildArtistGroups(songs, opts) {
       getArtistY: opts.getArtistY,
       getAddedAt: opts.getAddedAt,
       getBatchOrder: opts.getBatchOrder,
-    }));
-  }
-  var groups = [];
-  for (var entry2 of byArtist.entries()) {
-    groups.push({ artist: entry2[0], songs: entry2[1] });
+    });
+    groups.push({ artist: pickDisplayArtistName(sorted), songs: sorted });
   }
   return sortArtistGroups(groups, {
     sortMode: opts.sortMode,
