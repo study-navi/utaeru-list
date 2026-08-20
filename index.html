@@ -6457,6 +6457,26 @@ function requiredGoogleOAuthRedirectUris() {
   return Object.values(GOOGLE_OAUTH_REDIRECT_BY_ORIGIN);
 }
 
+/** 本番 utalis.github.io 以外（localhost / file / preview）でのみ OAuth デバッグログを出す */
+function isOAuthDevMode() {
+  if (location.protocol === 'file:') return true;
+  const host = location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1') return true;
+  if (host === 'study-navi.github.io') return true;
+  return false;
+}
+
+function debugOAuthRedirect(context) {
+  if (!isOAuthDevMode()) return;
+  try {
+    console.debug('[UTAEMO OAuth]', context, {
+      origin: location.origin,
+      pathname: location.pathname,
+      redirect_uri: googleOAuthRedirectUri(),
+    });
+  } catch (err) { /* ignore */ }
+}
+
 function newOAuthState() {
   const state = 'utalis_' + Math.random().toString(36).slice(2) + String(Date.now());
   try { sessionStorage.setItem(OAUTH_STATE_KEY, state); } catch (err) { /* ignore */ }
@@ -6503,9 +6523,11 @@ function recoverVisibleAuthUi() {
 }
 
 function googleOAuthAuthorizeUrl() {
+  debugOAuthRedirect('authorize');
+  const redirectUri = googleOAuthRedirectUri();
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
-    redirect_uri: googleOAuthRedirectUri(),
+    redirect_uri: redirectUri,
     response_type: 'token',
     scope: 'openid email profile',
     prompt: 'select_account',
@@ -6516,8 +6538,7 @@ function googleOAuthAuthorizeUrl() {
 }
 
 function startGoogleLoginRedirect() {
-  const redirectUri = googleOAuthRedirectUri();
-  try { console.info('[UTAEMO] Google OAuth redirect_uri:', redirectUri); } catch (err) { /* ignore */ }
+  debugOAuthRedirect('redirect');
   showAuthMessage('Googleログイン画面へ移動します…', 'info');
   location.assign(googleOAuthAuthorizeUrl());
 }
