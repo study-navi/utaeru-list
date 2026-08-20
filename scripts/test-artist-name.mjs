@@ -150,7 +150,7 @@ if (master.length !== 1952) fail('MASTER_SONGS count', String(master.length));
 else ok('MASTER_SONGS 1952曲（件数維持）');
 
 const variantGroups = findArtistVariantGroups(master).filter((g) => g.class === '統合してよい' || g.variants.length > 1);
-if (variantGroups.length >= 8) ok(`表記ゆれグループ ${variantGroups.length} 組を同一キーに`);
+if (variantGroups.length >= 6) ok(`表記ゆれグループ ${variantGroups.length} 組を同一キーに`);
 else fail('variant group count', String(variantGroups.length));
 
 const larc = master.filter((s) => /L'Arc/i.test(s.a));
@@ -166,12 +166,10 @@ const watchOk = ['LiSA', 'RADWIMPS', 'YOASOBI', '米津玄師', 'back number', '
 });
 if (watchOk) ok('指定アーティストの単独表記は1キー');
 else fail('watchlist split');
-const ohtsuka = master.filter((s) => artistCompareKey(s.a) === artistCompareKey('大塚愛'));
-if (ohtsuka.some((s) => s.a === '大塚 愛') && ohtsuka.some((s) => s.a === '大塚愛')) {
-  ok('MASTER の表示文字列は大塚愛／大塚 愛のまま');
-} else fail('master display preserved');
-if (ohtsuka.length !== 9) fail('ohtsuka count', String(ohtsuka.length));
-else ok('大塚愛系 9曲');
+const ohtsuka = master.filter((s) => s.a === '大塚愛');
+if (ohtsuka.length === 9 && ohtsuka.every((s) => s.a === '大塚愛')) {
+  ok('大塚愛 9曲は MASTER 上も正式表記のみ');
+} else fail('ohtsuka unified', JSON.stringify({ count: ohtsuka.length, names: [...new Set(ohtsuka.map((s) => s.a))] }));
 
 const ikimono = master.filter((s) => s.a === 'いきものがかり');
 if (ikimono.length === 10 && ikimono.every((s) => s.a === 'いきものがかり')) {
@@ -209,7 +207,15 @@ if (mrChildren.length === 13 && countDistinctArtists(mrChildren) === 1) {
     names: [...new Set(master.filter((s) => artistCompareKey(s.a) === artistCompareKey('Mr.Children')).map((s) => s.a))],
   }));
 }
-assertOneGroup('Mrs.GREEN APPLE', ['Mrs.GREEN APPLE', 'Mrs. GREEN APPLE']);
+const mrsGreen = master.filter((s) => s.a === 'Mrs. GREEN APPLE');
+if (mrsGreen.length === 22 && mrsGreen.every((s) => s.a === 'Mrs. GREEN APPLE')) {
+  ok('Mrs. GREEN APPLE 22曲は MASTER 上も正式表記のみ');
+} else {
+  fail('Mrs. GREEN APPLE unified in master', JSON.stringify({
+    count: mrsGreen.length,
+    names: [...new Set(master.filter((s) => artistCompareKey(s.a) === artistCompareKey('Mrs. GREEN APPLE')).map((s) => s.a))],
+  }));
+}
 assertOneGroup("L'Arc wave/tilde", ["L'Arc〜en〜Ciel", "L'Arc～en～Ciel"]);
 assertOneGroup('ユリイ・カノン 中黒', ['ユリイ･カノン', 'ユリイ・カノン']);
 assertOneGroup('Creepy Nuts ＆/&', ['CreePy Nuts(R-指定＆DJ松永)', 'Creepy Nuts(R-指定&DJ松永)']);
@@ -224,13 +230,13 @@ function assertDisplay(label, names, expected) {
 }
 assertDisplay('Kanaria', ['Kanaria', 'kanaria'], 'Kanaria');
 assertDisplay('Mr.Children', ['Mr.Children'], 'Mr.Children');
-assertDisplay('Mrs. GREEN APPLE', ['Mrs.GREEN APPLE', 'Mrs. GREEN APPLE'], 'Mrs. GREEN APPLE');
+assertDisplay('Mrs. GREEN APPLE', ['Mrs. GREEN APPLE'], 'Mrs. GREEN APPLE');
 assertDisplay("L'Arc", ["L'Arc〜en〜Ciel", "L'Arc～en～Ciel"], "L'Arc\u301Cen\u301CCiel");
 assertDisplay('ユリイ・カノン', ['ユリイ･カノン', 'ユリイ・カノン'], 'ユリイ・カノン');
 assertDisplay('Creepy Nuts', ['CreePy Nuts(R-指定＆DJ松永)', 'Creepy Nuts(R-指定&DJ松永)'], 'Creepy Nuts(R-指定&DJ松永)');
 assertDisplay('秦 基博', ['秦 基博(ハタ･モトヒロ)', '秦 基博(ハタ・モトヒロ)'], '秦 基博(ハタ・モトヒロ)');
 assertDisplay('シェリル', ['シェリル･ノーム starring May′n', 'シェリル・ノーム starring May\'n'], 'シェリル・ノーム starring May\'n');
-assertDisplay('大塚愛', ['大塚 愛', '大塚愛'], '大塚愛');
+assertDisplay('大塚愛', ['大塚愛'], '大塚愛');
 
 const catalog = [
   ['あたらよ', 'あ,あたらよ,夏霞', '夏霞'],
@@ -266,6 +272,9 @@ else fail('要確認 a', reviewNames.filter((n) => !master.some((s) => s.a === n
 if (!master.some((s) => s.a === 'Mr.children' || s.a === 'Ms.Chilidren')) {
   ok('Mr.children / Ms.Chilidren の誤記は MASTER から除去');
 } else fail('Mr.Children typos remain in master');
+if (!master.some((s) => s.a === 'Mrs.GREEN APPLE' || s.a === '大塚 愛')) {
+  ok('空白差の旧表記（Mrs.GREEN APPLE / 大塚 愛）は MASTER から除去');
+} else fail('whitespace variants remain in master');
 
 function assertPublicSource(label, src) {
   const need = ['function normalizeArtistName', 'function artistCompareKey', 'function displaySongTitle', 'countDistinctArtists', 'displaySongTitle(s.t)'];

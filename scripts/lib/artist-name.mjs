@@ -1,6 +1,7 @@
 /**
  * アーティスト名の比較・検索・グループ化用正規化。
- * 明らかな誤記は MASTER_SONGS の a を直接修正する。表記ゆれは pickDisplayArtistName で吸収。
+ * 誤記・空白差は MASTER_SONGS の a を正式表記へ修正する。
+ * 波ダッシュ・Unicode記号・大小文字などは比較キー / CANONICAL_ARTIST_NAMES で吸収。
  *
  * NFKC だけでは揃わない差（〜 U+301C と ～ U+FF5E、′ と ' など）もここで畳む。
  * feat / with / & / ・ / × / starring / CV などは残し、単独とコラボは同一視しない。

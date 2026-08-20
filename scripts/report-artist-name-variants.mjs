@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * MASTER_SONGS 全曲のアーティスト名表記ゆれレポート
- * 自動では元データ（s.a）を書き換えない。
+ * 誤記・空白差は patch-master-songs-artist-canonical.mjs で a を修正する。
  */
 import fs from 'node:fs';
 import path from 'node:path';
