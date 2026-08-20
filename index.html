@@ -5773,7 +5773,11 @@ async function initAppEntry() {
   const redirect = consumeGoogleOAuthRedirect();
   if (redirect.error) {
     showStartScreen();
-    showAuthMessage('Googleログインに失敗しました。' + (redirect.errorDescription ? ' (' + redirect.errorDescription + ')' : ''), 'error');
+    let msg = 'Googleログインに失敗しました。' + (redirect.errorDescription ? ' (' + redirect.errorDescription + ')' : '');
+    if (redirect.error === 'redirect_uri_mismatch') {
+      msg = 'Googleログインの設定エラー（redirect_uri_mismatch）です。redirect_uri=' + googleOAuthRedirectUri();
+    }
+    showAuthMessage(msg, 'error');
     document.documentElement.dataset.utalisEntryReady = '1';
     return;
   }
@@ -6432,8 +6436,25 @@ function isInAppBrowser() {
   return false;
 }
 
+/** Google Cloud Console → Authorized redirect URIs に登録が必要（完全一致） */
+const GOOGLE_OAUTH_REDIRECT_BY_ORIGIN = {
+  'https://utalis.github.io': 'https://utalis.github.io/',
+  'https://study-navi.github.io': 'https://study-navi.github.io/utaeru-list/',
+};
+
 function googleOAuthRedirectUri() {
-  return location.origin + location.pathname;
+  const mapped = GOOGLE_OAUTH_REDIRECT_BY_ORIGIN[location.origin];
+  if (mapped) return mapped;
+  let path = location.pathname || '/';
+  if (path.endsWith('/index.html')) {
+    path = path.slice(0, -'index.html'.length);
+  }
+  if (!path.endsWith('/')) path += '/';
+  return location.origin + path;
+}
+
+function requiredGoogleOAuthRedirectUris() {
+  return Object.values(GOOGLE_OAUTH_REDIRECT_BY_ORIGIN);
 }
 
 function newOAuthState() {
@@ -6495,6 +6516,8 @@ function googleOAuthAuthorizeUrl() {
 }
 
 function startGoogleLoginRedirect() {
+  const redirectUri = googleOAuthRedirectUri();
+  try { console.info('[UTAEMO] Google OAuth redirect_uri:', redirectUri); } catch (err) { /* ignore */ }
   showAuthMessage('Googleログイン画面へ移動します…', 'info');
   location.assign(googleOAuthAuthorizeUrl());
 }

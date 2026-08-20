@@ -116,6 +116,23 @@ async function testOauthHashLogin() {
   await browser.close();
 }
 
+async function testProductionRedirectUriConstants() {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForFunction(() => typeof requiredGoogleOAuthRedirectUris === 'function', { timeout: 15000 });
+  const uris = await page.evaluate(() => ({
+    prod: GOOGLE_OAUTH_REDIRECT_BY_ORIGIN['https://utalis.github.io'],
+    preview: GOOGLE_OAUTH_REDIRECT_BY_ORIGIN['https://study-navi.github.io'],
+    required: requiredGoogleOAuthRedirectUris(),
+  }));
+  if (uris.prod === 'https://utalis.github.io/') ok('本番 redirect_uri 定数');
+  else fail('本番 redirect_uri 定数', uris.prod);
+  if (uris.preview === 'https://study-navi.github.io/utaeru-list/') ok('preview redirect_uri 定数');
+  else fail('preview redirect_uri 定数', uris.preview);
+  await browser.close();
+}
+
 async function testAccountPanelLoginDirect() {
   const browser = await chromium.launch();
   const page = await browser.newPage();
@@ -144,6 +161,7 @@ async function main() {
   await testInAppBrowserDetection();
   await testInAppLoginUsesRedirect();
   await testOauthHashLogin();
+  await testProductionRedirectUriConstants();
   await testAccountPanelLoginDirect();
   console.log('');
   if (failed) {
