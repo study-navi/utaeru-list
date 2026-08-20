@@ -150,15 +150,15 @@ if (master.length !== 1952) fail('MASTER_SONGS count', String(master.length));
 else ok('MASTER_SONGS 1952曲（件数維持）');
 
 const variantGroups = findArtistVariantGroups(master).filter((g) => g.class === '統合してよい' || g.variants.length > 1);
-if (variantGroups.length >= 9) ok(`表記ゆれグループ ${variantGroups.length} 組を同一キーに`);
+if (variantGroups.length >= 8) ok(`表記ゆれグループ ${variantGroups.length} 組を同一キーに`);
 else fail('variant group count', String(variantGroups.length));
 
 const larc = master.filter((s) => /L'Arc/i.test(s.a));
 if (larc.length === 11 && countDistinctArtists(larc) === 1) ok("L'Arc 11曲が1組");
 else fail('LArc merge', JSON.stringify({ n: larc.length, distinct: countDistinctArtists(larc), names: [...new Set(larc.map((s) => s.a))] }));
 
-if (!artistsEqual('Ms.Chilidren', 'Mr.Children')) ok('Ms.Chilidren は誤記のため Mr.Children と統合しない');
-else fail('Ms.Chilidren');
+if (!artistsEqual('Ms.Chilidren', 'Mr.Children')) ok('Ms.Chilidren は比較キー上 Mr.Children と別（誤記パターン）');
+else fail('Ms.Chilidren compare key');
 
 const watchOk = ['LiSA', 'RADWIMPS', 'YOASOBI', '米津玄師', 'back number', 'Buono!'].every((n) => {
   const list = master.filter((s) => artistsEqual(s.a, n) && !/feat|×|x |、/.test(s.a));
@@ -199,7 +199,16 @@ function assertOneGroup(label, names) {
   } else fail(label, JSON.stringify({ groups: grouped.length, distinct: countDistinctArtists(list), raw: [...new Set(list.map((s) => s.a))] }));
 }
 assertOneGroup('Kanaria/kanaria', ['Kanaria', 'kanaria']);
-assertOneGroup('Mr.Children/Mr.children', ['Mr.Children', 'Mr.children']);
+const mrChildren = master.filter((s) => s.a === 'Mr.Children');
+if (mrChildren.length === 13 && countDistinctArtists(mrChildren) === 1) {
+  ok('Mr.Children 13曲は MASTER 上も正式表記のみ');
+} else {
+  fail('Mr.Children unified in master', JSON.stringify({
+    count: mrChildren.length,
+    distinct: countDistinctArtists(mrChildren),
+    names: [...new Set(master.filter((s) => artistCompareKey(s.a) === artistCompareKey('Mr.Children')).map((s) => s.a))],
+  }));
+}
 assertOneGroup('Mrs.GREEN APPLE', ['Mrs.GREEN APPLE', 'Mrs. GREEN APPLE']);
 assertOneGroup("L'Arc wave/tilde", ["L'Arc〜en〜Ciel", "L'Arc～en～Ciel"]);
 assertOneGroup('ユリイ・カノン 中黒', ['ユリイ･カノン', 'ユリイ・カノン']);
@@ -214,7 +223,7 @@ function assertDisplay(label, names, expected) {
   else fail(`${label}: 見出し`, `${got} !== ${expected}`);
 }
 assertDisplay('Kanaria', ['Kanaria', 'kanaria'], 'Kanaria');
-assertDisplay('Mr.Children', ['Mr.Children', 'Mr.children'], 'Mr.Children');
+assertDisplay('Mr.Children', ['Mr.Children'], 'Mr.Children');
 assertDisplay('Mrs. GREEN APPLE', ['Mrs.GREEN APPLE', 'Mrs. GREEN APPLE'], 'Mrs. GREEN APPLE');
 assertDisplay("L'Arc", ["L'Arc〜en〜Ciel", "L'Arc～en～Ciel"], "L'Arc\u301Cen\u301CCiel");
 assertDisplay('ユリイ・カノン', ['ユリイ･カノン', 'ユリイ・カノン'], 'ユリイ・カノン');
@@ -251,10 +260,12 @@ const reviewNames = [
   '秦 基博(ハタ・モトヒロ)',
   "L'Arc〜en〜Ciel",
   "L'Arc～en～Ciel",
-  'Ms.Chilidren',
 ];
 if (reviewNames.every((n) => master.some((s) => s.a === n))) ok('要確認リストの a はデータ上そのまま');
 else fail('要確認 a', reviewNames.filter((n) => !master.some((s) => s.a === n)).join(', '));
+if (!master.some((s) => s.a === 'Mr.children' || s.a === 'Ms.Chilidren')) {
+  ok('Mr.children / Ms.Chilidren の誤記は MASTER から除去');
+} else fail('Mr.Children typos remain in master');
 
 function assertPublicSource(label, src) {
   const need = ['function normalizeArtistName', 'function artistCompareKey', 'function displaySongTitle', 'countDistinctArtists', 'displaySongTitle(s.t)'];

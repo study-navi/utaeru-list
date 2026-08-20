@@ -1,6 +1,6 @@
 /**
  * アーティスト名の比較・検索・グループ化用正規化。
- * 曲データの a そのものは書き換えない（見出しは pickDisplayArtistName）。
+ * 明らかな誤記は MASTER_SONGS の a を直接修正する。表記ゆれは pickDisplayArtistName で吸収。
  *
  * NFKC だけでは揃わない差（〜 U+301C と ～ U+FF5E、′ と ' など）もここで畳む。
  * feat / with / & / ・ / × / starring / CV などは残し、単独とコラボは同一視しない。
