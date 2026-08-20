@@ -395,6 +395,41 @@ async function testMobileLayout() {
   }
 }
 
+async function testUnrelatedLocalDraftLoadsCloud() {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  const pub = await mockAuth(page, ['hiro']);
+  await setupEditor(page, { clearDraft: true });
+  await page.fill('#streamerName', 'このPCの無関係な下書き');
+  await page.fill('#streamerIdInput', 'pc-guest-draft');
+  await page.evaluate(() => {
+    selectedKeys.clear();
+    for (const s of MASTER_SONGS.slice(0, 1)) selectedKeys.add(s.a + '\u0001' + s.t);
+    render();
+    updateSelectedCount();
+    scheduleDraftSave(true);
+  });
+  await page.waitForTimeout(600);
+  await loginGoogle(page);
+  const after = await page.evaluate(() => ({
+    name: streamerNameInput.value,
+    sid: streamerIdInput.value,
+    count: selectedKeys.size,
+    draftModal: !document.getElementById('googleDraftChoiceModal').hidden,
+    active: activeOwnedStreamerId,
+  }));
+  if (!after.draftModal) ok('別端末同期: 無関係な下書きでは選択モーダルを出さない');
+  else fail('別端末同期: 無関係な下書きでは選択モーダルを出さない');
+  if (after.name === 'サーバー上の配信者名' && after.sid === 'hiro' && after.count === 13 && after.active === 'hiro') {
+    ok('別端末同期: 所有ページの公開データを自動読込');
+  } else {
+    fail('別端末同期: 所有ページの公開データを自動読込', JSON.stringify(after));
+  }
+  if (pub.getPublicGetCount() >= 1) ok('別端末同期: GET /api/public/hiro');
+  else fail('別端末同期: GET /api/public/hiro', String(pub.getPublicGetCount()));
+  await browser.close();
+}
+
 async function testViewLink() {
   const browser = await chromium.launch();
   const page = await browser.newPage();
@@ -418,6 +453,7 @@ async function main() {
   await testG();
   await testH();
   await testI();
+  await testUnrelatedLocalDraftLoadsCloud();
   await testViewLink();
   await testMobileLayout();
   console.log('');

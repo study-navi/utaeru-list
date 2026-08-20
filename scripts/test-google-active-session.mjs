@@ -190,21 +190,19 @@ async function testDraftMismatch() {
     await completeUtaeruLogin({ googleAccessToken: 'mock' });
   });
   await page.waitForTimeout(500);
-  const modal = await page.evaluate(() => !document.getElementById('googleDraftChoiceModal').hidden);
-  if (!modal) {
-    fail('F(不一致): 下書きあり → モーダル表示');
-  } else {
-    ok('F(不一致): 下書きあり → モーダル表示');
-  }
-  await page.click('#googleDraftContinueBtn');
-  await page.waitForTimeout(200);
-  const state = await page.evaluate(() => ({
+  const after = await page.evaluate(() => ({
+    modal: !document.getElementById('googleDraftChoiceModal').hidden,
     name: streamerNameInput.value,
     active: activeOwnedStreamerId,
     sid: streamerIdInput.value,
   }));
-  if (state.name === '匿名下書き' && !state.active) ok('F(不一致): 下書き続行 → hiro に紐づけない');
-  else fail('F(不一致): 下書き続行 → hiro に紐づけない', JSON.stringify(state));
+  if (!after.modal) ok('F(不一致): 無関係な下書きではモーダルを出さない');
+  else fail('F(不一致): 無関係な下書きではモーダルを出さない');
+  if (after.name !== '匿名下書き' && after.active === 'hiro' && after.sid === 'hiro') {
+    ok('F(不一致): 所有ページの公開データを優先して読込');
+  } else {
+    fail('F(不一致): 所有ページの公開データを優先して読込', JSON.stringify(after));
+  }
   await browser.close();
 }
 

@@ -5225,6 +5225,7 @@ let activeOwnedStreamerId = null;
 let googleEditSessionInitialized = false;
 let pendingGoogleDraftChoiceStreamerId = null;
 const SESSION_TOKEN_KEY = 'utaeru_access_token';
+const OAUTH_STATE_KEY = 'utaeru_oauth_state';
 const EDIT_KEY_STORAGE_PREFIX = 'utaeru_edit_key:';
 
 function getStoredEditKey(streamerId) {
@@ -5578,13 +5579,22 @@ async function shareCurrentPublicUrl() {
 }
 
 function getStoredAccessToken() {
-  try { return sessionStorage.getItem(SESSION_TOKEN_KEY); } catch (err) { return null; }
+  try {
+    return sessionStorage.getItem(SESSION_TOKEN_KEY) || localStorage.getItem(SESSION_TOKEN_KEY);
+  } catch (err) {
+    return null;
+  }
 }
 
 function setStoredAccessToken(token) {
   try {
-    if (token) sessionStorage.setItem(SESSION_TOKEN_KEY, token);
-    else sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    if (token) {
+      sessionStorage.setItem(SESSION_TOKEN_KEY, token);
+      localStorage.setItem(SESSION_TOKEN_KEY, token);
+    } else {
+      sessionStorage.removeItem(SESSION_TOKEN_KEY);
+      localStorage.removeItem(SESSION_TOKEN_KEY);
+    }
   } catch (err) { /* ignore */ }
 }
 
@@ -5758,6 +5768,27 @@ function enterEditorFromStart(opts = {}) {
 }
 
 async function initAppEntry() {
+  recoverVisibleAuthUi();
+  const redirect = consumeGoogleOAuthRedirect();
+  if (redirect.error) {
+    showStartScreen();
+    showAuthMessage('Googleログインに失敗しました。' + (redirect.errorDescription ? ' (' + redirect.errorDescription + ')' : ''), 'error');
+    document.documentElement.dataset.utalisEntryReady = '1';
+    return;
+  }
+  if (redirect.accessToken) {
+    try {
+      await completeUtaeruLogin({ googleAccessToken: redirect.accessToken });
+    } catch (err) {
+      showStartScreen();
+      showAuthMessage('ログインに失敗しました。ネットワークを確認してください。', 'error');
+    }
+    if (!authUser) showStartScreen();
+    recoverVisibleAuthUi();
+    document.documentElement.dataset.utalisEntryReady = '1';
+    return;
+  }
+
   const token = getStoredAccessToken();
   if (token) {
     await refreshAuthMe(token);
@@ -6077,7 +6108,7 @@ async function activateOwnedPageForEdit(streamerId, opts = {}) {
     return true;
   }
 
-  if (shouldConfirmBeforeLoadPublicData()) {
+  if (shouldOfferDraftChoiceForOwnedPage(streamerId)) {
     await showGoogleDraftChoiceModal(streamerId);
     return false;
   }
@@ -6186,6 +6217,16 @@ function shouldConfirmBeforeLoadPublicData() {
     && payload.selectedSongIds.length === 0
     && Object.keys(payload.songMeta).length === 0
   );
+}
+
+/** 所有ページを読む前に下書き選択が必要か。別端末の無関係な下書きでは公開データを優先する。 */
+function shouldOfferDraftChoiceForOwnedPage(targetStreamerId) {
+  if (!shouldConfirmBeforeLoadPublicData()) return false;
+  const draftSid = getDraftStreamerIdFromEditor();
+  if (!draftSid) return true;
+  if (draftSid === targetStreamerId) return true;
+  if (authUser && authUser.ownedStreamerIds.includes(draftSid)) return true;
+  return false;
 }
 
 let pendingLoadStreamerId = null;
@@ -6382,6 +6423,85 @@ async function completeUtaeruLogin(authBody) {
 
 let googleTokenClient = null;
 
+function isInAppBrowser() {
+  const ua = String(navigator.userAgent || '');
+  if (/Twitter|TwitterAndroid|FBAN|FBAV|FB_IAB|FBIOS|Line\/|Instagram|MicroMessenger|TikTok|Bytedance|Snapchat|Pinterest|WhatsApp/i.test(ua)) {
+    return true;
+  }
+  const isIOS = /iPhone|iPad|iPod/.test(ua);
+  const isWebKit = /AppleWebKit/.test(ua);
+  const isSafari = /Version\/[\d.]+.*Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|Brave/.test(ua);
+  if (isIOS && isWebKit && !isSafari) return true;
+  return false;
+}
+
+function googleOAuthRedirectUri() {
+  return location.origin + location.pathname;
+}
+
+function newOAuthState() {
+  const state = 'utalis_' + Math.random().toString(36).slice(2) + String(Date.now());
+  try { sessionStorage.setItem(OAUTH_STATE_KEY, state); } catch (err) { /* ignore */ }
+  return state;
+}
+
+function consumeGoogleOAuthRedirect() {
+  const hash = new URLSearchParams(String(location.hash || '').replace(/^#/, ''));
+  const query = new URLSearchParams(location.search || '');
+  const accessToken = hash.get('access_token') || query.get('access_token');
+  const error = hash.get('error') || query.get('error');
+  const errorDescription = hash.get('error_description') || query.get('error_description');
+  const state = hash.get('state') || query.get('state');
+  if (!accessToken && !error) return {};
+  let storedState = null;
+  try { storedState = sessionStorage.getItem(OAUTH_STATE_KEY); } catch (err) { /* ignore */ }
+  try { sessionStorage.removeItem(OAUTH_STATE_KEY); } catch (err) { /* ignore */ }
+  try {
+    const params = new URLSearchParams(location.search || '');
+    ['access_token', 'error', 'error_description', 'state', 'token_type', 'expires_in', 'scope'].forEach((key) => {
+      params.delete(key);
+    });
+    const nextSearch = params.toString();
+    history.replaceState({}, document.title, location.pathname + (nextSearch ? '?' + nextSearch : ''));
+  } catch (err) { /* ignore */ }
+  if (error) return { error, errorDescription };
+  if (storedState && state && storedState !== state) {
+    return { error: 'state_mismatch', errorDescription: 'ログイン状態を確認できませんでした' };
+  }
+  if (accessToken) return { accessToken };
+  return {};
+}
+
+function recoverVisibleAuthUi() {
+  const screen = document.getElementById('startScreen');
+  const startActive = document.body.classList.contains('start-screen-active');
+  if (startActive) {
+    if (screen) screen.hidden = false;
+    return;
+  }
+  if (screen && !screen.hidden && draftBootComplete) {
+    screen.hidden = true;
+  }
+}
+
+function googleOAuthAuthorizeUrl() {
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID,
+    redirect_uri: googleOAuthRedirectUri(),
+    response_type: 'token',
+    scope: 'openid email profile',
+    prompt: 'select_account',
+    include_granted_scopes: 'true',
+    state: newOAuthState(),
+  });
+  return 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
+}
+
+function startGoogleLoginRedirect() {
+  showAuthMessage('Googleログイン画面へ移動します…', 'info');
+  location.assign(googleOAuthAuthorizeUrl());
+}
+
 function onGoogleTokenResponse(tokenResponse) {
   if (tokenResponse.error) {
     authLoading = false;
@@ -6414,6 +6534,10 @@ function initGoogleAuth() {
 }
 
 function startGoogleLogin() {
+  if (isInAppBrowser()) {
+    startGoogleLoginRedirect();
+    return;
+  }
   if (!googleTokenClient) {
     showAuthMessage('Googleログインの読み込みに失敗しました。ページを再読み込みしてください。', 'error');
     return;
@@ -6422,14 +6546,19 @@ function startGoogleLogin() {
   googleTokenClient.requestAccessToken({ prompt: 'select_account' });
 }
 
-function bootGoogleAuth(attemptsLeft) {
-  if (initGoogleAuth()) {
-    document.getElementById('googleLoginBtn').addEventListener('click', startGoogleLogin);
-    document.getElementById('startGoogleLoginBtn')?.addEventListener('click', startGoogleLogin);
+function startGoogleManagementLogin() {
+  if (authUser) {
+    setOnlineMode('google');
     return;
   }
-  if (attemptsLeft <= 0) {
-    showAuthMessage('Googleログインの読み込みに失敗しました。ページを再読み込みしてください。', 'error');
+  startGoogleLogin();
+}
+
+function bootGoogleAuth(attemptsLeft) {
+  if (initGoogleAuth() || attemptsLeft <= 0) {
+    if (!googleTokenClient && !isInAppBrowser()) {
+      showAuthMessage('Googleログインの読み込みに失敗しました。ページを再読み込みしてください。', 'error');
+    }
     return;
   }
   setTimeout(() => bootGoogleAuth(attemptsLeft - 1), 200);
@@ -6905,11 +7034,13 @@ async function copyIssuedEditKey() {
 }
 
 document.getElementById('modeAnonymousBtn').addEventListener('click', () => setOnlineMode('anonymous'));
-document.getElementById('modeGoogleBtn').addEventListener('click', () => setOnlineMode('google'));
-document.getElementById('resumeGoogleBtn').addEventListener('click', () => setOnlineMode('google'));
+document.getElementById('modeGoogleBtn').addEventListener('click', startGoogleManagementLogin);
+document.getElementById('resumeGoogleBtn').addEventListener('click', startGoogleManagementLogin);
+document.getElementById('googleLoginBtn')?.addEventListener('click', startGoogleLogin);
+document.getElementById('startGoogleLoginBtn')?.addEventListener('click', startGoogleLogin);
 document.getElementById('modeEditKeyBtn').addEventListener('click', () => setOnlineMode('edit-key'));
 document.getElementById('modalChooseAnonymous').addEventListener('click', () => setOnlineMode('anonymous'));
-document.getElementById('modalChooseGoogle').addEventListener('click', () => setOnlineMode('google'));
+document.getElementById('modalChooseGoogle').addEventListener('click', startGoogleManagementLogin);
 document.getElementById('modalChooseEditKey').addEventListener('click', () => setOnlineMode('edit-key'));
 document.getElementById('editKeyVerifyBtn').addEventListener('click', verifyEditKeyAction);
 document.getElementById('linkGoogleBtn').addEventListener('click', linkGoogleAction);
@@ -7048,6 +7179,16 @@ document.getElementById('startGuestBtn')?.addEventListener('click', () => {
 });
 initAppEntry().then(() => {
   bootGoogleAuth(25);
+});
+window.addEventListener('pageshow', () => {
+  recoverVisibleAuthUi();
+});
+window.addEventListener('unhandledrejection', (ev) => {
+  const msg = ev && ev.reason ? String(ev.reason.message || ev.reason) : '';
+  if (/google|oauth|gsi/i.test(msg)) {
+    recoverVisibleAuthUi();
+    showAuthMessage('Googleログインで問題が起きました。ページを再読み込みしてから、もう一度お試しください。', 'error');
+  }
 });
 // @contact-form-inject
 const CONTACT_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfFMY4unRXIsYLiPh3-lgr3vFpX4DcYgvWKtq38BDNOa1NY9g/viewform";
