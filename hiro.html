@@ -1011,22 +1011,40 @@ function artistsEqual(a, b) {
 function artistSearchKey(name) {
   return artistCompareKey(name);
 }
+const ARTIST_CANONICAL_DISPLAY = {"kanaria":"Kanaria","mr.children":"Mr.Children","mrs.greenapple":"Mrs. GREEN APPLE","l'arc~en~ciel":"L'Arc〜en〜Ciel","ゆりい・かのん":"ユリイ・カノン","秦基博(はた・もとひろ)":"秦 基博(ハタ・モトヒロ)","creepynuts(r-指定&dj松永)":"Creepy Nuts(R-指定&DJ松永)","しぇりる・のーむstarringmay'n":"シェリル・ノーム starring May'n","大塚愛":"大塚愛"};
+function officialLookScore(name) {
+  var n = String(name == null ? '' : name);
+  var score = 0;
+  if (/[A-Za-z]/.test(n) && n !== n.toLowerCase()) score += 8;
+  if (/^(Mr|Mrs|Ms|Dr)\. /.test(n)) score += 6;
+  if (/^(Mr|Mrs|Ms|Dr)\.[^\s]/.test(n)) score -= 4;
+  score += (n.match(/\u30FB/g) || []).length * 4;
+  score -= (n.match(/\uFF65/g) || []).length * 4;
+  score += (n.match(/\u301C/g) || []).length * 3;
+  score -= (n.match(/\uFF5E/g) || []).length * 3;
+  score += (n.match(/'/g) || []).length * 2;
+  score -= (n.match(/\u2032/g) || []).length * 3;
+  score += (n.match(/&/g) || []).length;
+  score -= (n.match(/\uFF06/g) || []).length;
+  return score;
+}
 function pickDisplayArtistName(songs) {
-  const counts = new Map();
+  var names = [];
   for (var i = 0; i < songs.length; i++) {
     var name = songs[i] && typeof songs[i] === 'object' ? songs[i].a : songs[i];
     if (name == null || name === '') continue;
-    var prev = counts.get(name) || { name: name, count: 0, spaces: 0, first: i };
-    prev.count += 1;
-    prev.spaces = (String(name).match(/\s/g) || []).length;
-    counts.set(name, prev);
+    names.push(String(name));
   }
-  var ranked = [...counts.values()].sort(function(a, b) {
-    if (b.count !== a.count) return b.count - a.count;
-    if (a.spaces !== b.spaces) return a.spaces - b.spaces;
-    return a.first - b.first;
+  if (!names.length) return '';
+  var mapped = ARTIST_CANONICAL_DISPLAY[artistCompareKey(names[0])];
+  if (mapped) return mapped;
+  var unique = [...new Set(names)];
+  unique.sort(function(a, b) {
+    var diff = officialLookScore(b) - officialLookScore(a);
+    if (diff) return diff;
+    return a.localeCompare(b, 'ja');
   });
-  return ranked.length ? ranked[0].name : '';
+  return unique[0];
 }
 function countDistinctArtists(songs) {
   var keys = new Set();

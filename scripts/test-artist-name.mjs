@@ -102,10 +102,20 @@ const songs = [
   { a: '大塚愛', t: 'さくらんぼ', ty: 'さ' },
   { a: '大塚愛', t: 'プラネタリウム', ty: 'ぷ' },
 ];
-if (pickDisplayArtistName(songs) === '大塚愛') ok('代表表示名は最多の既存表記');
+if (pickDisplayArtistName(songs) === '大塚愛') ok('代表表示名は正式表記（件数ではない）');
 else fail('pickDisplayArtistName', pickDisplayArtistName(songs));
 if (songs.map((s) => s.a).join('|') === '大塚 愛|大塚愛|大塚愛') ok('曲の a は変更しない');
 else fail('display strings mutated');
+
+const manyWrongChildren = [
+  ...Array.from({ length: 100 }, () => ({ a: 'Mr.children', t: 'x' })),
+  { a: 'Mr.Children', t: 'y' },
+];
+if (pickDisplayArtistName(manyWrongChildren) === 'Mr.Children') ok('誤表記が多数でも Mr.Children');
+else fail('count must not win', pickDisplayArtistName(manyWrongChildren));
+if (pickDisplayArtistName([{ a: 'kanaria', t: 'KING' }, { a: 'kanaria', t: 'QUEEN' }]) === 'Kanaria') {
+  ok('kanaria のみでも見出しは Kanaria');
+} else fail('Kanaria mapping', pickDisplayArtistName([{ a: 'kanaria', t: 'KING' }]));
 
 if (countDistinctArtists(songs) === 1) ok('countDistinctArtists は正規化キー');
 else fail('countDistinctArtists', String(countDistinctArtists(songs)));
@@ -197,6 +207,22 @@ assertOneGroup('Creepy Nuts ＆/&', ['CreePy Nuts(R-指定＆DJ松永)', 'Creepy
 assertOneGroup('秦 基博 中黒', ['秦 基博(ハタ･モトヒロ)', '秦 基博(ハタ・モトヒロ)']);
 assertOneGroup('シェリル starring', ['シェリル･ノーム starring May′n', 'シェリル・ノーム starring May\'n']);
 
+function assertDisplay(label, names, expected) {
+  const list = master.filter((s) => names.includes(s.a));
+  const got = pickDisplayArtistName(list);
+  if (got === expected) ok(`${label}: 見出し ${expected}`);
+  else fail(`${label}: 見出し`, `${got} !== ${expected}`);
+}
+assertDisplay('Kanaria', ['Kanaria', 'kanaria'], 'Kanaria');
+assertDisplay('Mr.Children', ['Mr.Children', 'Mr.children'], 'Mr.Children');
+assertDisplay('Mrs. GREEN APPLE', ['Mrs.GREEN APPLE', 'Mrs. GREEN APPLE'], 'Mrs. GREEN APPLE');
+assertDisplay("L'Arc", ["L'Arc〜en〜Ciel", "L'Arc～en～Ciel"], "L'Arc\u301Cen\u301CCiel");
+assertDisplay('ユリイ・カノン', ['ユリイ･カノン', 'ユリイ・カノン'], 'ユリイ・カノン');
+assertDisplay('Creepy Nuts', ['CreePy Nuts(R-指定＆DJ松永)', 'Creepy Nuts(R-指定&DJ松永)'], 'Creepy Nuts(R-指定&DJ松永)');
+assertDisplay('秦 基博', ['秦 基博(ハタ･モトヒロ)', '秦 基博(ハタ・モトヒロ)'], '秦 基博(ハタ・モトヒロ)');
+assertDisplay('シェリル', ['シェリル･ノーム starring May′n', 'シェリル・ノーム starring May\'n'], 'シェリル・ノーム starring May\'n');
+assertDisplay('大塚愛', ['大塚 愛', '大塚愛'], '大塚愛');
+
 const catalog = [
   ['あたらよ', 'あ,あたらよ,夏霞', '夏霞'],
   ['いきものがかり', 'い,いきものがかり,コイスルオトメ', 'コイスルオトメ'],
@@ -277,6 +303,8 @@ async function runBrowserChecks() {
   if (editor.larcSongs === 11 && editor.larcGroups === 1 && editor.distinctLarc === 1 && editor.larcGroupSongs === 11) {
     ok("editor L'Arc 11曲が1アコーディオン");
   } else fail("editor L'Arc", JSON.stringify(editor));
+  if (editor.larcHeader === "L'Arc\u301Cen\u301CCiel") ok("editor L'Arc 見出しは波ダッシュ正式表記");
+  else fail("editor L'Arc header", editor.larcHeader);
   if (editor.searchHits >= 11) ok('editor アーティスト検索 LArc');
   else fail('editor search larc', String(editor.searchHits));
 
