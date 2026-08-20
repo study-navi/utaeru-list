@@ -535,7 +535,8 @@
     min-height: 48px;
     padding: 12px 2px;
     border: none;
-    background: transparent;
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+    border-radius: 8px;
     color: inherit;
     cursor: pointer;
     display: flex;
@@ -545,7 +546,7 @@
     text-align: left;
     font: inherit;
   }
-  .artist-accordion-trigger:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+  .artist-accordion-trigger:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
   .artist-accordion-trigger:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
@@ -556,7 +557,7 @@
     min-width: 0;
     font-size: 15px;
     font-weight: 800;
-    color: var(--accent);
+    color: var(--text-primary);
     line-height: 1.35;
     word-break: break-word;
   }
