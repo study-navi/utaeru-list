@@ -391,6 +391,15 @@
     margin: 0 0 var(--ui-gap-sm);
     line-height: 1.55;
   }
+  .account-login-benefits {
+    margin: 0 0 var(--ui-gap-md);
+    padding-left: 1.15em;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .account-login-benefits li { margin-bottom: 4px; }
+  .account-alt-lead { margin-bottom: var(--ui-gap-sm); }
   .account-divider {
     border-top: 1px solid var(--grid);
     margin: var(--ui-gap-md) 0;
@@ -2628,27 +2637,59 @@
     <button type="button" class="panel-close" id="accountPanelClose" aria-label="閉じる">✕</button>
   </div>
 
-  <div class="account-block">
-    <p class="account-block-title">管理方法</p>
-    <p class="account-lead">公開後の更新方法を選びます（あとから変更できます）</p>
-    <div class="ui-stack">
-      <p class="mode-desc">Googleアカウントで後から編集できます</p>
-      <button type="button" class="ui-btn ui-btn-primary" id="modeGoogleBtn">Googleで管理する</button>
-      <p class="mode-desc">アカウント不要。発行される編集キーを保管してください</p>
-      <button type="button" class="ui-btn ui-btn-tertiary" id="modeAnonymousBtn">ログインせずに作る</button>
-      <p class="mode-desc">すでに発行済みの編集キーで再編集します</p>
-      <button type="button" class="ui-btn ui-btn-secondary" id="modeEditKeyBtn">編集キーを使う</button>
+  <div id="accountSignedOutRoot">
+    <div class="account-block">
+      <p class="account-lead">Googleでログインすると、次のことができます。</p>
+      <ul class="account-login-benefits">
+        <li>公開ページを作成できる</li>
+        <li>別端末で同期できる</li>
+        <li>公開設定を管理できる</li>
+      </ul>
+      <div class="ui-stack">
+        <button type="button" class="ui-btn ui-btn-primary" id="accountGoogleLoginBtn">Googleでログイン</button>
+      </div>
+    </div>
+    <div class="account-divider"></div>
+    <div class="account-block account-alt-block">
+      <p class="account-block-title">Google以外で管理する</p>
+      <p class="hint account-alt-lead">アカウント不要、または編集キーで再編集できます。</p>
+      <div class="ui-stack">
+        <button type="button" class="ui-btn ui-btn-tertiary" id="modeAnonymousBtn">ログインせずに作る</button>
+        <button type="button" class="ui-btn ui-btn-secondary" id="modeEditKeyBtn">編集キーを使う</button>
+      </div>
     </div>
   </div>
 
-  <div class="account-divider"></div>
-
-  <div class="account-block">
-    <p class="account-block-title">再編集</p>
-    <p class="account-lead">以前作ったページを編集</p>
-    <div class="ui-stack">
-      <button type="button" class="ui-btn ui-btn-primary" id="resumeGoogleBtn">Googleでログイン</button>
+  <div id="accountSignedInRoot" hidden>
+    <div class="ui-status">
+      <p class="account-email" id="authUserEmail"></p>
+      <p class="account-status-line">Googleでログイン中</p>
+      <p class="account-active-page" id="activeEditorPageLine" hidden>現在編集中：<strong id="activeEditorPageId"></strong></p>
     </div>
+    <div class="ui-stack" id="switchOwnedPageWrap" style="display:none; margin-bottom: 8px;">
+      <button type="button" class="ui-btn ui-btn-secondary" id="switchOwnedPageBtn">ページを切り替える</button>
+    </div>
+    <div class="ui-stack" id="accountQuickActions" style="display:none">
+      <a class="ui-btn ui-btn-secondary" id="accountViewPage" href="#" target="_blank" rel="noopener noreferrer">公開ページを見る</a>
+      <button type="button" class="ui-btn ui-btn-secondary" id="accountCopyUrl">URLをコピー</button>
+    </div>
+    <div id="ownedPagesSection" class="owned-pages-section">
+      <p class="owned-pages-heading">あなたの公開ページ</p>
+      <div id="ownedPagesList" class="owned-pages-list" hidden></div>
+      <p id="ownedPagesEmpty" class="owned-pages-empty hint" hidden>まだ公開ページはありません</p>
+    </div>
+    <div class="ui-stack">
+      <button type="button" class="ui-btn ui-btn-primary" id="claimBtn" disabled>この公開ページIDを取得する</button>
+      <p class="claim-status" id="claimStatus">基本情報で公開ページIDを入力してください。</p>
+    </div>
+    <div class="account-divider"></div>
+    <div class="account-block" id="googleAccountSettingsBlock">
+      <p class="account-block-title">アカウント設定</p>
+      <p class="hint">うたエモに保存されたGoogleアカウント情報を削除する場合は、下のボタンを使います。</p>
+      <button type="button" class="ui-btn ui-btn-danger" id="deleteGoogleAccountBtn">アカウント情報を削除</button>
+    </div>
+    <div class="account-divider"></div>
+    <button type="button" class="ui-btn ui-btn-danger" id="logoutBtn">ログアウト</button>
   </div>
 
   <div id="anonymousModePanel" class="account-mode-panel online-mode-panel" style="display:none;">
@@ -2669,47 +2710,6 @@
         <input type="password" id="editKeyInput" placeholder="ut_..." autocomplete="off" spellcheck="false" />
       </div>
       <button type="button" class="ui-btn ui-btn-primary" id="editKeyVerifyBtn">編集を開始</button>
-    </div>
-  </div>
-
-  <div id="googleModePanel" class="account-mode-panel online-mode-panel" style="display:none;">
-    <div class="account-divider"></div>
-    <div id="authSignedOut">
-      <p class="account-lead" id="authLoggedOutHint">Googleアカウントでログインすると、公開ページを管理できます。</p>
-      <div class="ui-stack">
-        <button type="button" class="ui-btn ui-btn-primary" id="googleLoginBtn">Googleでログイン</button>
-      </div>
-    </div>
-    <div id="authSignedIn" style="display:none;">
-      <div class="ui-status">
-        <p class="account-email" id="authUserEmail"></p>
-        <p class="account-status-line">Googleでログイン中</p>
-        <p class="account-active-page" id="activeEditorPageLine" hidden>現在編集中：<strong id="activeEditorPageId"></strong></p>
-      </div>
-      <div class="ui-stack" id="switchOwnedPageWrap" style="display:none; margin-bottom: 8px;">
-        <button type="button" class="ui-btn ui-btn-secondary" id="switchOwnedPageBtn">ページを切り替える</button>
-      </div>
-      <div class="ui-stack" id="accountQuickActions" style="display:none">
-        <a class="ui-btn ui-btn-secondary" id="accountViewPage" href="#" target="_blank" rel="noopener noreferrer">公開ページを見る</a>
-        <button type="button" class="ui-btn ui-btn-secondary" id="accountCopyUrl">URLをコピー</button>
-      </div>
-      <div id="ownedPagesSection" class="owned-pages-section">
-        <p class="owned-pages-heading">あなたの公開ページ</p>
-        <div id="ownedPagesList" class="owned-pages-list" hidden></div>
-        <p id="ownedPagesEmpty" class="owned-pages-empty hint" hidden>まだ公開ページはありません</p>
-      </div>
-      <div class="ui-stack">
-        <button type="button" class="ui-btn ui-btn-primary" id="claimBtn" disabled>この公開ページIDを取得する</button>
-        <p class="claim-status" id="claimStatus">基本情報で公開ページIDを入力し、Googleでログインしてください。</p>
-      </div>
-      <div class="account-divider"></div>
-      <div class="account-block" id="googleAccountSettingsBlock">
-        <p class="account-block-title">アカウント設定</p>
-        <p class="hint">ログアウトは端末上のログイン状態を解除するだけです。うたエモに保存されたGoogleアカウント情報を削除する場合は、下のボタンを使います。</p>
-        <button type="button" class="ui-btn ui-btn-danger" id="deleteGoogleAccountBtn">アカウント情報を削除</button>
-      </div>
-      <div class="account-divider"></div>
-      <button type="button" class="ui-btn ui-btn-danger" id="logoutBtn">ログアウト</button>
     </div>
   </div>
 
@@ -2734,8 +2734,8 @@
     <h3 id="manageModeTitle">このページをどう管理しますか？</h3>
     <p>公開後の更新方法を選んでください。あとから変更することもできます。</p>
     <div class="modal-actions ui-stack">
-      <p class="mode-desc">Googleアカウントで後から編集できます</p>
-      <button type="button" class="ui-btn ui-btn-primary" id="modalChooseGoogle">Googleで管理する</button>
+      <p class="mode-desc">Googleアカウントで公開ページを管理できます</p>
+      <button type="button" class="ui-btn ui-btn-primary" id="modalChooseGoogle">Googleでログイン</button>
       <p class="mode-desc">アカウント不要。編集キーを保管してください</p>
       <button type="button" class="ui-btn ui-btn-tertiary" id="modalChooseAnonymous">ログインせずに作る</button>
       <p class="mode-desc">すでに編集キーをお持ちの場合</p>
@@ -5512,6 +5512,7 @@ function openAccountPanel() {
   document.getElementById('accountPanel').setAttribute('aria-hidden', 'false');
   document.getElementById('panelBackdrop').classList.add('open');
   document.getElementById('accountMenuBtn').setAttribute('aria-expanded', 'true');
+  updateAuthUI();
 }
 
 function closeAccountPanel() {
@@ -6145,11 +6146,9 @@ function setOnlineMode(mode, opts = {}) {
   const panels = {
     anonymous: document.getElementById('anonymousModePanel'),
     editKey: document.getElementById('editKeyModePanel'),
-    google: document.getElementById('googleModePanel'),
   };
-  panels.anonymous.style.display = mode === 'anonymous' ? 'block' : 'none';
-  panels.editKey.style.display = mode === 'edit-key' ? 'block' : 'none';
-  panels.google.style.display = mode === 'google' ? 'block' : 'none';
+  if (panels.anonymous) panels.anonymous.style.display = mode === 'anonymous' ? 'block' : 'none';
+  if (panels.editKey) panels.editKey.style.display = mode === 'edit-key' ? 'block' : 'none';
 
   closeManageModeModal();
   if (openPanel) openAccountPanel();
@@ -6293,25 +6292,20 @@ async function requestLoadOwnedPageForEdit(streamerId) {
 }
 
 function updateAuthUI() {
-  const signedOut = document.getElementById('authSignedOut');
-  const signedIn = document.getElementById('authSignedIn');
+  const signedOutRoot = document.getElementById('accountSignedOutRoot');
+  const signedInRoot = document.getElementById('accountSignedInRoot');
   const claimBtn = document.getElementById('claimBtn');
   const claimStatus = document.getElementById('claimStatus');
-  const googleLoginBtn = document.getElementById('googleLoginBtn');
-  if (googleLoginBtn) googleLoginBtn.disabled = authLoading;
-
-  if (onlineMode !== 'google') {
-    if (signedOut) signedOut.style.display = 'none';
-    if (signedIn) signedIn.style.display = 'none';
-    if (claimBtn) claimBtn.disabled = true;
-    updatePublishButtonState();
-    updateLinkGooglePanel();
-    return;
-  }
+  const loginBtn = document.getElementById('accountGoogleLoginBtn');
+  const anonPanel = document.getElementById('anonymousModePanel');
+  const editPanel = document.getElementById('editKeyModePanel');
+  if (loginBtn) loginBtn.disabled = authLoading;
 
   if (authUser) {
-    signedOut.style.display = 'none';
-    signedIn.style.display = 'block';
+    if (signedOutRoot) signedOutRoot.hidden = true;
+    if (signedInRoot) signedInRoot.hidden = false;
+    if (anonPanel) anonPanel.style.display = 'none';
+    if (editPanel) editPanel.style.display = 'none';
     document.getElementById('authUserEmail').textContent = authUser.email || authUser.name || 'ログイン中';
     const owned = authUser.ownedStreamerIds;
     reconcileActiveOwnedStreamerFromStorage();
@@ -6327,15 +6321,18 @@ function updateAuthUI() {
     }
     if (switchWrap) switchWrap.style.display = owned.length > 1 ? '' : 'none';
   } else {
-    signedOut.style.display = 'block';
-    signedIn.style.display = 'none';
+    if (signedOutRoot) signedOutRoot.hidden = false;
+    if (signedInRoot) signedInRoot.hidden = true;
     renderOwnedPagesList([]);
+    if (anonPanel) anonPanel.style.display = onlineMode === 'anonymous' ? 'block' : 'none';
+    if (editPanel) editPanel.style.display = onlineMode === 'edit-key' ? 'block' : 'none';
   }
+
   const sid = streamerIdInput.value.trim();
   const sidCheck = validateStreamerId(sid);
   if (!authUser) {
-    claimStatus.textContent = 'Googleでログイン後、公開ページIDを取得できます。';
-    claimBtn.disabled = !sid || !sidCheck.ok || authLoading;
+    if (claimStatus) claimStatus.textContent = '';
+    if (claimBtn) claimBtn.disabled = true;
   } else if (!sid) {
     claimStatus.textContent = '基本情報で公開ページIDを入力してください。';
     claimBtn.disabled = true;
@@ -6547,8 +6544,9 @@ function startGoogleLogin() {
 }
 
 function startGoogleManagementLogin() {
+  closeManageModeModal();
   if (authUser) {
-    setOnlineMode('google');
+    setOnlineMode('google', { openPanel: true });
     return;
   }
   startGoogleLogin();
@@ -7034,9 +7032,7 @@ async function copyIssuedEditKey() {
 }
 
 document.getElementById('modeAnonymousBtn').addEventListener('click', () => setOnlineMode('anonymous'));
-document.getElementById('modeGoogleBtn').addEventListener('click', startGoogleManagementLogin);
-document.getElementById('resumeGoogleBtn').addEventListener('click', startGoogleManagementLogin);
-document.getElementById('googleLoginBtn')?.addEventListener('click', startGoogleLogin);
+document.getElementById('accountGoogleLoginBtn')?.addEventListener('click', startGoogleLogin);
 document.getElementById('startGoogleLoginBtn')?.addEventListener('click', startGoogleLogin);
 document.getElementById('modeEditKeyBtn').addEventListener('click', () => setOnlineMode('edit-key'));
 document.getElementById('modalChooseAnonymous').addEventListener('click', () => setOnlineMode('anonymous'));

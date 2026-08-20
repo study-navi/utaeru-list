@@ -116,46 +116,26 @@ async function testOauthHashLogin() {
   await browser.close();
 }
 
-async function testResumeGoesDirectlyToGoogle() {
+async function testAccountPanelLoginDirect() {
   const browser = await chromium.launch();
   const page = await browser.newPage();
   await addBypassStart(page);
   await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.waitForFunction(() => document.documentElement.dataset.utalisEntryReady === '1', { timeout: 15000 });
-  const result = await page.evaluate(() => {
-    let loginCalls = 0;
-    const original = startGoogleLogin;
-    startGoogleLogin = () => { loginCalls += 1; };
-    document.getElementById('resumeGoogleBtn').click();
-    const googlePanel = document.getElementById('googleModePanel');
-    const display = googlePanel ? googlePanel.style.display : 'missing';
-    startGoogleLogin = original;
-    return { loginCalls, display, authUser: !!authUser };
-  });
-  if (!result.authUser && result.loginCalls === 1) ok('再編集Google: 1回の操作で認証開始');
-  else fail('再編集Google: 1回の操作で認証開始', JSON.stringify(result));
-  if (result.display === 'none') ok('再編集Google: パネル内の二段ボタンを出さない');
-  else fail('再編集Google: パネル内の二段ボタンを出さない', result.display);
-  await browser.close();
-}
-
-async function testModeGoogleGoesDirectlyToGoogle() {
-  const browser = await chromium.launch();
-  const page = await browser.newPage();
-  await addBypassStart(page);
-  await page.goto(indexUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
-  await page.waitForFunction(() => document.documentElement.dataset.utalisEntryReady === '1', { timeout: 15000 });
-  const result = await page.evaluate(() => {
-    let loginCalls = 0;
-    const original = startGoogleLogin;
-    startGoogleLogin = () => { loginCalls += 1; };
-    document.getElementById('modeGoogleBtn').click();
-    const display = document.getElementById('googleModePanel').style.display;
-    startGoogleLogin = original;
-    return { loginCalls, display };
-  });
-  if (result.loginCalls === 1 && result.display === 'none') ok('管理方法Google: 直接認証開始');
-  else fail('管理方法Google: 直接認証開始', JSON.stringify(result));
+  await page.click('#accountMenuBtn');
+  await page.waitForFunction(() => document.getElementById('accountPanel')?.classList.contains('open'), { timeout: 5000 });
+  const btnCount = await page.evaluate(() => [...document.querySelectorAll('#accountPanel button')]
+    .filter((el) => /Googleでログイン|Googleで管理する/.test(el.textContent || '')).length);
+  await page.click('#accountGoogleLoginBtn');
+  const after = await page.evaluate(() => ({
+    authLoading,
+    message: document.getElementById('authMessage')?.textContent?.trim() || '',
+  }));
+  if (btnCount === 1 && (after.authLoading || /ログイン/.test(after.message))) {
+    ok('アカウントパネル: 1つのGoogleでログインから直接認証');
+  } else {
+    fail('アカウントパネル: 1つのGoogleでログインから直接認証', JSON.stringify({ btnCount, after }));
+  }
   await browser.close();
 }
 
@@ -164,8 +144,7 @@ async function main() {
   await testInAppBrowserDetection();
   await testInAppLoginUsesRedirect();
   await testOauthHashLogin();
-  await testResumeGoesDirectlyToGoogle();
-  await testModeGoogleGoesDirectlyToGoogle();
+  await testAccountPanelLoginDirect();
   console.log('');
   if (failed) {
     console.error(`\n${failed} 件失敗`);

@@ -251,9 +251,9 @@ async function testJ() {
   const state = await page.evaluate(() => ({
     start: document.body.classList.contains('start-screen-active'),
     choice: localStorage.getItem('utalis_start_choice_v1'),
-    resumeBtn: !!document.getElementById('resumeGoogleBtn'),
+    loginBtn: !!document.getElementById('accountGoogleLoginBtn'),
   }));
-  if (!state.start && state.choice === 'guest' && state.resumeBtn) ok('J: 匿名記憶 → 次回直接編集 + Googleログイン可能');
+  if (!state.start && state.choice === 'guest' && state.loginBtn) ok('J: 匿名記憶 → 次回直接編集 + Googleログイン可能');
   else fail('J: 匿名記憶', JSON.stringify(state));
   await browser.close();
 }
