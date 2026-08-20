@@ -1,35 +1,54 @@
 /**
  * アーティスト名の比較・検索・グループ化用正規化。
- * 表示文字列そのものは変更しない（呼び出し側で header 用に代表名を選ぶ）。
+ * 曲データの a そのものは書き換えない（見出しは pickDisplayArtistName）。
+ *
+ * NFKC だけでは揃わない差（〜 U+301C と ～ U+FF5E、′ と ' など）もここで畳む。
+ * feat / with / & / ・ / × / starring / CV などは残し、単独とコラボは同一視しない。
  */
+
+const CONTROL_AND_INVISIBLE_RE = /[\u0000-\u001F\u007F\u200B-\u200D\uFEFF]/g;
+const WAVE_AND_TILDE_RE = /[\u301C\u3030\uFF5E\u223C\u2053\u02DC]/g;
+const APOSTROPHE_RE = /[\u2018\u2019\u201B\u2032\u2035\u00B4\u0060\uFF07\u02BC\u02B9]/g;
+const DASH_RE = /[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uFF0D\uFE63]/g;
 
 function toHiragana(str) {
   return String(str ?? '').replace(/[ァ-ヶ]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0x60));
 }
 
-function foldFullwidthAlnum(str) {
-  return String(str ?? '').replace(/[\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A]/g, (ch) =>
-    String.fromCharCode(ch.charCodeAt(0) - 0xFEE0),
-  );
+function foldCompatPunctuation(str) {
+  return String(str ?? '')
+    .replace(CONTROL_AND_INVISIBLE_RE, '')
+    .replace(WAVE_AND_TILDE_RE, '~')
+    .replace(APOSTROPHE_RE, "'")
+    .replace(DASH_RE, '-');
 }
 
-/** 前後空白削除・全角/NBSP→半角・連続空白を1つに */
-export function normalizeArtistWhitespace(name) {
-  return String(name ?? '')
+/**
+ * 表示に近い正規化（空白整理・互換折りたたみ・NFKC）。
+ * 大小・かな/カナはまだ変えない。
+ */
+export function normalizeArtistName(name) {
+  return foldCompatPunctuation(name)
+    .normalize('NFKC')
     .replace(/[\u3000\u00A0]/g, ' ')
-    .replace(/[\u200B-\u200D\uFEFF]/g, '')
     .replace(/[\r\n\t]+/g, ' ')
     .replace(/ +/g, ' ')
     .trim();
 }
 
+/** 前後空白削除・全角/NBSP→半角・連続空白を1つに */
+export function normalizeArtistWhitespace(name) {
+  return normalizeArtistName(name);
+}
+
 /**
  * 比較・重複判定キー。
- * スペースは除去、英字は大小無視、全角英数字は半角化。
- * feat / & / ・ などは残す（意味が変わる表記を結合しない）。
+ * スペースは除去、英字は大小無視、全角英数字・記号の互換差は揃える。
+ * feat / & / ・ / × などは残す（意味が変わる表記を結合しない）。
  */
 export function artistCompareKey(name) {
-  return foldFullwidthAlnum(toHiragana(normalizeArtistWhitespace(name)))
+  return toHiragana(normalizeArtistName(name))
+    .normalize('NFC')
     .toLowerCase()
     .replace(/ /g, '');
 }
@@ -44,18 +63,18 @@ export function artistSearchKey(name) {
 
 export function pickDisplayArtistName(songs) {
   const counts = new Map();
-  for (const s of songs) {
+  songs.forEach((s, i) => {
     const name = s && typeof s === 'object' ? s.a : s;
-    if (name == null || name === '') continue;
-    const prev = counts.get(name) || { name, count: 0, spaces: 0 };
+    if (name == null || name === '') return;
+    const prev = counts.get(name) || { name, count: 0, spaces: 0, first: i };
     prev.count += 1;
     prev.spaces = (String(name).match(/\s/g) || []).length;
     counts.set(name, prev);
-  }
+  });
   const ranked = [...counts.values()].sort((a, b) => {
     if (b.count !== a.count) return b.count - a.count;
     if (a.spaces !== b.spaces) return a.spaces - b.spaces;
-    return 0;
+    return a.first - b.first;
   });
   return ranked.length ? ranked[0].name : '';
 }
@@ -69,7 +88,7 @@ export function countDistinctArtists(songs) {
   return keys.size;
 }
 
-const MEANING_MARK_RE = /feat\.?|featuring|\bwith\b|&|＆|\/|・|･|\+|×|\bvs\.?\b/i;
+const MEANING_MARK_RE = /feat\.?|featuring|\bwith\b|&|＆|\/|／|・|･|\+|＋|×|\bvs\.?\b|\bstarring\b|\bcv\b|、/i;
 
 export function hasMeaningChangingMarker(name) {
   return MEANING_MARK_RE.test(String(name ?? ''));
@@ -143,18 +162,23 @@ export function displaySongTitle(t) {
 
 export function artistNameBrowserSnippet() {
   return `
-function normalizeArtistWhitespace(name) {
-  return String(name == null ? '' : name)
+function foldArtistCompatPunctuation(str) {
+  return String(str == null ? '' : str)
+    .replace(/[\\u0000-\\u001F\\u007F\\u200B-\\u200D\\uFEFF]/g, '')
+    .replace(/[\\u301C\\u3030\\uFF5E\\u223C\\u2053\\u02DC]/g, '~')
+    .replace(/[\\u2018\\u2019\\u201B\\u2032\\u2035\\u00B4\\u0060\\uFF07\\u02BC\\u02B9]/g, "'")
+    .replace(/[\\u2010\\u2011\\u2012\\u2013\\u2014\\u2015\\u2212\\uFF0D\\uFE63]/g, '-');
+}
+function normalizeArtistName(name) {
+  return foldArtistCompatPunctuation(name)
+    .normalize('NFKC')
     .replace(/[\\u3000\\u00A0]/g, ' ')
-    .replace(/[\\u200B-\\u200D\\uFEFF]/g, '')
     .replace(/[\\r\\n\\t]+/g, ' ')
     .replace(/ +/g, ' ')
     .trim();
 }
-function foldFullwidthAlnum(str) {
-  return String(str == null ? '' : str).replace(/[\\uFF10-\\uFF19\\uFF21-\\uFF3A\\uFF41-\\uFF5A]/g, function(ch) {
-    return String.fromCharCode(ch.charCodeAt(0) - 0xFEE0);
-  });
+function normalizeArtistWhitespace(name) {
+  return normalizeArtistName(name);
 }
 function artistToHiragana(str) {
   return String(str == null ? '' : str).replace(/[ァ-ヶ]/g, function(ch) {
@@ -162,7 +186,7 @@ function artistToHiragana(str) {
   });
 }
 function artistCompareKey(name) {
-  return foldFullwidthAlnum(artistToHiragana(normalizeArtistWhitespace(name))).toLowerCase().replace(/ /g, '');
+  return artistToHiragana(normalizeArtistName(name)).normalize('NFC').toLowerCase().replace(/ /g, '');
 }
 function artistsEqual(a, b) {
   return artistCompareKey(a) === artistCompareKey(b);
@@ -175,7 +199,7 @@ function pickDisplayArtistName(songs) {
   for (var i = 0; i < songs.length; i++) {
     var name = songs[i] && typeof songs[i] === 'object' ? songs[i].a : songs[i];
     if (name == null || name === '') continue;
-    var prev = counts.get(name) || { name: name, count: 0, spaces: 0 };
+    var prev = counts.get(name) || { name: name, count: 0, spaces: 0, first: i };
     prev.count += 1;
     prev.spaces = (String(name).match(/\\s/g) || []).length;
     counts.set(name, prev);
@@ -183,7 +207,7 @@ function pickDisplayArtistName(songs) {
   var ranked = [...counts.values()].sort(function(a, b) {
     if (b.count !== a.count) return b.count - a.count;
     if (a.spaces !== b.spaces) return a.spaces - b.spaces;
-    return 0;
+    return a.first - b.first;
   });
   return ranked.length ? ranked[0].name : '';
 }

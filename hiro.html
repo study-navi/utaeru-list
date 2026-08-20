@@ -979,6 +979,69 @@ let searchTarget = 'artist';
 let activeKana = null;
 
 // @song-sort-inject
+function foldArtistCompatPunctuation(str) {
+  return String(str == null ? '' : str)
+    .replace(/[\u0000-\u001F\u007F\u200B-\u200D\uFEFF]/g, '')
+    .replace(/[\u301C\u3030\uFF5E\u223C\u2053\u02DC]/g, '~')
+    .replace(/[\u2018\u2019\u201B\u2032\u2035\u00B4\u0060\uFF07\u02BC\u02B9]/g, "'")
+    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uFF0D\uFE63]/g, '-');
+}
+function normalizeArtistName(name) {
+  return foldArtistCompatPunctuation(name)
+    .normalize('NFKC')
+    .replace(/[\u3000\u00A0]/g, ' ')
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/ +/g, ' ')
+    .trim();
+}
+function normalizeArtistWhitespace(name) {
+  return normalizeArtistName(name);
+}
+function artistToHiragana(str) {
+  return String(str == null ? '' : str).replace(/[ァ-ヶ]/g, function(ch) {
+    return String.fromCharCode(ch.charCodeAt(0) - 0x60);
+  });
+}
+function artistCompareKey(name) {
+  return artistToHiragana(normalizeArtistName(name)).normalize('NFC').toLowerCase().replace(/ /g, '');
+}
+function artistsEqual(a, b) {
+  return artistCompareKey(a) === artistCompareKey(b);
+}
+function artistSearchKey(name) {
+  return artistCompareKey(name);
+}
+function pickDisplayArtistName(songs) {
+  const counts = new Map();
+  for (var i = 0; i < songs.length; i++) {
+    var name = songs[i] && typeof songs[i] === 'object' ? songs[i].a : songs[i];
+    if (name == null || name === '') continue;
+    var prev = counts.get(name) || { name: name, count: 0, spaces: 0, first: i };
+    prev.count += 1;
+    prev.spaces = (String(name).match(/\s/g) || []).length;
+    counts.set(name, prev);
+  }
+  var ranked = [...counts.values()].sort(function(a, b) {
+    if (b.count !== a.count) return b.count - a.count;
+    if (a.spaces !== b.spaces) return a.spaces - b.spaces;
+    return a.first - b.first;
+  });
+  return ranked.length ? ranked[0].name : '';
+}
+function countDistinctArtists(songs) {
+  var keys = new Set();
+  for (var i = 0; i < songs.length; i++) {
+    if (!songs[i] || songs[i].a == null) continue;
+    keys.add(artistCompareKey(songs[i].a));
+  }
+  return keys.size;
+}
+function displaySongTitle(t) {
+  if (t == null) return '';
+  var parts = String(t).split(',');
+  if (parts.length >= 3 && /^[ぁ-ん]$/.test(parts[0])) return parts.slice(2).join(',');
+  return String(t);
+}
 const SORT_OPTIONS = [{"value":"title-asc","label":"曲名 あ→ん"},{"value":"title-desc","label":"曲名 ん→あ"},{"value":"artist-asc","label":"アーティスト あ→ん"},{"value":"artist-desc","label":"アーティスト ん→あ"},{"value":"batch-order","label":"UTAEMO新着順"},{"value":"added-desc","label":"追加が新しい順"},{"value":"added-asc","label":"追加が古い順"}];
 const DEFAULT_SORT_BY_TARGET = {"artist":"artist-asc","title":"title-asc"};
 const JA_COLLATOR = new Intl.Collator('ja', { sensitivity: 'base', numeric: true });
@@ -1132,64 +1195,6 @@ function sortArtistGroups(groups, opts) {
     return compareReading(getArtistY(ga.songs[0]), getArtistY(gb.songs[0]), 1);
   });
 }
-function normalizeArtistWhitespace(name) {
-  return String(name == null ? '' : name)
-    .replace(/[\u3000\u00A0]/g, ' ')
-    .replace(/[\u200B-\u200D\uFEFF]/g, '')
-    .replace(/[\r\n\t]+/g, ' ')
-    .replace(/ +/g, ' ')
-    .trim();
-}
-function foldFullwidthAlnum(str) {
-  return String(str == null ? '' : str).replace(/[\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A]/g, function(ch) {
-    return String.fromCharCode(ch.charCodeAt(0) - 0xFEE0);
-  });
-}
-function artistToHiragana(str) {
-  return String(str == null ? '' : str).replace(/[ァ-ヶ]/g, function(ch) {
-    return String.fromCharCode(ch.charCodeAt(0) - 0x60);
-  });
-}
-function artistCompareKey(name) {
-  return foldFullwidthAlnum(artistToHiragana(normalizeArtistWhitespace(name))).toLowerCase().replace(/ /g, '');
-}
-function artistsEqual(a, b) {
-  return artistCompareKey(a) === artistCompareKey(b);
-}
-function artistSearchKey(name) {
-  return artistCompareKey(name);
-}
-function pickDisplayArtistName(songs) {
-  const counts = new Map();
-  for (var i = 0; i < songs.length; i++) {
-    var name = songs[i] && typeof songs[i] === 'object' ? songs[i].a : songs[i];
-    if (name == null || name === '') continue;
-    var prev = counts.get(name) || { name: name, count: 0, spaces: 0 };
-    prev.count += 1;
-    prev.spaces = (String(name).match(/\s/g) || []).length;
-    counts.set(name, prev);
-  }
-  var ranked = [...counts.values()].sort(function(a, b) {
-    if (b.count !== a.count) return b.count - a.count;
-    if (a.spaces !== b.spaces) return a.spaces - b.spaces;
-    return 0;
-  });
-  return ranked.length ? ranked[0].name : '';
-}
-function countDistinctArtists(songs) {
-  var keys = new Set();
-  for (var i = 0; i < songs.length; i++) {
-    if (!songs[i] || songs[i].a == null) continue;
-    keys.add(artistCompareKey(songs[i].a));
-  }
-  return keys.size;
-}
-function displaySongTitle(t) {
-  if (t == null) return '';
-  var parts = String(t).split(',');
-  if (parts.length >= 3 && /^[ぁ-ん]$/.test(parts[0])) return parts.slice(2).join(',');
-  return String(t);
-}
 function buildArtistGroups(songs, opts) {
   const byArtist = new Map();
   for (var i = 0; i < songs.length; i++) {
@@ -1226,7 +1231,7 @@ function shouldUseFlatListMode(opts) {
   if (opts.sortMode === 'title-asc' || opts.sortMode === 'title-desc') return true;
   if (opts.sortMode === 'batch-order') return true;
   if (opts.sortMode === 'added-desc' || opts.sortMode === 'added-asc') return true;
-  if (opts.newOnly || opts.activeMark || opts.activeTagsSize > 0 || opts.activeFilter === 'new-batch') return true;
+  if (opts.newOnly || opts.activeMark || opts.activeTagsSize > 0 || opts.catalogScope === 'new-batch') return true;
   return false;
 }
 function shouldUseFlatForAddedSort(searchTarget, sortMode) {

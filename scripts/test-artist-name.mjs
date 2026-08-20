@@ -4,15 +4,19 @@
  */
 import {
   normalizeArtistWhitespace,
+  normalizeArtistName,
   artistCompareKey,
   artistsEqual,
   pickDisplayArtistName,
   countDistinctArtists,
   classifyArtistNameVariants,
   displaySongTitle,
+  findArtistVariantGroups,
 } from './lib/artist-name.mjs';
 import { parseMasterSongsFromIndexHtml } from './lib/genre-lookup.mjs';
 import { buildArtistGroups } from './lib/song-sort.mjs';
+import { addBypassStart } from './lib/test-bypass-start.mjs';
+import { chromium } from 'playwright-core';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -45,6 +49,47 @@ if (normalizeArtistWhitespace('  大塚\u3000\u3000愛  ') === '大塚 愛') {
 
 if (artistCompareKey('ＡＩ') === artistCompareKey('ai')) ok('全角英字と大小無視');
 else fail('fullwidth alnum', artistCompareKey('ＡＩ') + ' vs ' + artistCompareKey('ai'));
+
+if (normalizeArtistName('Buono！') === 'Buono!') ok('normalizeArtistName: 全角感嘆符');
+else fail('normalizeArtistName bang', JSON.stringify(normalizeArtistName('Buono！')));
+
+if (artistsEqual("L'Arc〜en〜Ciel", "L'Arc～en～Ciel")) ok('〜 と ～ は同一');
+else fail('wave dash vs fullwidth tilde');
+if (artistsEqual("L'Arc〜en〜Ciel", "L'Arc~en~Ciel")) ok('〜 と ASCII tilde は同一');
+else fail('wave vs ascii tilde');
+if (artistsEqual("May′n", "May'n")) ok('プライムとアポストロフィは同一');
+else fail('prime vs apostrophe');
+if (artistsEqual("19's Sound Factory", "19\u2019s Sound Factory")) ok('curly apostrophe は同一');
+else fail('curly apostrophe');
+if (artistsEqual('じーざす(ワンダフル☆オポチュニティ！)', 'じーざす(ワンダフル☆オポチュニティ!)')) ok('全角！は同一');
+else fail('fullwidth exclamation');
+if (artistsEqual('Team.ねこかん［猫］', 'Team.ねこかん[猫]')) ok('全角括弧は同一');
+else fail('fullwidth brackets');
+if (artistsEqual('井上陽水／安全地帯', '井上陽水/安全地帯')) ok('全角スラッシュは同一（同一コラボ表記）');
+else fail('fullwidth slash');
+
+const nfc = 'é';
+const nfd = 'e\u0301';
+if (artistsEqual(nfc, nfd)) ok('NFC と NFD は同一');
+else fail('unicode normalize nfc/nfd', artistCompareKey(nfc) + ' vs ' + artistCompareKey(nfd));
+if (artistsEqual('\uFF2C\uFF27', 'lg')) ok('NFKC 全角英字');
+else fail('nfkc letters');
+
+if (artistsEqual('A\u200B&B', 'A&B')) ok('ゼロ幅スペースを除去');
+else fail('zwsp');
+
+if (!artistsEqual('Aimer', 'Aimer × milet')) ok('Aimer とコラボは同一にしない');
+else fail('aimer collab');
+if (!artistsEqual('YOASOBI', 'YOASOBI feat. 幾田りら')) ok('YOASOBI feat. は同一にしない');
+else fail('yoasobi feat');
+if (!artistsEqual('米津玄師', '米津玄師、宇多田ヒカル')) ok('米津玄師と連名は同一にしない');
+else fail('yonezu comma');
+if (!artistsEqual('LiSA', 'LiSA×Uru')) ok('LiSA と × コラボは同一にしない');
+else fail('lisa collab');
+if (!artistsEqual('Buono!', 'Buono! feat. x')) ok('feat. ありなしは同一にしない');
+else fail('feat marker');
+if (!artistsEqual('米津玄師', 'DAOKO×米津玄師')) ok('× コラボは単独と同一にしない');
+else fail('daoko collab');
 
 if (!artistsEqual('A & B', 'A')) ok('& ありなしは同一にしない');
 else fail('ampersand meaning');
@@ -87,10 +132,30 @@ if (classifyArtistNameVariants(['大塚愛', '大塚 愛']) === '統合してよ
 else fail('classify space');
 if (classifyArtistNameVariants(['Kanaria', 'kanaria']) === '統合してよい') ok('分類: 大小のみは統合してよい');
 else fail('classify case');
-if (classifyArtistNameVariants(['ユリイ･カノン', 'ユリイ・カノン']) === '要確認') ok('分類: 中黒幅は要確認');
+if (classifyArtistNameVariants(['ユリイ･カノン', 'ユリイ・カノン']) === '統合してよい') ok('分類: 中黒幅は統合してよい');
 else fail('classify middle dot', classifyArtistNameVariants(['ユリイ･カノン', 'ユリイ・カノン']));
 
 const master = parseMasterSongsFromIndexHtml(fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'));
+if (master.length !== 1952) fail('MASTER_SONGS count', String(master.length));
+else ok('MASTER_SONGS 1952曲（件数維持）');
+
+const variantGroups = findArtistVariantGroups(master).filter((g) => g.class === '統合してよい' || g.variants.length > 1);
+if (variantGroups.length >= 9) ok(`表記ゆれグループ ${variantGroups.length} 組を同一キーに`);
+else fail('variant group count', String(variantGroups.length));
+
+const larc = master.filter((s) => /L'Arc/i.test(s.a));
+if (larc.length === 11 && countDistinctArtists(larc) === 1) ok("L'Arc 11曲が1組");
+else fail('LArc merge', JSON.stringify({ n: larc.length, distinct: countDistinctArtists(larc), names: [...new Set(larc.map((s) => s.a))] }));
+
+if (!artistsEqual('Ms.Chilidren', 'Mr.Children')) ok('Ms.Chilidren は誤記のため Mr.Children と統合しない');
+else fail('Ms.Chilidren');
+
+const watchOk = ['LiSA', 'RADWIMPS', 'YOASOBI', '米津玄師', 'back number', 'Buono!'].every((n) => {
+  const list = master.filter((s) => artistsEqual(s.a, n) && !/feat|×|x |、/.test(s.a));
+  return countDistinctArtists(list) === 1;
+});
+if (watchOk) ok('指定アーティストの単独表記は1キー');
+else fail('watchlist split');
 const ohtsuka = master.filter((s) => artistCompareKey(s.a) === artistCompareKey('大塚愛'));
 if (ohtsuka.some((s) => s.a === '大塚 愛') && ohtsuka.some((s) => s.a === '大塚愛')) {
   ok('MASTER の表示文字列は大塚愛／大塚 愛のまま');
@@ -126,6 +191,11 @@ function assertOneGroup(label, names) {
 assertOneGroup('Kanaria/kanaria', ['Kanaria', 'kanaria']);
 assertOneGroup('Mr.Children/Mr.children', ['Mr.Children', 'Mr.children']);
 assertOneGroup('Mrs.GREEN APPLE', ['Mrs.GREEN APPLE', 'Mrs. GREEN APPLE']);
+assertOneGroup("L'Arc wave/tilde", ["L'Arc〜en〜Ciel", "L'Arc～en～Ciel"]);
+assertOneGroup('ユリイ・カノン 中黒', ['ユリイ･カノン', 'ユリイ・カノン']);
+assertOneGroup('Creepy Nuts ＆/&', ['CreePy Nuts(R-指定＆DJ松永)', 'Creepy Nuts(R-指定&DJ松永)']);
+assertOneGroup('秦 基博 中黒', ['秦 基博(ハタ･モトヒロ)', '秦 基博(ハタ・モトヒロ)']);
+assertOneGroup('シェリル starring', ['シェリル･ノーム starring May′n', 'シェリル・ノーム starring May\'n']);
 
 const catalog = [
   ['あたらよ', 'あ,あたらよ,夏霞', '夏霞'],
@@ -161,7 +231,7 @@ if (reviewNames.every((n) => master.some((s) => s.a === n))) ok('要確認リス
 else fail('要確認 a', reviewNames.filter((n) => !master.some((s) => s.a === n)).join(', '));
 
 function assertPublicSource(label, src) {
-  const need = ['function artistCompareKey', 'function displaySongTitle', 'countDistinctArtists', 'displaySongTitle(s.t)'];
+  const need = ['function normalizeArtistName', 'function artistCompareKey', 'function displaySongTitle', 'countDistinctArtists', 'displaySongTitle(s.t)'];
   const missing = need.filter((n) => !src.includes(n));
   if (missing.length) fail(`${label}: 公開処理欠落`, missing.join(', '));
   else ok(`${label}: 正規化と曲名表示を含む`);
@@ -173,6 +243,121 @@ const indexHtml = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const b64 = indexHtml.match(/id="viewer-template-b64">([^<]+)</);
 const tpl = b64 ? Buffer.from(b64[1], 'base64').toString('utf8') : '';
 assertPublicSource('viewer-template-b64', tpl);
+
+async function runBrowserChecks() {
+  const widths = [320, 375, 390, 430, 1280];
+  const browser = await chromium.launch();
+
+  const indexPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const indexErrors = [];
+  indexPage.on('pageerror', (e) => indexErrors.push(e.message));
+  await addBypassStart(indexPage);
+  await indexPage.goto('file://' + path.join(ROOT, 'index.html'), { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await indexPage.waitForFunction(() => document.documentElement.dataset.utalisEntryReady === '1', { timeout: 20000 });
+  await indexPage.click('#editTabSongs');
+  await indexPage.waitForTimeout(200);
+
+  const editor = await indexPage.evaluate(() => {
+    const larc = MASTER_SONGS.filter((s) => /L.?Arc/i.test(s.a) || artistCompareKey(s.a) === artistCompareKey("L'Arc〜en〜Ciel"));
+    const groups = typeof buildSortedArtistGroups === 'function' ? buildSortedArtistGroups(larc) : [];
+    const q = "L'Arc";
+    const searchHits = MASTER_SONGS.filter((s) => matchesArtistSearch(s, q));
+    return {
+      master: MASTER_SONGS.length,
+      larcSongs: larc.length,
+      larcGroups: groups.length,
+      larcHeader: groups[0]?.artist || '',
+      larcGroupSongs: groups[0]?.songs.length || 0,
+      searchHits: searchHits.length,
+      distinctLarc: countDistinctArtists(larc),
+    };
+  });
+  if (editor.master !== 1952) fail('editor MASTER_SONGS', String(editor.master));
+  else ok('editor MASTER_SONGS 1952');
+  if (editor.larcSongs === 11 && editor.larcGroups === 1 && editor.distinctLarc === 1 && editor.larcGroupSongs === 11) {
+    ok("editor L'Arc 11曲が1アコーディオン");
+  } else fail("editor L'Arc", JSON.stringify(editor));
+  if (editor.searchHits >= 11) ok('editor アーティスト検索 LArc');
+  else fail('editor search larc', String(editor.searchHits));
+
+  await indexPage.fill('#searchInput', "L'Arc");
+  await indexPage.dispatchEvent('#searchInput', 'input');
+  await indexPage.waitForTimeout(250);
+  const meta = await indexPage.locator('#resultMeta').textContent();
+  if (meta && meta.includes('11曲') && meta.includes('1組')) ok('editor 検索UI 11曲/1組');
+  else fail('editor search meta', meta);
+
+  await indexPage.fill('#searchInput', '');
+  await indexPage.dispatchEvent('#searchInput', 'input');
+  await indexPage.waitForTimeout(150);
+
+  for (const width of widths) {
+    await indexPage.setViewportSize({ width, height: width <= 430 ? 844 : 900 });
+    const overflow = await indexPage.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 2);
+    if (overflow) fail(`editor ${width}px: 横スクロール`);
+    else ok(`editor ${width}px: 横スクロールなし`);
+  }
+  if (indexErrors.length) fail('editor Console', indexErrors.join('; '));
+  else ok('editor Consoleエラーなし');
+  await indexPage.close();
+
+  const hiroPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const hiroErrors = [];
+  hiroPage.on('pageerror', (e) => hiroErrors.push(e.message));
+  await hiroPage.goto('file://' + path.join(ROOT, 'hiro.html'), { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await hiroPage.waitForFunction(() => typeof SONGS !== 'undefined' && SONGS.length > 0, { timeout: 15000 });
+  const hiroInit = await hiroPage.evaluate(() => ({
+    songs: SONGS.length,
+    groups: document.querySelectorAll('.artist-accordion-item, .artist-group').length,
+    hasSearch: !!document.getElementById('searchInput'),
+    hasRandom: !!document.getElementById('randomBtn'),
+  }));
+  if (hiroInit.songs > 0 && hiroInit.groups > 0) ok('viewer 曲一覧とアコーディオン');
+  else fail('viewer list', JSON.stringify(hiroInit));
+
+  await hiroPage.locator('#songSearchPanelToggle').click();
+  await hiroPage.waitForTimeout(280);
+
+  async function searchViewer(q, mode) {
+    await hiroPage.evaluate((m) => {
+      if (typeof setSearchTarget === 'function') setSearchTarget(m);
+    }, mode);
+    await hiroPage.fill('#searchInput', q);
+    await hiroPage.dispatchEvent('#searchInput', 'input');
+    await hiroPage.waitForTimeout(200);
+    return hiroPage.locator('#resultMeta').textContent();
+  }
+  const titleMeta = await searchViewer('ストロー', 'title');
+  if (titleMeta && !titleMeta.startsWith('0曲')) ok('viewer 曲名検索');
+  else fail('viewer title search', titleMeta);
+  const artistMeta = await searchViewer('aiko', 'artist');
+  if (artistMeta && !artistMeta.startsWith('0曲')) ok('viewer アーティスト検索');
+  else fail('viewer artist search', artistMeta);
+
+  await hiroPage.fill('#searchInput', '');
+  await hiroPage.dispatchEvent('#searchInput', 'input');
+  await hiroPage.waitForTimeout(150);
+  await hiroPage.click('#randomBtn');
+  const randomVisible = await hiroPage.evaluate(() => {
+    const el = document.getElementById('randomPick');
+    return el && getComputedStyle(el).display !== 'none';
+  });
+  if (randomVisible) ok('viewer ランダム');
+  else fail('viewer random');
+
+  for (const width of widths) {
+    await hiroPage.setViewportSize({ width, height: width <= 430 ? 844 : 900 });
+    const overflow = await hiroPage.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 2);
+    if (overflow) fail(`viewer ${width}px: 横スクロール`);
+    else ok(`viewer ${width}px: 横スクロールなし`);
+  }
+  if (hiroErrors.length) fail('viewer Console', hiroErrors.join('; '));
+  else ok('viewer Consoleエラーなし');
+  await hiroPage.close();
+  await browser.close();
+}
+
+await runBrowserChecks();
 
 if (failed) {
   console.error(`\n${failed} failure(s)`);
