@@ -1748,7 +1748,7 @@ const songSearchPanelBody = document.getElementById('songSearchPanelBody');
 let searchPanelExpanded = null;
 
 function getSearchPanelDefaultExpanded() {
-  return window.matchMedia('(min-width: 641px)').matches;
+  return false;
 }
 function isSearchPanelExpanded() {
   if (searchPanelExpanded !== null) return searchPanelExpanded;

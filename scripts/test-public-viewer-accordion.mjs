@@ -44,6 +44,14 @@ function writeFixture(name, html) {
   return `file://${p}`;
 }
 
+async function openSearchPanel(page) {
+  const expanded = await page.evaluate(() => document.getElementById('songSearchPanel')?.classList.contains('is-expanded'));
+  if (!expanded) {
+    await page.click('#songSearchPanelToggle');
+    await page.waitForFunction(() => document.getElementById('songSearchPanel')?.classList.contains('is-expanded'));
+  }
+}
+
 async function openPage(browser, url) {
   const page = await browser.newPage();
   const errors = [];
@@ -173,6 +181,7 @@ async function main() {
     ];
     const url = writeFixture('fg', buildFixtureHtml({ songs }));
     const { page } = await openPage(browser, url);
+    await openSearchPanel(page);
     await page.click('#searchTargetTitle');
     await page.fill('#searchInput', '新時代');
     await page.dispatchEvent('#searchInput', 'input');
@@ -199,6 +208,7 @@ async function main() {
     const songMeta = { 'Ado\u0001marked': { marks: [markKey] } };
     const url = writeFixture(`mark-${markKey}`, buildFixtureHtml({ songs, songMeta }));
     const { page } = await openPage(browser, url);
+    await openSearchPanel(page);
     await page.locator('#statusFilterRow .chip').filter({ hasText: markKey === 'signature' ? '⭐' : markKey === 'favorite' ? '❤️' : '🔰' }).click();
     await page.waitForFunction(() => document.querySelectorAll('.flat-song-item').length === 1);
     const hasMark = await page.locator('.song-mark').count();

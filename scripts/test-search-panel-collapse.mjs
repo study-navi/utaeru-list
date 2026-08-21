@@ -89,11 +89,9 @@ async function checkViewer(page, url, label, width) {
   await page.waitForTimeout(120);
 
   const init = await measureListTop(page);
-  if (width <= 640 && init.collapsed && init.ariaExpanded === 'false') {
+  if (init.collapsed && init.ariaExpanded === 'false') {
     ok(`${label}: 初期折りたたみ`);
-  } else if (width > 640 && init.expanded) {
-    ok(`${label}: PC初期展開`);
-  } else if (width <= 640) {
+  } else {
     fail(`${label}: 初期折りたたみ`, JSON.stringify(init));
   }
 
