@@ -98,7 +98,16 @@ ${css}
     <div class="random-pick" id="randomPick"></div>
   </div>
 
-  <div class="result-meta" id="resultMeta"></div>
+  <div class="list-toolbar-card" id="listToolbar">
+    <div class="list-toolbar-main">
+      <p class="result-meta" id="resultMeta"></p>
+      <p class="list-toolbar-updated" id="listToolbarUpdated"></p>
+    </div>
+    <div class="view-segment view-segment-toolbar" role="tablist" aria-label="表示方法">
+      <button type="button" class="view-segment-btn active" data-layout="artist" aria-selected="true">アーティスト</button>
+      <button type="button" class="view-segment-btn" data-layout="song" aria-selected="false">曲</button>
+    </div>
+  </div>
   <div class="filter-summary" id="filterSummary" style="display:none;"></div>
 
   <div id="results"></div>

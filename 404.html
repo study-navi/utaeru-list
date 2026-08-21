@@ -22,6 +22,17 @@
     --accent-wash: #e6f2fd;
     --chip-bg: #f3f7fb;
     --chip-border: #e4ebf2;
+    --ui-radius: 14px;
+    --ui-radius-inner: 10px;
+    --ui-padding: 12px 14px;
+    --ui-border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--grid));
+    --ui-border-plain: 1px solid var(--grid);
+    --ui-shadow: 0 1px 2px rgba(21, 32, 43, 0.04);
+    --ui-bg-accent: color-mix(in srgb, var(--accent) 5%, var(--surface));
+    --ui-bg-accent-row: color-mix(in srgb, var(--accent) 6%, transparent);
+    --ui-hover-accent: color-mix(in srgb, var(--accent) 8%, transparent);
+    --ui-hover-accent-soft: color-mix(in srgb, var(--accent) 4%, transparent);
+    --ui-focus-ring: 2px solid var(--accent);
   }
 
   * { box-sizing: border-box; }
@@ -43,8 +54,12 @@
     justify-content: space-between;
     gap: 12px;
     margin-bottom: 12px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--grid);
+    padding: var(--ui-padding);
+    border-bottom: none;
+    border-radius: var(--ui-radius);
+    background: var(--ui-bg-accent);
+    border: var(--ui-border);
+    box-shadow: var(--ui-shadow);
   }
   .top-main { min-width: 0; flex: 1; }
   .page-kind {
@@ -177,10 +192,14 @@
   }
   .song-search-panel {
     background: var(--surface);
-    border: 1px solid var(--grid);
-    border-radius: 14px;
-    box-shadow: 0 1px 2px rgba(21, 32, 43, 0.04);
+    border: var(--ui-border-plain);
+    border-radius: var(--ui-radius);
+    box-shadow: var(--ui-shadow);
     overflow: hidden;
+  }
+  .song-search-panel.is-expanded {
+    background: var(--ui-bg-accent);
+    border: var(--ui-border);
   }
   .song-search-panel-header {
     display: flex;
@@ -196,9 +215,9 @@
     font: inherit;
     color: inherit;
   }
-  .song-search-panel-header:hover { background: color-mix(in srgb, var(--accent) 4%, transparent); }
+  .song-search-panel-header:hover { background: var(--ui-hover-accent-soft); }
   .song-search-panel-header:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: var(--ui-focus-ring);
     outline-offset: -2px;
   }
   .song-search-panel-leading {
@@ -253,6 +272,7 @@
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
+    border-top-color: color-mix(in srgb, var(--accent) 10%, var(--grid));
   }
   @media (prefers-reduced-motion: no-preference) {
     .song-search-panel-body {
@@ -296,10 +316,10 @@
   }
   .search-shell {
     background: var(--surface);
-    border: 1px solid var(--grid);
-    border-radius: 14px;
+    border: var(--ui-border-plain);
+    border-radius: var(--ui-radius);
     padding: 10px;
-    box-shadow: 0 1px 2px rgba(21, 32, 43, 0.04);
+    box-shadow: var(--ui-shadow);
   }
 
 
@@ -475,9 +495,70 @@
   }
   .result-meta {
     font-size: 12px;
-    color: var(--text-muted);
-    margin: 12px 2px 6px;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.4;
   }
+  .list-toolbar-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 12px;
+    padding: var(--ui-padding);
+    margin: 12px 0 10px;
+    border-radius: var(--ui-radius);
+    background: var(--ui-bg-accent);
+    border: var(--ui-border);
+    box-shadow: var(--ui-shadow);
+  }
+  .list-toolbar-main {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .list-toolbar-updated {
+    margin: 2px 0 0;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.35;
+  }
+  .view-segment {
+    flex: 0 0 auto;
+    display: inline-flex;
+    padding: 2px;
+    border-radius: var(--ui-radius-inner);
+    background: color-mix(in srgb, var(--accent) 10%, var(--grid));
+    border: var(--ui-border-plain);
+  }
+  .view-segment-btn {
+    min-width: 72px;
+    min-height: 32px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: calc(var(--ui-radius-inner) - 2px);
+    background: transparent;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .view-segment-btn.active {
+    background: var(--surface);
+    color: var(--accent);
+    font-weight: 700;
+    box-shadow: var(--ui-shadow);
+  }
+  .view-segment-btn:focus-visible {
+    outline: var(--ui-focus-ring);
+    outline-offset: 1px;
+  }
+  .view-segment-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .list-view-section { margin-top: 4px; }
 
   .filter-row {
     display: flex;
@@ -502,20 +583,26 @@
     font-size: 13px;
     min-height: 44px;
     padding: 8px 14px;
-    border-radius: 12px;
-    border: 1px solid var(--grid);
-    background: var(--surface);
+    border-radius: var(--ui-radius);
+    border: var(--ui-border);
+    background: var(--ui-bg-accent);
+    box-shadow: var(--ui-shadow);
     color: var(--text-primary);
     cursor: pointer;
   }
-  .random-btn:hover { background: var(--surface-2); }
+  .random-btn:hover { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+  .random-btn:focus-visible {
+    outline: var(--ui-focus-ring);
+    outline-offset: 2px;
+  }
   .random-btn:disabled { opacity: 0.45; cursor: not-allowed; }
   .random-pick {
     margin-top: 8px;
-    padding: 12px 14px;
+    padding: var(--ui-padding);
     background: var(--accent-wash);
-    border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--grid));
-    border-radius: 12px;
+    border: var(--ui-border);
+    border-radius: var(--ui-radius);
+    box-shadow: var(--ui-shadow);
     font-size: 14px;
     display: none;
   }
@@ -525,19 +612,18 @@
   .artist-accordion {
     display: flex;
     flex-direction: column;
-    gap: 0;
+    gap: 6px;
   }
   .artist-accordion-item {
-    border-bottom: 1px solid var(--grid);
+    border-bottom: none;
   }
-  .artist-accordion-item:last-child { border-bottom: none; }
   .artist-accordion-trigger {
     width: 100%;
     min-height: 48px;
-    padding: 12px 2px;
+    padding: 12px 10px;
     border: none;
-    background: color-mix(in srgb, var(--accent) 6%, transparent);
-    border-radius: 8px;
+    background: var(--ui-bg-accent-row);
+    border-radius: var(--ui-radius-inner);
     color: inherit;
     cursor: pointer;
     display: flex;
@@ -547,18 +633,17 @@
     text-align: left;
     font: inherit;
   }
-  .artist-accordion-trigger:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .artist-accordion-trigger:hover { background: var(--ui-hover-accent); }
   .artist-accordion-trigger:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: var(--ui-focus-ring);
     outline-offset: 2px;
-    border-radius: 8px;
   }
   .artist-accordion-name {
     flex: 1;
     min-width: 0;
     font-size: 15px;
     font-weight: 800;
-    color: var(--accent);
+    color: var(--text-primary);
     line-height: 1.35;
     word-break: break-word;
   }
@@ -830,6 +915,13 @@
             <label class="sort-control-label" for="sortSelect">並び替え</label>
             <select class="sort-control-select" id="sortSelect" aria-label="並び替え"></select>
           </div>
+          <div class="list-view-section">
+            <div class="narrow-filter-label">一覧の見せ方</div>
+            <div class="view-segment view-segment-in-panel" role="tablist" aria-label="表示方法">
+              <button type="button" class="view-segment-btn active" data-layout="artist" aria-selected="true">アーティスト</button>
+              <button type="button" class="view-segment-btn" data-layout="song" aria-selected="false">曲</button>
+            </div>
+          </div>
           <div class="narrow-filter-block">
             <div class="narrow-filter-label">絞り込み</div>
             <div class="narrow-filter-row" id="narrowFilterRow" role="group" aria-label="絞り込み"></div>
@@ -848,7 +940,16 @@
     <div class="random-pick" id="randomPick"></div>
   </div>
 
-  <div class="result-meta" id="resultMeta"></div>
+  <div class="list-toolbar-card" id="listToolbar">
+    <div class="list-toolbar-main">
+      <p class="result-meta" id="resultMeta"></p>
+      <p class="list-toolbar-updated" id="listToolbarUpdated"></p>
+    </div>
+    <div class="view-segment view-segment-toolbar" role="tablist" aria-label="表示方法">
+      <button type="button" class="view-segment-btn active" data-layout="artist" aria-selected="true">アーティスト</button>
+      <button type="button" class="view-segment-btn" data-layout="song" aria-selected="false">曲</button>
+    </div>
+  </div>
   <div class="filter-summary" id="filterSummary" style="display:none;"></div>
 
   <div id="results"></div>
@@ -1218,6 +1319,7 @@ const clearBtn = document.getElementById('clearBtn');
 const gyoSubRow = document.getElementById('gyoSubRow');
 const gyoRow = document.getElementById('gyoRow');
 let searchTarget = 'artist';
+let listDisplayMode = 'artist';
 let activeKana = null;
 
 // @song-sort-inject
@@ -1635,6 +1737,7 @@ document.querySelectorAll('.search-mode-tab').forEach(tab => {
 });
 const resultsEl = document.getElementById('results');
 const resultMeta = document.getElementById('resultMeta');
+const listToolbarUpdated = document.getElementById('listToolbarUpdated');
 const filterSummaryEl = document.getElementById('filterSummary');
 const statusFilterRow = document.getElementById('statusFilterRow');
 const songSearchPanel = document.getElementById('songSearchPanel');
@@ -1858,7 +1961,7 @@ function flatSongRowHtml(s, q) {
     </li>`;
 }
 
-function isFlatListMode(q) {
+function isFlatListForced(q) {
   return shouldUseFlatListMode({
     sortMode: sortMode,
     searchTarget: searchTarget,
@@ -1867,7 +1970,30 @@ function isFlatListMode(q) {
     newOnly: newOnly,
     activeMark: activeMark,
     activeTagsSize: activeTags.size,
-    activeFilter: activeFilter,
+    catalogScope: activeFilter === 'new-batch' ? 'new-batch' : 'all',
+  });
+}
+function isFlatListMode(q) {
+  if (isFlatListForced(q)) return true;
+  return listDisplayMode === 'song';
+}
+function effectiveListDisplayMode(q) {
+  return isFlatListMode(q) ? 'song' : 'artist';
+}
+function setListDisplayMode(mode) {
+  if (mode !== 'artist' && mode !== 'song') return;
+  listDisplayMode = mode;
+  syncListDisplaySegments(searchInput.value.trim());
+  render();
+}
+function syncListDisplaySegments(q) {
+  const effective = effectiveListDisplayMode(q);
+  const forced = isFlatListForced(q);
+  document.querySelectorAll('.view-segment-btn[data-layout]').forEach(function(btn) {
+    const active = btn.dataset.layout === effective;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-selected', active ? 'true' : 'false');
+    btn.disabled = forced && btn.dataset.layout === 'artist';
   });
 }
 
@@ -1963,6 +2089,11 @@ function render() {
 
   const artistCount = countDistinctArtists(filtered);
   resultMeta.textContent = `${filtered.length}曲 / ${artistCount}組`;
+  if (listToolbarUpdated) {
+    const updated = document.getElementById('statUpdated')?.textContent?.trim() || '';
+    listToolbarUpdated.textContent = updated && updated !== '-' ? `更新 ${updated}` : '';
+  }
+  syncListDisplaySegments(q);
   updateFilterSummary();
 
   if (SONGS.length === 0) {
@@ -1997,6 +2128,14 @@ function render() {
 
 searchInput.addEventListener('input', render);
 clearBtn.addEventListener('click', () => { searchInput.value = ''; render(); searchInput.focus(); });
+
+document.addEventListener('click', (e) => {
+  const viewBtn = e.target.closest('.view-segment-btn[data-layout]');
+  if (viewBtn && !viewBtn.disabled) {
+    setListDisplayMode(viewBtn.dataset.layout);
+    return;
+  }
+});
 
 resultsEl.addEventListener('click', (e) => {
   const btn = e.target.closest('.artist-accordion-trigger');
