@@ -23,27 +23,27 @@ function fail(msg, detail) {
 
 function unitTests() {
   const batch = getCurrentBatch();
-  if (batch.songs.length === 52) ok('抽出52曲（重複なし）');
+  if (batch.songs.length === 34) ok('抽出34曲（重複なし）');
   else fail('曲数', String(batch.songs.length));
 
   const titles = batch.songs.map((s) => `${s.artist}|${s.title}`);
-  if (new Set(titles).size === 52) ok('重複除外後52曲');
+  if (new Set(titles).size === 34) ok('重複除外後34曲');
   else fail('重複あり', String(new Set(titles).size));
 
   const songs = parseMasterSongsFromIndexHtml(fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'));
-  if (songs.length === 1952) ok('MASTER_SONGS 1952曲維持');
+  if (songs.length === 1986) ok('MASTER_SONGS 1986曲');
   else fail('MASTER_SONGS曲数', String(songs.length));
 
   const report = runBatchMatchReport(songs);
-  if (report.registered.length === 52) ok(`登録済み ${report.registered.length}件`);
+  if (report.registered.length === 34) ok(`登録済み ${report.registered.length}件`);
   else fail('登録済み', String(report.registered.length));
   if (report.unregistered.length === 0) ok('未登録0件');
   else fail('未登録', String(report.unregistered.length));
-  if (report.needsReview.length === 0) ok('要確認0件（SEVEN DAYS部分一致含む）');
+  if (report.needsReview.length === 0) ok('要確認0件');
   else fail('要確認', String(report.needsReview.length));
 
-  const lookup = buildNewBatchLookup(songs);
-  if (Object.keys(lookup).length === 52) ok('lookup 52キー');
+  const lookup = buildNewBatchLookup(songs, [getCurrentBatch()]);
+  if (Object.keys(lookup).length === 34) ok('lookup 34キー');
   else fail('lookup keys', String(Object.keys(lookup).length));
 
   const html404 = fs.readFileSync(path.join(ROOT, '404.html'), 'utf8');
@@ -76,7 +76,7 @@ function buildViewerFixture(name, { songs, songMeta = {} }) {
 }
 
 async function uiTests(browser) {
-  // Editor: 新着フィルタで52曲
+  // Editor: 新着フィルタで34曲
   {
     const page = await browser.newPage({ viewport: { width: 375, height: 800 } });
     const errors = [];
@@ -92,8 +92,8 @@ async function uiTests(browser) {
     });
     await page.waitForTimeout(200);
     const meta = await page.locator('#resultMeta').textContent();
-    if (meta.includes('52曲')) ok(`編集: 新着フィルタ ${meta}`);
-    else fail('編集: 新着52曲', meta);
+    if (meta.includes('34曲')) ok(`編集: 新着フィルタ ${meta}`);
+    else fail('編集: 新着34曲', meta);
     const h = await page.locator('#narrowFilterRow .chip', { hasText: '新着' }).evaluate((el) => el.offsetHeight);
     if (h >= 34) ok(`編集: 新着chip 高さ ${h}px`);
     else fail('編集: 新着chip タップ領域', String(h));
@@ -106,9 +106,9 @@ async function uiTests(browser) {
   {
     const url = buildViewerFixture('viewer', {
       songs: [
-        { k: 'え', y: 'しど', a: 'シド', t: 'ENAMEL' },
+        { k: 'あ', y: 'あいみょん', a: 'あいみょん', t: '生きていたんだよな' },
+        { k: 'お', y: 'おふぃしゃるひげだんでぃずむ', a: 'Official髭男dism', t: 'SOULSOUP' },
         { k: 'あ', y: 'あいこ', a: 'aiko', t: 'カブトムシ' },
-        { k: 'ら', y: 'らんぶ', a: 'シド', t: '乱舞のメロディ' },
       ],
     });
     const page = await browser.newPage({ viewport: { width: 390, height: 800 } });
@@ -120,7 +120,7 @@ async function uiTests(browser) {
     });
     await page.waitForTimeout(200);
     const meta = await page.locator('#resultMeta').textContent();
-    if (meta === '2曲 / 1組') ok(`viewer: 新着は公開曲 intersect ${meta}`);
+    if (meta === '2曲 / 2組') ok(`viewer: 新着は公開曲 intersect ${meta}`);
     else fail('viewer: 新着 intersect', meta);
     const flat = await page.locator('.flat-song-item').count();
     if (flat === 2) ok('viewer: 新着 flat 2曲');
@@ -133,7 +133,7 @@ async function uiTests(browser) {
   {
     const url = buildViewerFixture('genre-and', {
       songs: [
-        { k: 'え', y: 'しど', a: 'シド', t: 'ENAMEL' },
+        { k: 'ね', y: 'ねこだてこたつ', a: '猫舘こたつ', t: '黙ってロックをやれって言ってんの!' },
         { k: 'ぼ', y: 'ぼかろ', a: 'cosMo@暴走P', t: '初音ミクの暴走' },
       ],
     });
@@ -164,12 +164,12 @@ async function uiTests(browser) {
 
   for (const w of [320, 1280]) {
     const url = buildViewerFixture(`vp-${w}`, {
-      songs: [{ k: 'え', y: 'しど', a: 'シド', t: 'ENAMEL' }],
+      songs: [{ k: 'あ', y: 'あいみょん', a: 'あいみょん', t: '生きていたんだよな' }],
     });
     const page = await browser.newPage({ viewport: { width: w, height: 800 } });
     await page.goto(url, { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('#narrowFilterRow');
     await page.evaluate(() => { setSearchPanelExpanded(true); applySearchPanelState(); });
+    await page.waitForSelector('#narrowFilterRow');
     await page.waitForTimeout(120);
     const h = await page.locator('#narrowFilterRow .chip').first().evaluate((el) => el.offsetHeight);
     if (h >= 34) ok(`${w}px: narrow chip h=${h}`);

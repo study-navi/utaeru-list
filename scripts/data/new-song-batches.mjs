@@ -8,7 +8,7 @@
  */
 
 /** @type {string} 現在の新着バッチ ID */
-export const CURRENT_NEW_BATCH = 'batch-2026-emokara-01';
+export const CURRENT_NEW_BATCH = 'batch-2026-emokara-02';
 
 /**
  * @typedef {{ title: string, artist: string, titleNeedsReview?: boolean, note?: string }} BatchSongEntry
@@ -78,6 +78,47 @@ export const NEW_SONG_BATCHES = [
       { title: '乱舞のメロディ', artist: 'シド' },
       { title: 'Rosso & Dry', artist: 'SiM' },
       { title: '夜な夜な夜な', artist: '倉橋ヨエコ' },
+    ],
+  },
+  {
+    id: 'batch-2026-emokara-02',
+    label: 'エモカラ新着（2026-08 追加3枚）',
+    source: 'emokara-screenshots-2026-08-3pages',
+    songs: [
+      { title: '#情とは', artist: 'This is LAST' },
+      { title: 'SOULSOUP', artist: 'Official髭男dism' },
+      { title: 'Friends，Family & God feat. G-k.i.d & KEIJU', artist: 'Kvi Baba' },
+      { title: '君を誰より愛してんのにな。', artist: 'ACE COLLECTION' },
+      { title: '元彼女のみなさまへ', artist: 'コレサワ' },
+      { title: '黙ってロックをやれって言ってんの!', artist: '猫舘こたつ' },
+      { title: 'シェードの埃は延長', artist: 'ずっと真夜中でいいのに。' },
+      { title: '君中心に揺れる世界は', artist: 'マルシィ' },
+      { title: 'ナルバキスン (Look at me, Gwisun)', artist: 'D-LITE(from BIGBANG)' },
+      { title: 'courage', artist: '戸松遥' },
+      { title: 'パズルガール', artist: 'とあ' },
+      { title: 'きみわずらい', artist: 'まねきケチャ' },
+      { title: 'うるとらみらくるくるふぁいなるアルティメットチョコびーむ', artist: 'わーすた' },
+      { title: '生きていたんだよな', artist: 'あいみょん' },
+      { title: 'D-Day', artist: 'D-LITE(from BIGBANG)' },
+      { title: 'ずっと、ふたりで', artist: '家入レオ' },
+      { title: 'WINGS', artist: 'D-LITE(from BIGBANG)' },
+      { title: 'ちっぽけな愛のうた', artist: '小枝理子&小笠原秋' },
+      { title: '裸執事', artist: '金瓶梅' },
+      { title: '星のすみか', artist: '藍坊主' },
+      { title: '1925', artist: '冨田悠斗(とみー/T-POCKET)' },
+      { title: 'タカラモノ ～この声がなくなるまで～', artist: 'ナオト・インティライミ' },
+      { title: 'Happy Birthday to you you', artist: 'YUI' },
+      { title: '旅人', artist: '高杉 さと美' },
+      { title: 'My Special Day', artist: 'Dew' },
+      { title: '深愛', artist: '水樹奈々' },
+      { title: 'ハグルマ', artist: 'KANA-BOON' },
+      { title: 'おかえりらぶっ!', artist: 'すとぷり' },
+      { title: 'かまってちょうだい///', artist: 'ゴールデンボンバー' },
+      { title: '鼓動', artist: 'カグラナナ' },
+      { title: 'なんでもないよ、', artist: 'マカロニえんぴつ' },
+      { title: 'ブラザービート', artist: 'Snow Man' },
+      { title: 'フューチャー・イヴ', artist: 'sasakure.UK' },
+      { title: '夢をみせて', artist: 'Co shu Nie' },
     ],
   },
 ];
