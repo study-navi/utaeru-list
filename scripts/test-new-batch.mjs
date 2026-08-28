@@ -23,19 +23,19 @@ function fail(msg, detail) {
 
 function unitTests() {
   const batch = getCurrentBatch();
-  if (batch.songs.length === 34) ok('抽出34曲（重複なし）');
+  if (batch.songs.length === 50) ok('抽出50曲（重複なし）');
   else fail('曲数', String(batch.songs.length));
 
   const titles = batch.songs.map((s) => `${s.artist}|${s.title}`);
-  if (new Set(titles).size === 34) ok('重複除外後34曲');
+  if (new Set(titles).size === 50) ok('重複除外後50曲');
   else fail('重複あり', String(new Set(titles).size));
 
   const songs = parseMasterSongsFromIndexHtml(fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'));
-  if (songs.length === 1986) ok('MASTER_SONGS 1986曲');
+  if (songs.length === 2002) ok('MASTER_SONGS 2002曲');
   else fail('MASTER_SONGS曲数', String(songs.length));
 
   const report = runBatchMatchReport(songs);
-  if (report.registered.length === 34) ok(`登録済み ${report.registered.length}件`);
+  if (report.registered.length === 50) ok(`登録済み ${report.registered.length}件`);
   else fail('登録済み', String(report.registered.length));
   if (report.unregistered.length === 0) ok('未登録0件');
   else fail('未登録', String(report.unregistered.length));
@@ -43,7 +43,7 @@ function unitTests() {
   else fail('要確認', String(report.needsReview.length));
 
   const lookup = buildNewBatchLookup(songs, [getCurrentBatch()]);
-  if (Object.keys(lookup).length === 34) ok('lookup 34キー');
+  if (Object.keys(lookup).length === 50) ok('lookup 50キー');
   else fail('lookup keys', String(Object.keys(lookup).length));
 
   const html404 = fs.readFileSync(path.join(ROOT, '404.html'), 'utf8');
@@ -76,7 +76,7 @@ function buildViewerFixture(name, { songs, songMeta = {} }) {
 }
 
 async function uiTests(browser) {
-  // Editor: 新着フィルタで34曲
+  // Editor: 新着フィルタで50曲
   {
     const page = await browser.newPage({ viewport: { width: 375, height: 800 } });
     const errors = [];
@@ -92,8 +92,8 @@ async function uiTests(browser) {
     });
     await page.waitForTimeout(200);
     const meta = await page.locator('#resultMeta').textContent();
-    if (meta.includes('34曲')) ok(`編集: 新着フィルタ ${meta}`);
-    else fail('編集: 新着34曲', meta);
+    if (meta.includes('50曲')) ok(`編集: 新着フィルタ ${meta}`);
+    else fail('編集: 新着50曲', meta);
     const h = await page.locator('#narrowFilterRow .chip', { hasText: '新着' }).evaluate((el) => el.offsetHeight);
     if (h >= 34) ok(`編集: 新着chip 高さ ${h}px`);
     else fail('編集: 新着chip タップ領域', String(h));
