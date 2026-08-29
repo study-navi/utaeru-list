@@ -24,6 +24,10 @@ const creditMatch = hiro.match(/<aside class="song-data-credit"[\s\S]*?<\/aside>
 if (!creditMatch) throw new Error('song-data-credit block not found in hiro.html');
 const songDataCreditHtml = creditMatch[0];
 
+const operatorCreditMatch = hiro.match(/<p class="operator-credit"[\s\S]*?<\/p>/);
+if (!operatorCreditMatch) throw new Error('operator-credit block not found in hiro.html');
+const operatorCreditHtml = operatorCreditMatch[0];
+
 const viewerStart = hiro.indexOf('// @genre-lookup-inject');
 const viewerEnd = hiro.lastIndexOf('render();');
 if (viewerStart < 0 || viewerEnd < 0) throw new Error('viewer script block not found in hiro.html');
@@ -123,6 +127,7 @@ ${css}
   <footer class="catalog-footer">
     データ提供元：Mirrativ（ミラティブ）内カラオケアプリ「エモカラ」の楽曲一覧を個人配布しているGoogle Driveより取得（2026/7/28時点のカタログ）。配信者が歌える曲として選択したものを掲載しています。配信状況や仕様変更により、実際に歌える曲は変動する場合があります。
   </footer>
+  ${operatorCreditHtml}
 </div>
 
 <script>
