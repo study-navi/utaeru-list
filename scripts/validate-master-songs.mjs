@@ -17,8 +17,8 @@ function fail(msg, detail) {
   console.error('FAIL:', msg, detail ? `— ${detail}` : '');
 }
 
-if (songs.length !== 2002) fail('2,002曲', String(songs.length));
-else ok('2,002曲');
+if (songs.length !== 2033) fail('2,033曲', String(songs.length));
+else ok('2,033曲');
 
 const ids = new Set();
 for (const s of songs) {

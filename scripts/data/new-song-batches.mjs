@@ -8,7 +8,7 @@
  */
 
 /** @type {string} 現在の新着バッチ ID */
-export const CURRENT_NEW_BATCH = 'batch-2026-emokara-02';
+export const CURRENT_NEW_BATCH = 'batch-2026-emokara-03';
 
 /**
  * @typedef {{ title: string, artist: string, titleNeedsReview?: boolean, note?: string }} BatchSongEntry
@@ -137,6 +137,44 @@ export const NEW_SONG_BATCHES = [
       { title: 'ブラザービート', artist: 'Snow Man' },
       { title: 'フューチャー・イヴ', artist: 'sasakure.UK' },
       { title: '夢をみせて', artist: 'Co shu Nie' },
+    ],
+  },
+  {
+    id: 'batch-2026-emokara-03',
+    label: 'エモカラ新着（2026-09 提供分）',
+    source: 'emokara-screenshots-2026-09-3pages',
+    songs: [
+      { title: 'スキスキDieスキ超Ayeシテル', artist: '宝鐘マリン' },
+      { title: 'DARMA GRAND PRIX', artist: 'ヨルシカ' },
+      { title: 'シャケナベイベー', artist: 'AKASAKI' },
+      { title: '日記', artist: 'MACO' },
+      { title: 'あなたの彼女', artist: 'MACO' },
+      { title: 'キャットフード', artist: 'doriko' },
+      { title: 'サンタマリア', artist: '米津玄師' },
+      { title: '春風', artist: 'Rihwa' },
+      { title: 'Orange Iris《レコおと》', artist: 'こすぴ' },
+      { title: 'spectrum《レコおと》', artist: 'シマエナガ' },
+      { title: 'あんた', artist: 'ティーナ・カリーナ' },
+      { title: 'power of the dream', artist: 'lol' },
+      { title: 'Bouquet', artist: '家入レオ' },
+      { title: 'HELP', artist: 'flumpool' },
+      { title: 'クエスチョン', artist: 'meiyo' },
+      { title: '魔法が解けたら', artist: 'Saucy Dog' },
+      { title: 'チャンピオン', artist: 'Kanaria' },
+      { title: 'アルビレオ', artist: 'ロクデナシ' },
+      { title: 'アンバランスなKissをして', artist: '高橋ひろ' },
+      { title: 'ひとりじゃない', artist: 'DEEN' },
+      { title: '僕たちの行方', artist: '高橋瞳' },
+      { title: 'やさしい気持ち', artist: 'CHARA' },
+      { title: 'There will be love there -愛のある場所-', artist: 'the brilliant green' },
+      { title: 'Stage of the ground', artist: 'BUMP OF CHICKEN' },
+      { title: '19 Memories', artist: '加藤ミリヤ' },
+      { title: 'しょうちのすけ', artist: '推定少女' },
+      { title: 'Prisoner Of Love', artist: '宇多田ヒカル' },
+      { title: 'オルフェ', artist: '宮野真守' },
+      { title: 'One day', artist: 'The ROOTLESS' },
+      { title: 'ソプラノ', artist: 'HERO' },
+      { title: 'ふたりずっと', artist: 'MACO' },
     ],
   },
 ];

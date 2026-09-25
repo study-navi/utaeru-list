@@ -23,19 +23,19 @@ function fail(msg, detail) {
 
 function unitTests() {
   const batch = getCurrentBatch();
-  if (batch.songs.length === 50) ok('抽出50曲（重複なし）');
+  if (batch.songs.length === 31) ok('抽出31曲（重複なし）');
   else fail('曲数', String(batch.songs.length));
 
   const titles = batch.songs.map((s) => `${s.artist}|${s.title}`);
-  if (new Set(titles).size === 50) ok('重複除外後50曲');
+  if (new Set(titles).size === 31) ok('重複除外後31曲');
   else fail('重複あり', String(new Set(titles).size));
 
   const songs = parseMasterSongsFromIndexHtml(fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'));
-  if (songs.length === 2002) ok('MASTER_SONGS 2002曲');
+  if (songs.length === 2033) ok('MASTER_SONGS 2033曲');
   else fail('MASTER_SONGS曲数', String(songs.length));
 
   const report = runBatchMatchReport(songs);
-  if (report.registered.length === 50) ok(`登録済み ${report.registered.length}件`);
+  if (report.registered.length === 31) ok(`登録済み ${report.registered.length}件`);
   else fail('登録済み', String(report.registered.length));
   if (report.unregistered.length === 0) ok('未登録0件');
   else fail('未登録', String(report.unregistered.length));
@@ -43,7 +43,7 @@ function unitTests() {
   else fail('要確認', String(report.needsReview.length));
 
   const lookup = buildNewBatchLookup(songs, [getCurrentBatch()]);
-  if (Object.keys(lookup).length === 50) ok('lookup 50キー');
+  if (Object.keys(lookup).length === 31) ok('lookup 31キー');
   else fail('lookup keys', String(Object.keys(lookup).length));
 
   const html404 = fs.readFileSync(path.join(ROOT, '404.html'), 'utf8');
@@ -76,7 +76,7 @@ function buildViewerFixture(name, { songs, songMeta = {} }) {
 }
 
 async function uiTests(browser) {
-  // Editor: 新着フィルタで50曲
+  // Editor: 新着フィルタで31曲
   {
     const page = await browser.newPage({ viewport: { width: 375, height: 800 } });
     const errors = [];
@@ -92,8 +92,8 @@ async function uiTests(browser) {
     });
     await page.waitForTimeout(200);
     const meta = await page.locator('#resultMeta').textContent();
-    if (meta.includes('50曲')) ok(`編集: 新着フィルタ ${meta}`);
-    else fail('編集: 新着50曲', meta);
+    if (meta.includes('31曲')) ok(`編集: 新着フィルタ ${meta}`);
+    else fail('編集: 新着31曲', meta);
     const h = await page.locator('#narrowFilterRow .chip', { hasText: '新着' }).evaluate((el) => el.offsetHeight);
     if (h >= 34) ok(`編集: 新着chip 高さ ${h}px`);
     else fail('編集: 新着chip タップ領域', String(h));
@@ -106,8 +106,8 @@ async function uiTests(browser) {
   {
     const url = buildViewerFixture('viewer', {
       songs: [
-        { k: 'あ', y: 'あいみょん', a: 'あいみょん', t: '生きていたんだよな' },
-        { k: 'お', y: 'おふぃしゃるひげだんでぃずむ', a: 'Official髭男dism', t: 'SOULSOUP' },
+        { k: 'よ', y: 'よるしか', a: 'ヨルシカ', t: 'DARMA GRAND PRIX' },
+        { k: 'い', y: 'いえいりれお', a: '家入レオ', t: 'Bouquet' },
         { k: 'あ', y: 'あいこ', a: 'aiko', t: 'カブトムシ' },
       ],
     });
@@ -133,7 +133,7 @@ async function uiTests(browser) {
   {
     const url = buildViewerFixture('genre-and', {
       songs: [
-        { k: 'ね', y: 'ねこだてこたつ', a: '猫舘こたつ', t: '黙ってロックをやれって言ってんの!' },
+        { k: 'よ', y: 'よるしか', a: 'ヨルシカ', t: 'DARMA GRAND PRIX' },
         { k: 'ぼ', y: 'ぼかろ', a: 'cosMo@暴走P', t: '初音ミクの暴走' },
       ],
     });
@@ -164,7 +164,7 @@ async function uiTests(browser) {
 
   for (const w of [320, 1280]) {
     const url = buildViewerFixture(`vp-${w}`, {
-      songs: [{ k: 'あ', y: 'あいみょん', a: 'あいみょん', t: '生きていたんだよな' }],
+      songs: [{ k: 'ら', y: 'らっどうぃんぷす', a: 'RADWIMPS', t: 'DARMA GRAND PRIX' }],
     });
     const page = await browser.newPage({ viewport: { width: w, height: 800 } });
     await page.goto(url, { waitUntil: 'domcontentloaded' });
