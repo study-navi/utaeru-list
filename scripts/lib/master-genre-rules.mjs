@@ -10,7 +10,9 @@
 import { ANIME_VERIFIED_PHASE4, GENRE_CORRECTIONS_PHASE4 } from '../data/anime-verified-phase4.mjs';
 import { GENRE_VERIFIED_PHASE5, GENRE_CORRECTIONS_PHASE5 } from '../data/genre-verified-phase5.mjs';
 
-export const MASTER_GENRE_LABELS = ['J-POP', 'アニソン', 'ボカロ', '洋楽', '演歌', 'その他'];
+import { IDOL_SONG_KEYS } from '../data/idol-songs.mjs';
+
+export const MASTER_GENRE_LABELS = ['J-POP', 'アニソン', 'ボカロ', 'アイドル曲', '洋楽', '演歌', 'その他'];
 
 /** VOCALOID P名義でカタログ上すべてボカロ扱いできるアーティスト（本人歌唱曲は曲単位で除外） */
 export const VOCALOID_ONLY_ARTISTS = new Set([
@@ -325,7 +327,9 @@ export function enrichWithJPop(song, genres) {
  */
 export function classifySongGenres(song) {
   const base = classifyBaseGenres(song);
-  return enrichWithJPop(song, base);
+  const genres = enrichWithJPop(song, base);
+  if (IDOL_SONG_KEYS.has(song.a + '\u0001' + song.t)) genres.push('アイドル曲');
+  return normalizeGenreList(genres);
 }
 
 /** @param {{ genres?: string[] }} song */
