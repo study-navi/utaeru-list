@@ -32,7 +32,7 @@ for (const s of songs) {
   if (s.tk !== s.ty[0]) fail('tk === ty[0]', `${s.id} tk=${s.tk} ty=${s.ty}`);
   if (s.genres !== undefined) {
     if (!Array.isArray(s.genres)) fail('genresは配列', String(s.id));
-    const allowed = new Set(['J-POP', 'アニソン', 'ボカロ', '洋楽', '演歌', 'その他']);
+    const allowed = new Set(['J-POP', 'アニソン', 'ボカロ', 'アイドル曲', '洋楽', '演歌', 'その他']);
     for (const g of s.genres) {
       if (!allowed.has(g)) fail('genres値', `${s.id}:${g}`);
     }

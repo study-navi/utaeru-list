@@ -85,6 +85,7 @@ const NARROW_FILTER_OPTIONS = [
   { kind: 'genre', value: 'J-POP', label: 'J-POP' },
   { kind: 'genre', value: 'アニソン', label: 'アニソン' },
   { kind: 'genre', value: 'ボカロ', label: 'ボカロ' },
+  { kind: 'genre', value: 'アイドル曲', label: 'アイドル曲' },
   { kind: 'genre', value: '洋楽', label: '洋楽' },
   { kind: 'genre', value: '演歌', label: '演歌' },
   { kind: 'genre', value: 'その他', label: 'その他' },
