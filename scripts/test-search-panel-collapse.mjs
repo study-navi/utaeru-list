@@ -56,6 +56,7 @@ async function measureListTop(page) {
       ariaExpanded: document.getElementById('songSearchPanelToggle')?.getAttribute('aria-expanded'),
       summary: document.getElementById('songSearchPanelSummary')?.textContent?.trim() || '',
       randomOutside: !!randomOutside && !document.getElementById('songSearchPanel')?.contains(randomOutside),
+      gyoOutside: !!document.getElementById('gyoRow') && !document.getElementById('songSearchPanel')?.contains(document.getElementById('gyoRow')),
       markInside: !!markInside,
       scroll: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
       panelH: panel?.offsetHeight ?? 0,
@@ -99,8 +100,8 @@ async function checkViewer(page, url, label, width) {
     ok(`${label}: 条件要約 ${init.summary.slice(0, 40)}…`);
   } else fail(`${label}: 条件要約`, init.summary);
 
-  if (init.randomOutside && init.markInside) ok(`${label}: ランダム外・マーク内`);
-  else fail(`${label}: 配置`, JSON.stringify({ randomOutside: init.randomOutside, markInside: init.markInside }));
+  if (init.randomOutside && init.markInside && init.gyoOutside) ok(`${label}: ランダム外・五十音外・マーク内`);
+  else fail(`${label}: 配置`, JSON.stringify({ randomOutside: init.randomOutside, gyoOutside: init.gyoOutside, markInside: init.markInside }));
 
   if (!init.scroll) ok(`${label}: 横スクロールなし`);
   else fail(`${label}: 横スクロール`);

@@ -445,12 +445,18 @@
   }
   .clear-btn:hover { background: var(--surface-2); }
 
+  .gyo-filter {
+    margin-top: 8px;
+  }
   .gyo-row {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     margin: 10px 0 2px;
   }
+  .gyo-filter .gyo-row { margin: 0; }
+  .gyo-filter .gyo-sub-row { margin-top: 6px; }
+  .gyo-sub-row[hidden] { display: none !important; }
   .chip {
     font-size: 13px;
     min-height: 34px;
@@ -918,8 +924,6 @@
             <input type="search" id="searchInput" placeholder="アーティスト名を入力" autocomplete="off" />
             <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
           </div>
-          <div class="gyo-row" id="gyoRow"></div>
-          <div class="gyo-row gyo-sub-row" id="gyoSubRow" hidden aria-label="五十音 1文字"></div>
           <div class="sort-control-row">
             <label class="sort-control-label" for="sortSelect">並び替え</label>
             <select class="sort-control-select" id="sortSelect" aria-label="並び替え"></select>
@@ -941,6 +945,10 @@
           </div>
         </div>
       </div>
+    </div>
+    <div class="gyo-filter" aria-label="五十音">
+      <div class="gyo-row" id="gyoRow"></div>
+      <div class="gyo-row gyo-sub-row" id="gyoSubRow" hidden aria-label="五十音 1文字"></div>
     </div>
   </div>
 
