@@ -1515,6 +1515,8 @@ function setSearchTarget(target) {
   if (target !== 'title' && target !== 'artist') return;
   searchTarget = target;
   activeKana = null;
+  sortUserChosen = false;
+  listDisplayMode = target === 'title' ? 'song' : 'artist';
   document.querySelectorAll('.search-mode-tab').forEach(tab => {
     const active = tab.dataset.target === target;
     tab.classList.toggle('active', active);
@@ -1782,6 +1784,11 @@ function effectiveListDisplayMode(q) {
 }
 function setListDisplayMode(mode) {
   if (mode !== 'artist' && mode !== 'song') return;
+  const target = mode === 'song' ? 'title' : 'artist';
+  if (searchTarget !== target) {
+    setSearchTarget(target);
+    return;
+  }
   listDisplayMode = mode;
   syncListDisplaySegments(searchInput.value.trim());
   render();
