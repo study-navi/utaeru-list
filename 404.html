@@ -1325,6 +1325,7 @@ const GYO = [
 ];
 
 function gyoOf(kanaHead) {
+  if (!kanaHead) return null;
   for (const g of GYO) {
     if (g.chars.includes(kanaHead)) return g.label;
   }
@@ -2151,7 +2152,14 @@ function render() {
   const sortedGroups = buildSortedArtistGroups(filtered);
 
   const MAX_GROUPS = 400;
-  const shown = sortedGroups.slice(0, MAX_GROUPS);
+  const head = sortedGroups.slice(0, MAX_GROUPS);
+  const extra = [];
+  for (let i = MAX_GROUPS; i < sortedGroups.length; i++) {
+    const group = sortedGroups[i];
+    if (group.songs.some(s => s && (s.customId || s.custom))) extra.push(group);
+  }
+  const shown = head.concat(extra);
+  const hiddenGroups = sortedGroups.length - shown.length;
   lastGroups = shown;
 
   if (isFlatListMode(q)) {
@@ -2160,10 +2168,10 @@ function render() {
     resultsEl.innerHTML = `<div class="artist-accordion">${shown.map((g, i) => artistAccordionHtml(g, q, i)).join('')}</div>`;
   }
 
-  if (sortedGroups.length > MAX_GROUPS) {
+  if (hiddenGroups > 0) {
     const note = document.createElement('div');
     note.className = 'result-meta';
-    note.textContent = `他 ${sortedGroups.length - MAX_GROUPS} 組は絞り込みを続けると表示されます`;
+    note.textContent = `他 ${hiddenGroups} 組は絞り込みを続けると表示されます`;
     resultsEl.appendChild(note);
   }
 }
