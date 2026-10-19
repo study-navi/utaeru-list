@@ -1800,7 +1800,7 @@ function syncListDisplaySegments(q) {
     const active = btn.dataset.layout === effective;
     btn.classList.toggle('active', active);
     btn.setAttribute('aria-selected', active ? 'true' : 'false');
-    btn.disabled = forced && btn.dataset.layout === 'artist';
+    btn.disabled = forced && btn.dataset.layout === 'artist' && searchTarget !== 'title';
   });
 }
 
