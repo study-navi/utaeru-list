@@ -44,6 +44,8 @@ export function readingFromParentheses(t) {
 const HAS_KANJI = /[\u4E00-\u9FFF]/;
 const HAS_KANA = /[\u3040-\u309F\u30A0-\u30FF]/;
 
+import { englishTitleToHiragana } from './english-to-kana.mjs';
+
 /** 漢字を含まない曲名は機械変換せずそのまま読みにできる */
 export function deriveTitleReadingSafe(t) {
   const comma = parseCommaCatalogTitle(t);
@@ -58,8 +60,11 @@ export function deriveTitleReadingSafe(t) {
   const main = titleForReading(t);
   if (HAS_KANJI.test(main)) return null;
   if (!main) return null;
+  if (/[A-Za-z]/.test(main)) {
+    const kana = englishTitleToHiragana(main);
+    if (kana) return kana;
+  }
   if (HAS_KANA.test(main)) return norm(toHiragana(main));
-  if (/^[A-Za-z0-9\s.+!?&'"-]+$/.test(main)) return norm(main);
   return null;
 }
 
