@@ -22,20 +22,33 @@ const RESERVED_STREAMER_IDS = new Set([
   '404', 'index', 'robots', 'sitemap',
 ]);
 
+// HP sync (利用者が好きなタイミングで自分のHPへ歌える曲リストを反映する機能)
+const HP_ADMIN_TOKEN_MIN_LEN = 16;
+const HP_MAX_SONGS = 5000;
+const HP_MAX_TEXT_LEN = 200;
+const HP_FEED_SCHEMA_VERSION = 1;
+// Utaemo のマスター曲データが使う標準ジャンル。これ以外の値は公開データに載せない。
+const HP_GENRES = ['J-POP', 'アニソン', 'ボカロ', 'アイドル曲', '洋楽', '演歌', 'その他'];
+// HP の読み込みコード(別オリジン)から認証情報なしで読む公開フィード専用。他のAPIには適用しない。
+const HP_FEED_CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Expose-Headers': 'ETag',
+};
+
 /** @type {{ keys: object[] | null, fetchedAt: number }} */
 const jwksCache = { keys: null, fetchedAt: 0 };
 
 export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin');
-    const cors = corsHeaders(origin, env);
-
-    if (request.method === 'OPTIONS') {
-      return corsPreflight(request, cors);
-    }
-
     const url = new URL(request.url);
     const path = url.pathname;
+    const isHpFeed = isHpFeedPath(path);
+    const cors = isHpFeed ? HP_FEED_CORS : corsHeaders(origin, env);
+
+    if (request.method === 'OPTIONS') {
+      return isHpFeed ? hpFeedPreflight() : corsPreflight(request, cors);
+    }
 
     try {
       let response;
@@ -68,6 +81,18 @@ export default {
         response = await handleDeleteStreamer(request, path, env);
       } else if (path === '/api/admin/stats' && request.method === 'GET') {
         response = await handleAdminStats(request, env);
+      } else if (isHpFeed && request.method === 'GET') {
+        response = await handleHpFeed(request, path, env);
+      } else if (path.startsWith('/api/streamer/') && path.endsWith('/hp-link') && request.method === 'GET') {
+        response = await handleHpLinkStatus(request, path, env);
+      } else if (path.startsWith('/api/streamer/') && path.endsWith('/hp-publish') && request.method === 'POST') {
+        response = await handleHpPublish(request, path, env);
+      } else if (path === '/api/admin/hp-links' && request.method === 'GET') {
+        response = await handleAdminHpLinksList(request, env);
+      } else if (path.startsWith('/api/admin/hp-links/') && request.method === 'PUT') {
+        response = await handleAdminHpLinkPut(request, path, env);
+      } else if (path.startsWith('/api/admin/hp-links/') && request.method === 'DELETE') {
+        response = await handleAdminHpLinkDelete(request, path, env);
       } else {
         response = json({ error: 'not_found' }, 404);
       }
@@ -744,8 +769,544 @@ async function handleAdminStats(request, env) {
 }
 
 // ---------------------------------------------------------------------------
+// HP sync — 利用者が「HPに反映する」を押した時点の曲リストだけをHPへ公開する
+//
+//   Utaemo の編集中データ ──(本人が反映操作)──▶ hp_published (最後に成功した公開データ) ◀── HP が読む
+//
+// - 紐づけ(hp_links)は制作者(管理者)だけが作成・解除できる。
+// - 反映できるのは、紐づいた Utaemo 公開ページIDの本人(Google ログイン or 編集キー)だけ。
+//   リクエストに連携先IDは含めず、サーバーが streamer_id から連携先を引く(=他人のHPには書けない)。
+// - 公開データは許可リスト方式で作り直す。メモ・マーク・タグ・認証情報などは構造上、載らない。
+// - 反映は revision による楽観ロック付きの単一UPSERT。失敗・連打・同時更新でも前回の公開データは壊れない。
+// ---------------------------------------------------------------------------
+
+function isHpFeedPath(path) {
+  return /^\/api\/hp\/[^/]+\/songs$/.test(path);
+}
+
+function hpFeedPreflight() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      ...HP_FEED_CORS,
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, If-None-Match',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
+}
+
+function isValidHpLinkId(id) {
+  if (typeof id !== 'string' || !/^[a-z0-9-]{3,40}$/.test(id)) return false;
+  if (id.startsWith('-') || id.endsWith('-') || id.includes('--')) return false;
+  return true;
+}
+
+function isMissingTableError(err) {
+  return String(err && err.message ? err.message : err).includes('no such table');
+}
+
+function noStore(response) {
+  response.headers.set('Cache-Control', 'no-store');
+  return response;
+}
+
+function hpSongKey(song) {
+  return `${song.a}\u0001${song.t}`;
+}
+
+function sanitizeHpText(value) {
+  if (typeof value !== 'string') return '';
+  // 制御文字(曲キーの区切りの \u0001 を含む)だけ除く。正規の曲名は変えない。
+  const text = value.replace(/[\u0000-\u001f\u007f\u2028\u2029]/g, '');
+  return text.length > HP_MAX_TEXT_LEN ? text.slice(0, HP_MAX_TEXT_LEN) : text;
+}
+
+/**
+ * クライアントから届いた曲配列を、HPに公開してよい形へ作り直す(許可リスト方式)。
+ * 戻り値の曲は { t, a, y?, ty?, genres } だけ。それ以外のフィールドは捨てる。
+ */
+function sanitizeHpSongs(input) {
+  if (!Array.isArray(input)) return { ok: false, message: 'songs must be an array' };
+  if (input.length > HP_MAX_SONGS) return { ok: false, message: `too many songs (max ${HP_MAX_SONGS})` };
+
+  const songs = [];
+  const seen = new Set();
+  for (const raw of input) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      return { ok: false, message: 'each song must be an object' };
+    }
+    const t = sanitizeHpText(raw.t);
+    const a = sanitizeHpText(raw.a);
+    if (!t) return { ok: false, message: 'song.t (title) is required' };
+
+    const key = `${a}\u0001${t}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    const song = { t, a };
+    const y = sanitizeHpText(raw.y);
+    const ty = sanitizeHpText(raw.ty);
+    if (y) song.y = y;
+    if (ty) song.ty = ty;
+
+    const genres = [];
+    if (Array.isArray(raw.genres)) {
+      for (const g of raw.genres) {
+        if (HP_GENRES.includes(g) && !genres.includes(g)) genres.push(g);
+      }
+    }
+    song.genres = genres;
+    songs.push(song);
+  }
+  return { ok: true, songs };
+}
+
+function hpSongSignature(song) {
+  return JSON.stringify([
+    song.t, song.a, song.y || '', song.ty || '',
+    [...(song.genres || [])].sort(),
+  ]);
+}
+
+/** 前回反映分(prev)と今回(next)の差分。曲キー(アーティスト+曲名)で突き合わせる。 */
+function diffHpSongs(prev, next) {
+  const prevMap = new Map(prev.map((s) => [hpSongKey(s), s]));
+  const nextMap = new Map(next.map((s) => [hpSongKey(s), s]));
+  const added = [];
+  const changed = [];
+  const removed = [];
+  for (const [key, song] of nextMap) {
+    if (!prevMap.has(key)) added.push(key);
+    else if (hpSongSignature(prevMap.get(key)) !== hpSongSignature(song)) changed.push(key);
+  }
+  for (const key of prevMap.keys()) {
+    if (!nextMap.has(key)) removed.push(key);
+  }
+  return { added, changed, removed };
+}
+
+function parseHpData(text) {
+  try {
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed && parsed.songs) ? parsed.songs : [];
+  } catch {
+    return [];
+  }
+}
+
+/** HPが読む公開フィード。認証なし・読み取り専用。最後に反映が成功したデータだけを返す。 */
+async function handleHpFeed(request, path, env) {
+  const linkId = path.split('/')[3];
+  if (!isValidHpLinkId(linkId)) {
+    return json({ error: 'invalid_link_id' }, 400);
+  }
+
+  let head;
+  try {
+    head = await env.DB.prepare(`
+      SELECT p.revision AS revision
+      FROM hp_published p INNER JOIN hp_links l ON l.link_id = p.link_id
+      WHERE p.link_id = ?
+    `).bind(linkId).first();
+  } catch (err) {
+    if (isMissingTableError(err)) return json({ error: 'not_found' }, 404);
+    throw err;
+  }
+
+  if (!head) {
+    return json({ error: 'not_found' }, 404);
+  }
+
+  // 常に最新を返す(no-cache)。変わっていなければ ETag で 304 にして転送量とD1読み取りを抑える。
+  const baseHeaders = { 'Cache-Control': 'no-cache' };
+  const etagFor = (revision) => `"r${revision}"`;
+  if (request.headers.get('If-None-Match') === etagFor(head.revision)) {
+    return new Response(null, { status: 304, headers: { ...baseHeaders, ETag: etagFor(head.revision) } });
+  }
+
+  const row = await env.DB.prepare(
+    'SELECT revision, published_at, song_count, data FROM hp_published WHERE link_id = ?',
+  ).bind(linkId).first();
+  if (!row) {
+    return json({ error: 'not_found' }, 404);
+  }
+
+  const response = json({
+    schemaVersion: HP_FEED_SCHEMA_VERSION,
+    linkId,
+    revision: row.revision,
+    publishedAt: row.published_at,
+    songCount: row.song_count,
+    songs: parseHpData(row.data),
+  }, 200);
+  response.headers.set('Cache-Control', baseHeaders['Cache-Control']);
+  response.headers.set('ETag', etagFor(row.revision));
+  return response;
+}
+
+/** 連携状況(本人のみ)。Utaemo の「HPに反映する」画面が、連携先・最終反映・前回反映分の差分元を取得する。 */
+async function handleHpLinkStatus(request, path, env) {
+  const streamerId = extractStreamerPathId(path, '/hp-link');
+  if (!isValidStreamerId(streamerId)) {
+    return noStore(json({ error: streamerIdError(streamerId) }, 400));
+  }
+
+  const rl = await checkRateLimit(env, 'RL_WRITE_AUTH', rateLimitClientKey(request, 'hp-link'));
+  if (!rl.ok) {
+    return noStore(json({ error: 'rate_limited' }, 429));
+  }
+
+  const auth = await authorizeOwner(request, env, streamerId);
+  if (!auth.ok) {
+    return noStore(json({ error: auth.error }, auth.status));
+  }
+
+  let link;
+  let published = null;
+  try {
+    link = await env.DB.prepare(
+      'SELECT link_id, hp_name, hp_url FROM hp_links WHERE streamer_id = ?',
+    ).bind(streamerId).first();
+    if (link) {
+      published = await env.DB.prepare(
+        'SELECT revision, published_at, song_count, data FROM hp_published WHERE link_id = ?',
+      ).bind(link.link_id).first();
+    }
+  } catch (err) {
+    // マイグレーション未適用でも、HP連携を使わない利用者の通常利用を妨げない。
+    if (isMissingTableError(err)) return noStore(json({ linked: false }, 200));
+    throw err;
+  }
+
+  if (!link) {
+    return noStore(json({ linked: false }, 200));
+  }
+
+  return noStore(json({
+    linked: true,
+    linkId: link.link_id,
+    hpName: link.hp_name,
+    hpUrl: link.hp_url,
+    published: published ? {
+      revision: published.revision,
+      publishedAt: published.published_at,
+      songCount: published.song_count,
+      songs: parseHpData(published.data),
+    } : null,
+  }, 200));
+}
+
+/** 「この内容で反映する」。本人だけが、自分に紐づいたHPの公開データを更新できる。 */
+async function handleHpPublish(request, path, env) {
+  const streamerId = extractStreamerPathId(path, '/hp-publish');
+  if (!isValidStreamerId(streamerId)) {
+    return noStore(json({ error: streamerIdError(streamerId) }, 400));
+  }
+
+  const rl = await checkRateLimit(env, 'RL_WRITE_AUTH', rateLimitClientKey(request, 'hp-publish'));
+  if (!rl.ok) {
+    return noStore(json({ error: 'rate_limited' }, 429));
+  }
+
+  const auth = await authorizeOwner(request, env, streamerId);
+  if (!auth.ok) {
+    return noStore(json({ error: auth.error }, auth.status));
+  }
+
+  const rawBody = await readBodyWithLimit(request, MAX_BODY_BYTES);
+  if (rawBody.error) {
+    return noStore(json({ error: rawBody.error }, rawBody.status));
+  }
+
+  let body;
+  try {
+    body = JSON.parse(rawBody.text);
+  } catch {
+    return noStore(json({ error: 'invalid_body' }, 400));
+  }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return noStore(json({ error: 'invalid_body', message: 'body must be an object' }, 400));
+  }
+  if (!Number.isInteger(body.expectedRevision) || body.expectedRevision < 0) {
+    return noStore(json({ error: 'invalid_body', message: 'expectedRevision must be a non-negative integer' }, 400));
+  }
+
+  const clean = sanitizeHpSongs(body.songs);
+  if (!clean.ok) {
+    return noStore(json({ error: 'invalid_body', message: clean.message }, 400));
+  }
+  if (clean.songs.length === 0 && body.confirmEmpty !== true) {
+    // 空のリストは「HPの全曲が非表示になる」操作。明示確認(confirmEmpty)がなければ受け付けない。
+    return noStore(json({ error: 'empty_requires_confirmation' }, 400));
+  }
+
+  let link;
+  let current;
+  try {
+    link = await env.DB.prepare(
+      'SELECT link_id FROM hp_links WHERE streamer_id = ?',
+    ).bind(streamerId).first();
+    if (!link) {
+      return noStore(json({ error: 'hp_not_linked' }, 404));
+    }
+    current = await env.DB.prepare(
+      'SELECT revision, published_at, song_count, data FROM hp_published WHERE link_id = ?',
+    ).bind(link.link_id).first();
+  } catch (err) {
+    if (isMissingTableError(err)) return noStore(json({ error: 'hp_not_linked' }, 404));
+    throw err;
+  }
+
+  const streamer = await env.DB.prepare(
+    'SELECT deleted_at FROM streamers WHERE streamer_id = ?',
+  ).bind(streamerId).first();
+  if (!streamer || streamer.deleted_at) {
+    return noStore(json({ error: 'page_unpublished' }, 403));
+  }
+
+  const currentRevision = current ? current.revision : 0;
+  if (body.expectedRevision !== currentRevision) {
+    // 別の端末・別タブ・連打で先に更新された。画面側に最新状態を読み直してもらう。
+    return noStore(json({ error: 'stale_revision', currentRevision }, 409));
+  }
+
+  const previousSongs = current ? parseHpData(current.data) : [];
+  const diff = diffHpSongs(previousSongs, clean.songs);
+  const changeCount = diff.added.length + diff.changed.length + diff.removed.length;
+
+  if (current && changeCount === 0) {
+    // 内容が前回と同じ。何も書き換えず、成功として返す(冪等)。
+    return noStore(json({
+      ok: true,
+      unchanged: true,
+      revision: current.revision,
+      publishedAt: current.published_at,
+      songCount: current.song_count,
+      added: 0,
+      changed: 0,
+      removed: 0,
+    }, 200));
+  }
+
+  const now = new Date().toISOString();
+  const data = JSON.stringify({ songs: clean.songs });
+  const nextRevision = currentRevision + 1;
+
+  try {
+    if (!current) {
+      await env.DB.prepare(`
+        INSERT INTO hp_published (link_id, revision, published_at, song_count, data)
+        VALUES (?, ?, ?, ?, ?)
+      `).bind(link.link_id, nextRevision, now, clean.songs.length, data).run();
+    } else {
+      const result = await env.DB.prepare(`
+        UPDATE hp_published
+        SET revision = ?, published_at = ?, song_count = ?, data = ?
+        WHERE link_id = ? AND revision = ?
+      `).bind(nextRevision, now, clean.songs.length, data, link.link_id, currentRevision).run();
+      const changes = result && result.meta ? result.meta.changes : 0;
+      if (changes !== 1) {
+        return noStore(json({ error: 'stale_revision', currentRevision }, 409));
+      }
+    }
+  } catch (err) {
+    if (isD1UniqueViolation(err)) {
+      return noStore(json({ error: 'stale_revision', currentRevision }, 409));
+    }
+    throw err;
+  }
+
+  return noStore(json({
+    ok: true,
+    unchanged: false,
+    revision: nextRevision,
+    publishedAt: now,
+    songCount: clean.songs.length,
+    added: diff.added.length,
+    changed: diff.changed.length,
+    removed: diff.removed.length,
+  }, 200));
+}
+
+// ---- 管理者(制作者)専用: 連携先の紐づけ・解除 -------------------------------------------------
+// 専用シークレット HP_ADMIN_TOKEN は Worker の secret にだけ置く(公開コード・ブラウザには置かない)。
+
+async function authorizeHpAdmin(request, env) {
+  const rl = await checkRateLimit(env, 'RL_WRITE_AUTH', rateLimitClientKey(request, 'hp-admin'));
+  if (!rl.ok) return { ok: false, status: 429, error: 'rate_limited' };
+
+  const expected = env.HP_ADMIN_TOKEN;
+  const token = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (
+    typeof expected !== 'string'
+    || expected.length < HP_ADMIN_TOKEN_MIN_LEN
+    || typeof token !== 'string'
+    || !timingSafeEqual(token, expected)
+  ) {
+    return { ok: false, status: 401, error: 'unauthorized' };
+  }
+  return { ok: true };
+}
+
+function normalizeHpUrl(raw) {
+  if (typeof raw !== 'string' || raw.length > 300) return null;
+  let parsed;
+  try {
+    parsed = new URL(raw.trim());
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== 'https:' || !parsed.hostname || parsed.username || parsed.password) return null;
+  return parsed.href;
+}
+
+async function handleAdminHpLinksList(request, env) {
+  const auth = await authorizeHpAdmin(request, env);
+  if (!auth.ok) return noStore(json({ error: auth.error }, auth.status));
+
+  try {
+    const { results } = await env.DB.prepare(`
+      SELECT l.link_id, l.streamer_id, l.hp_name, l.hp_url, l.created_at,
+             p.revision, p.published_at, p.song_count
+      FROM hp_links l LEFT JOIN hp_published p ON p.link_id = l.link_id
+      ORDER BY l.created_at
+    `).all();
+    return noStore(json({
+      links: (results || []).map((r) => ({
+        linkId: r.link_id,
+        streamerId: r.streamer_id,
+        hpName: r.hp_name,
+        hpUrl: r.hp_url,
+        createdAt: r.created_at,
+        revision: r.revision ?? null,
+        publishedAt: r.published_at ?? null,
+        songCount: r.song_count ?? null,
+      })),
+    }, 200));
+  } catch (err) {
+    if (isMissingTableError(err)) return noStore(json({ error: 'migration_required' }, 500));
+    throw err;
+  }
+}
+
+async function handleAdminHpLinkPut(request, path, env) {
+  const auth = await authorizeHpAdmin(request, env);
+  if (!auth.ok) return noStore(json({ error: auth.error }, auth.status));
+
+  const linkId = path.slice('/api/admin/hp-links/'.length);
+  if (!isValidHpLinkId(linkId)) {
+    return noStore(json({ error: 'invalid_link_id' }, 400));
+  }
+
+  const rawBody = await readBodyWithLimit(request, 16 * 1024);
+  if (rawBody.error) return noStore(json({ error: rawBody.error }, rawBody.status));
+  let body;
+  try {
+    body = JSON.parse(rawBody.text);
+  } catch {
+    return noStore(json({ error: 'invalid_body' }, 400));
+  }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return noStore(json({ error: 'invalid_body' }, 400));
+  }
+
+  const streamerId = body.streamerId;
+  if (!isValidStreamerId(streamerId)) {
+    return noStore(json({ error: streamerIdError(streamerId) }, 400));
+  }
+  const hpName = typeof body.hpName === 'string' ? body.hpName.trim() : '';
+  if (!hpName || hpName.length > 60) {
+    return noStore(json({ error: 'invalid_body', message: 'hpName must be 1-60 characters' }, 400));
+  }
+  const hpUrl = normalizeHpUrl(body.hpUrl);
+  if (!hpUrl) {
+    return noStore(json({ error: 'invalid_body', message: 'hpUrl must be an https URL' }, 400));
+  }
+
+  // 連携先にできるのは「公開中で、所有者が決まっているUtaemoページ」だけ。
+  // 所有者のいない/未公開のIDに紐づけると、第三者がそのIDを取得してHPを更新できてしまうため。
+  const streamer = await env.DB.prepare(
+    'SELECT deleted_at FROM streamers WHERE streamer_id = ?',
+  ).bind(streamerId).first();
+  if (!streamer) return noStore(json({ error: 'streamer_not_found' }, 404));
+  if (streamer.deleted_at) return noStore(json({ error: 'page_unpublished' }, 409));
+
+  const googleOwner = await env.DB.prepare(
+    'SELECT user_id FROM streamer_owners WHERE streamer_id = ?',
+  ).bind(streamerId).first();
+  const keyOwner = googleOwner ? null : await env.DB.prepare(
+    'SELECT streamer_id FROM streamer_edit_keys WHERE streamer_id = ? AND revoked_at IS NULL',
+  ).bind(streamerId).first();
+  if (!googleOwner && !keyOwner) return noStore(json({ error: 'streamer_unowned' }, 409));
+
+  try {
+    const byLink = await env.DB.prepare(
+      'SELECT streamer_id FROM hp_links WHERE link_id = ?',
+    ).bind(linkId).first();
+    if (byLink && byLink.streamer_id !== streamerId) {
+      return noStore(json({ error: 'link_id_in_use' }, 409));
+    }
+    const byStreamer = await env.DB.prepare(
+      'SELECT link_id FROM hp_links WHERE streamer_id = ?',
+    ).bind(streamerId).first();
+    if (byStreamer && byStreamer.link_id !== linkId) {
+      return noStore(json({ error: 'streamer_already_linked', linkId: byStreamer.link_id }, 409));
+    }
+
+    const now = new Date().toISOString();
+    await env.DB.prepare(`
+      INSERT INTO hp_links (link_id, streamer_id, hp_name, hp_url, created_at)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(link_id) DO UPDATE SET hp_name = excluded.hp_name, hp_url = excluded.hp_url
+    `).bind(linkId, streamerId, hpName, hpUrl, now).run();
+
+    return noStore(json({ ok: true, linkId, streamerId, hpName, hpUrl, created: !byLink }, 200));
+  } catch (err) {
+    if (isMissingTableError(err)) return noStore(json({ error: 'migration_required' }, 500));
+    if (isD1UniqueViolation(err)) return noStore(json({ error: 'streamer_already_linked' }, 409));
+    throw err;
+  }
+}
+
+async function handleAdminHpLinkDelete(request, path, env) {
+  const auth = await authorizeHpAdmin(request, env);
+  if (!auth.ok) return noStore(json({ error: auth.error }, auth.status));
+
+  const linkId = path.slice('/api/admin/hp-links/'.length);
+  if (!isValidHpLinkId(linkId)) {
+    return noStore(json({ error: 'invalid_link_id' }, 400));
+  }
+
+  try {
+    const existing = await env.DB.prepare(
+      'SELECT link_id FROM hp_links WHERE link_id = ?',
+    ).bind(linkId).first();
+    if (!existing) return noStore(json({ error: 'not_found' }, 404));
+
+    // 解除すると公開フィードは 404 になり、HP側は従来のデータ元に戻る。Utaemo側の編集データには触れない。
+    await env.DB.batch([
+      env.DB.prepare('DELETE FROM hp_published WHERE link_id = ?').bind(linkId),
+      env.DB.prepare('DELETE FROM hp_links WHERE link_id = ?').bind(linkId),
+    ]);
+    return noStore(json({ ok: true, linkId, deleted: true }, 200));
+  } catch (err) {
+    if (isMissingTableError(err)) return noStore(json({ error: 'migration_required' }, 500));
+    throw err;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Authorization
 // ---------------------------------------------------------------------------
+
+/**
+ * Utaemo 公開ページの本人(Google セッションの所有者 or 有効な編集キー)だけを通す。
+ * 開発用バイパス(X-Utaeru-Dev-Token)は意図的に受け付けない。
+ */
+async function authorizeOwner(request, env, streamerId) {
+  return authorizeOwnerDelete(request, env, streamerId);
+}
 
 async function authorizeOwnerDelete(request, env, streamerId) {
   const editKey = request.headers.get(EDIT_KEY_HEADER);
