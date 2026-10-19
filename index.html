@@ -450,6 +450,52 @@
   .modal-card h3 { margin: 0 0 8px; font-size: 17px; font-weight: 800; }
   .modal-card p { margin: 0 0 var(--ui-gap-md); font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
 
+  /* ---- HP連携（「HPに反映する」） ---- */
+  .bar-hp-chip { border: 0; cursor: pointer; font: inherit; line-height: inherit; }
+  .bar-hp-chip[hidden] { display: none; }
+  .bar-hp-chip.is-pending { background: var(--warn-bg); color: var(--warn-text); font-weight: 700; }
+  .bar-hp-chip.is-synced { background: var(--accent-wash); color: var(--success-text); font-weight: 700; }
+  .hp-sync-card h3, .hp-sync-note h3 { margin: 0 0 8px; font-size: 16px; font-weight: 800; }
+  .hp-sync-card[hidden], .hp-sync-note[hidden] { display: none; }
+  .hp-sync-target { margin: 0 0 8px; font-size: 14px; }
+  .hp-sync-state {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin: 0 0 6px; padding: 5px 12px; border-radius: 999px;
+    font-size: 13px; font-weight: 700; background: var(--surface-2);
+  }
+  .hp-sync-state.is-pending { background: var(--warn-bg); color: var(--warn-text); }
+  .hp-sync-state.is-synced { background: var(--success-bg); color: var(--success-text); }
+  .hp-sync-meta { margin: 0 0 12px; font-size: 12.5px; color: var(--text-secondary); }
+  .hp-sync-modal { width: min(100%, 460px); max-height: min(88vh, 680px); display: flex; flex-direction: column; padding: 18px 18px 14px; }
+  .hp-sync-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 0 2px 6px; }
+  .hp-sync-body p { margin: 0 0 10px; }
+  .hp-sync-footer { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .hp-sync-footer .ui-btn[hidden] { display: none; }
+  .hp-sync-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0 12px; }
+  .hp-sync-stat { text-align: center; padding: 10px 4px; border-radius: 12px; background: var(--surface-2); }
+  .hp-sync-stat b { display: block; font-size: 22px; line-height: 1.2; }
+  .hp-sync-stat span { font-size: 12px; color: var(--text-secondary); }
+  .hp-sync-stat.is-add b { color: var(--success-text); }
+  .hp-sync-stat.is-chg b { color: var(--accent); }
+  .hp-sync-stat.is-del b { color: var(--error-text); }
+  .hp-sync-group { border: 1px solid var(--border); border-radius: 12px; margin: 8px 0; background: var(--input-bg); }
+  .hp-sync-group summary { display: flex; align-items: center; min-height: 44px; padding: 0 12px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .hp-sync-list { list-style: none; margin: 0; padding: 0 12px 8px; max-height: 190px; overflow-y: auto; }
+  .hp-sync-list li { padding: 6px 0; border-top: 1px solid var(--grid); font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+  .hp-sync-list li small { display: block; color: var(--text-muted); font-size: 12px; }
+  .hp-sync-list li.is-more { color: var(--text-muted); font-size: 12px; }
+  .hp-sync-warn { margin: 10px 0; padding: 12px; border-radius: 12px; background: var(--warn-bg); color: var(--warn-text); border: 1px solid rgba(122, 78, 0, 0.22); font-size: 13px; font-weight: 600; line-height: 1.6; }
+  .hp-sync-check { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; margin: 4px 0 0; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .hp-sync-check input { flex: 0 0 auto; width: 22px; height: 22px; margin: 1px 0 0; }
+  .hp-sync-result { margin: 4px 0 10px; font-size: 17px; font-weight: 800; }
+  .hp-sync-result.is-ok { color: var(--success-text); }
+  .hp-sync-result.is-err { color: var(--error-text); }
+  @media (max-width: 640px) {
+    .hp-sync-backdrop { align-items: flex-end; padding: 0; }
+    .hp-sync-modal { width: 100%; max-height: 92vh; border-radius: 18px 18px 0 0; padding: 16px 16px calc(14px + env(safe-area-inset-bottom, 0px)); }
+    .hp-sync-footer .ui-btn { min-height: 50px; font-size: 15px; }
+  }
+
   .page-intro,
   .hint,
   .account-lead,
@@ -2623,6 +2669,7 @@
       <span class="utaeru-brand">UTAEMO</span>
       <div class="bar-meta">
         <span class="bar-status" id="barStatus">未公開</span>
+        <button type="button" class="bar-status bar-hp-chip" id="barHpChip" hidden></button>
         <span class="bar-id" id="barStreamerId"></span>
       </div>
     </div>
@@ -2748,6 +2795,18 @@
       <button type="button" class="ui-btn ui-btn-tertiary" id="modalChooseAnonymous">ログインせずに作る</button>
       <p class="mode-desc">すでに編集キーをお持ちの場合</p>
       <button type="button" class="ui-btn ui-btn-secondary" id="modalChooseEditKey">編集キーを使う</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop hp-sync-backdrop" id="hpSyncModal" hidden aria-modal="true">
+  <div class="modal-card hp-sync-modal" role="dialog" aria-labelledby="hpSyncModalTitle">
+    <h3 id="hpSyncModalTitle">HPに反映する</h3>
+    <div class="hp-sync-body" id="hpSyncModalBody" aria-live="polite"></div>
+    <div class="hp-sync-footer">
+      <button type="button" class="ui-btn ui-btn-primary" id="hpSyncConfirmBtn">この内容で反映する</button>
+      <a class="ui-btn ui-btn-secondary" id="hpSyncModalView" href="#" target="_blank" rel="noopener noreferrer" hidden>反映後のHPを開く</a>
+      <button type="button" class="ui-btn ui-btn-tertiary" id="hpSyncCancelBtn">キャンセル</button>
     </div>
   </div>
 </div>
@@ -3025,6 +3084,17 @@
 
     <section class="edit-panel" role="tabpanel" id="panelMore" data-tab-panel="more" aria-labelledby="editTabMore" hidden>
       <h2 class="edit-panel-heading">管理</h2>
+      <div class="ui-field-group hp-sync-card" id="hpSyncLinked" hidden>
+        <h3>HP連携</h3>
+        <p class="hp-sync-target">連携先：<strong id="hpSyncName"></strong></p>
+        <p class="hp-sync-state" id="hpSyncState"></p>
+        <p class="hp-sync-meta" id="hpSyncLast"></p>
+        <div class="ui-stack">
+          <button type="button" class="ui-btn ui-btn-primary" id="hpSyncOpenBtn">HPに反映する</button>
+          <a class="ui-btn ui-btn-secondary" id="hpSyncViewLink" href="#" target="_blank" rel="noopener noreferrer">反映後のHPを開く</a>
+        </div>
+        <p class="hint">編集しただけではHPは変わりません。「HPに反映する」を押した時点の曲リストがHPに公開されます。</p>
+      </div>
       <div class="ui-field-group">
         <h3>以前のファイルから復元</h3>
         <p class="hint">前に書き出したページのHTMLファイルを読み込むと、選択していた曲やテーマカラーを復元して編集を続けられます。</p>
@@ -3038,6 +3108,10 @@
         <h3>バックアップ・書き出し</h3>
         <p class="hint">現在の曲リストをHTMLファイルとして保存できます。通常の編集では、この操作は必要ありません。</p>
         <button type="button" class="tool-btn backup-export-btn" id="exportBtn" disabled>HTMLファイルとして保存</button>
+      </div>
+      <div class="ui-field-group hp-sync-note" id="hpSyncUnlinked">
+        <h3>HP連携</h3>
+        <p class="hint">HP連携は個別設定が必要です。ご自身のHPに歌える曲リストを反映したい場合は、<a href="contact.html">お問い合わせ</a>からご相談ください。連携しなくても、これまでどおりご利用いただけます。</p>
       </div>
     </section>
   </div>
@@ -5449,6 +5523,7 @@ function updateManagementBar() {
   }
   updateDeletePageBlock();
   syncBuilderChromeInsets();
+  try { renderHpSync(); } catch (err) { /* HP連携の表示に失敗しても、通常の編集・公開は止めない */ }
 }
 
 function canDeletePublishedPage() {
@@ -5686,6 +5761,7 @@ function apiErrorMessage(status, data) {
   if (data && data.error === 'page_unpublished') return 'この公開ページは現在公開されていません。';
   if (data && data.error === 'confirm_mismatch') return '確認用の公開ページIDが一致しません。';
   if (data && data.error === 'rate_limited') return '操作が多すぎます。しばらく待ってからもう一度お試しください。';
+  if (data && data.error === 'hp_not_linked') return 'このページはHPに連携されていません。HP連携は個別設定が必要です。';
   if (data && data.error === 'invalid_token') return 'Googleログインに失敗しました。もう一度お試しください。';
   if (data && typeof data.message === 'string') return data.message;
   const map = {
@@ -6979,6 +7055,420 @@ async function publishWithGoogle(sid) {
   }
 }
 
+// ---- HP連携: 「HPに反映する」 ----------------------------------------------------------
+// Utaemo の編集中データ(selectedKeys など)と、HPが読む「反映済みの公開データ」は別管理。
+// 反映済みデータはサーバー(hp_published)に置かれ、本人が「この内容で反映する」を押したときだけ更新される。
+// 連携は制作者が個別に設定する任意機能。未連携の利用者には何も変わらない(案内文のみ)。
+const hpLink = {
+  contextKey: '',
+  state: 'none', // 'none' | 'linked'
+  linkId: '',
+  hpName: '',
+  hpUrl: '',
+  published: null, // { revision, publishedAt, songCount, songs[] } | null
+  loading: false,
+  loadError: false,
+};
+let hpSyncBusy = false;
+let hpLoadSeq = 0;
+let hpModalView = null;
+let hpModalOpener = null;
+const HP_LIST_PREVIEW_MAX = 50;
+
+// 連携状況を問い合わせてよい状態か(=そのIDの本人として認証済みか)。問い合わせ先の識別キーを返す。
+function hpContextKey() {
+  const sid = streamerIdInput.value.trim();
+  if (!sid || !validateStreamerId(sid).ok) return '';
+  if (onlineMode === 'google' && authUser && isStreamerIdOwned(sid)) return 'google:' + sid;
+  if (onlineMode === 'edit-key' && editKeyVerified && editKeyVerifiedStreamerId === sid && getActiveEditKey()) return 'edit-key:' + sid;
+  return '';
+}
+
+function hpSongKey(s) { return s.a + '\u0001' + s.t; }
+
+// HPに渡す公開用データ。曲名・アーティスト名・検索用の読み・ジャンルだけ(許可リスト方式)。
+// 個人用のマーク(おはこ/練習中など)・タグ・追加日・下書き・認証情報は含めない。サーバー側でも同じ許可リストで再検証される。
+function buildHpSongs() {
+  const out = [];
+  for (const s of MASTER_SONGS) {
+    if (!selectedKeys.has(keyOf(s))) continue;
+    const o = { t: s.t, a: s.a };
+    if (s.y) o.y = s.y;
+    if (s.ty) o.ty = s.ty;
+    o.genres = getSongGenres(s);
+    out.push(o);
+  }
+  return out;
+}
+
+function hpSongSignature(s) {
+  return JSON.stringify([s.t, s.a, s.y || '', s.ty || '', [...(s.genres || [])].sort()]);
+}
+
+// 前回反映分(prev)と今回(next)の差分。曲キー(アーティスト+曲名)で突き合わせる(Worker 側と同じ規則)。
+function diffHpSongs(prev, next) {
+  const prevMap = new Map(prev.map((s) => [hpSongKey(s), s]));
+  const nextMap = new Map(next.map((s) => [hpSongKey(s), s]));
+  const added = [];
+  const changed = [];
+  const removed = [];
+  for (const [key, song] of nextMap) {
+    const old = prevMap.get(key);
+    if (!old) added.push(song);
+    else if (hpSongSignature(old) !== hpSongSignature(song)) changed.push({ prev: old, next: song });
+  }
+  for (const [key, song] of prevMap) {
+    if (!nextMap.has(key)) removed.push(song);
+  }
+  return { added, changed, removed };
+}
+
+function hpChangeNote(prev, next) {
+  const parts = [];
+  const pg = (prev.genres || []).join('・') || 'ジャンルなし';
+  const ng = (next.genres || []).join('・') || 'ジャンルなし';
+  if (pg !== ng) parts.push('ジャンル：' + pg + ' → ' + ng);
+  if ((prev.y || '') !== (next.y || '') || (prev.ty || '') !== (next.ty || '')) parts.push('読みを更新');
+  return parts.join(' / ');
+}
+
+function hpPlanInfo() {
+  const next = buildHpSongs();
+  const prev = hpLink.published ? hpLink.published.songs : [];
+  const diff = diffHpSongs(prev, next);
+  const count = diff.added.length + diff.changed.length + diff.removed.length;
+  return { next, prev, diff, count, neverPublished: !hpLink.published };
+}
+
+function formatHpDate(iso) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const p2 = (n) => String(n).padStart(2, '0');
+  return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+}
+
+function normalizeHpPublished(p) {
+  if (!p || typeof p !== 'object') return null;
+  return {
+    revision: Number.isInteger(p.revision) ? p.revision : 0,
+    publishedAt: typeof p.publishedAt === 'string' ? p.publishedAt : '',
+    songCount: Number.isInteger(p.songCount) ? p.songCount : 0,
+    songs: Array.isArray(p.songs) ? p.songs : [],
+  };
+}
+
+// 画面(管理タブのカード・上部バーのチップ・未連携の案内)を、現在の連携状況と編集内容に合わせて更新する。
+function renderHpSync() {
+  const key = hpContextKey();
+  if (hpLink.contextKey !== key) {
+    hpLoadSeq++;
+    hpLink.contextKey = key;
+    hpLink.state = 'none';
+    hpLink.linkId = '';
+    hpLink.hpName = '';
+    hpLink.hpUrl = '';
+    hpLink.published = null;
+    hpLink.loading = false;
+    hpLink.loadError = false;
+    if (key) refreshHpLink();
+  }
+
+  const linked = hpLink.state === 'linked';
+  const card = document.getElementById('hpSyncLinked');
+  const note = document.getElementById('hpSyncUnlinked');
+  const chip = document.getElementById('barHpChip');
+  if (card) card.hidden = !linked;
+  if (note) note.hidden = linked;
+  if (chip) chip.hidden = !linked;
+  if (!linked) return;
+
+  const info = hpPlanInfo();
+  const pending = info.count > 0;
+  const d = info.diff;
+  const stateEl = document.getElementById('hpSyncState');
+  document.getElementById('hpSyncName').textContent = hpLink.hpName;
+  if (pending) {
+    stateEl.textContent = info.neverPublished
+      ? 'まだHPに反映していません（' + info.next.length + '曲）'
+      : '反映待ちの変更があります（追加' + d.added.length + '・変更' + d.changed.length + '・削除' + d.removed.length + '）';
+  } else {
+    stateEl.textContent = info.neverPublished ? 'まだHPに反映していません（曲が選ばれていません）' : '✓ HPと同じ内容です';
+  }
+  stateEl.className = 'hp-sync-state ' + (pending ? 'is-pending' : (info.neverPublished ? '' : 'is-synced'));
+  document.getElementById('hpSyncLast').textContent = hpLink.published
+    ? '最終反映：' + formatHpDate(hpLink.published.publishedAt) + '（' + hpLink.published.songCount + '曲）'
+    : '最終反映：まだありません';
+  const viewLink = document.getElementById('hpSyncViewLink');
+  viewLink.href = hpLink.hpUrl || '#';
+  viewLink.style.display = hpLink.hpUrl ? '' : 'none';
+  document.getElementById('hpSyncOpenBtn').disabled = hpSyncBusy;
+
+  chip.textContent = pending ? 'HP 反映待ち' : 'HP ✓ 反映済み';
+  chip.className = 'bar-status bar-hp-chip ' + (pending ? 'is-pending' : 'is-synced');
+  chip.title = (hpLink.hpName ? hpLink.hpName + '：' : '') + (pending ? '反映待ちの変更があります' : 'HPと同じ内容です');
+}
+
+// サーバーから連携状況と「前回反映した公開データ」を読み直す。
+async function refreshHpLink() {
+  const key = hpContextKey();
+  if (!key) return { ok: false, reason: 'no-context' };
+  const seq = ++hpLoadSeq;
+  const sid = streamerIdInput.value.trim();
+  hpLink.loading = true;
+  let result;
+  try {
+    const { res, data } = await apiFetch('/api/streamer/' + encodeURIComponent(sid) + '/hp-link', {
+      method: 'GET',
+      editKey: key.startsWith('edit-key:') ? getActiveEditKey() : undefined,
+    });
+    if (seq !== hpLoadSeq || hpContextKey() !== key) return { ok: false, reason: 'stale' };
+    if (!res.ok) {
+      hpLink.loadError = true;
+      result = { ok: false, status: res.status, data };
+    } else if (data && data.linked) {
+      hpLink.state = 'linked';
+      hpLink.linkId = String(data.linkId || '');
+      hpLink.hpName = String(data.hpName || '');
+      hpLink.hpUrl = String(data.hpUrl || '');
+      hpLink.published = normalizeHpPublished(data.published);
+      hpLink.loadError = false;
+      result = { ok: true };
+    } else {
+      hpLink.state = 'none';
+      hpLink.linkId = '';
+      hpLink.hpName = '';
+      hpLink.hpUrl = '';
+      hpLink.published = null;
+      hpLink.loadError = false;
+      result = { ok: true };
+    }
+  } catch (err) {
+    if (seq !== hpLoadSeq) return { ok: false, reason: 'stale' };
+    hpLink.loadError = true;
+    result = { ok: false, network: true };
+  }
+  if (seq === hpLoadSeq) hpLink.loading = false;
+  renderHpSync();
+  return result;
+}
+
+function hpGroupHtml(title, items, renderItem, open) {
+  if (!items.length) return '';
+  const shown = items.slice(0, HP_LIST_PREVIEW_MAX).map(renderItem).join('');
+  const more = items.length > HP_LIST_PREVIEW_MAX
+    ? '<li class="is-more">ほか ' + (items.length - HP_LIST_PREVIEW_MAX) + ' 曲</li>'
+    : '';
+  return '<details class="hp-sync-group"' + (open ? ' open' : '') + '><summary>' + title + '（' + items.length + '曲）</summary><ul class="hp-sync-list">' + shown + more + '</ul></details>';
+}
+
+function hpSongLi(s) {
+  return '<li>' + escapeHtml(s.t) + '<small>' + escapeHtml(s.a) + '</small></li>';
+}
+
+function setHpModalView(view) {
+  hpModalView = view;
+  renderHpSyncModal();
+}
+
+function renderHpSyncModal() {
+  const v = hpModalView;
+  const modal = document.getElementById('hpSyncModal');
+  if (!v || !modal) return;
+  const body = document.getElementById('hpSyncModalBody');
+  const confirmBtn = document.getElementById('hpSyncConfirmBtn');
+  const cancelBtn = document.getElementById('hpSyncCancelBtn');
+  const viewLink = document.getElementById('hpSyncModalView');
+  const name = escapeHtml(hpLink.hpName || 'HP');
+  const target = '<p>連携先：<strong>' + name + '</strong></p>';
+
+  confirmBtn.hidden = false;
+  confirmBtn.disabled = false;
+  confirmBtn.textContent = 'この内容で反映する';
+  cancelBtn.disabled = hpSyncBusy;
+  cancelBtn.textContent = 'キャンセル';
+  viewLink.hidden = true;
+  viewLink.href = hpLink.hpUrl || '#';
+
+  if (v.kind === 'loading') {
+    body.innerHTML = target + '<p class="hint">前回の反映内容を確認しています…</p>';
+    confirmBtn.hidden = true;
+  } else if (v.kind === 'confirm') {
+    const info = v.info;
+    const d = info.diff;
+    const emptyNext = info.next.length === 0;
+    const notice = v.notice ? '<p class="hp-sync-warn">' + escapeHtml(v.notice) + '</p>' : '';
+    const lead = hpLink.published
+      ? '<p class="hint">前回の反映（' + escapeHtml(formatHpDate(hpLink.published.publishedAt)) + '）からの変更</p>'
+      : '<p class="hint">はじめての反映です。</p>';
+    const stats = '<div class="hp-sync-stats">'
+      + '<div class="hp-sync-stat is-add"><b>' + d.added.length + '</b><span>追加</span></div>'
+      + '<div class="hp-sync-stat is-chg"><b>' + d.changed.length + '</b><span>変更</span></div>'
+      + '<div class="hp-sync-stat is-del"><b>' + d.removed.length + '</b><span>削除</span></div>'
+      + '</div>';
+    const warn = emptyNext
+      ? '<p class="hp-sync-warn">曲リストが0曲です。このまま反映すると、HPの「歌える曲」がすべて非表示になります。</p>'
+        + '<label class="hp-sync-check"><input type="checkbox" id="hpSyncEmptyAck"' + (v.ack ? ' checked' : '') + '><span>全曲が非表示になることを理解しました</span></label>'
+      : '';
+    const groups = hpGroupHtml('追加される曲', d.added, hpSongLi, true)
+      + hpGroupHtml('変更される曲', d.changed, (c) => {
+        const note = hpChangeNote(c.prev, c.next);
+        return '<li>' + escapeHtml(c.next.t) + '<small>' + escapeHtml(c.next.a) + (note ? '｜' + escapeHtml(note) : '') + '</small></li>';
+      }, true)
+      + hpGroupHtml('削除される曲', d.removed, hpSongLi, emptyNext);
+    body.innerHTML = notice + target + lead + stats
+      + '<p>反映後のHP：全 <strong>' + info.next.length + '</strong> 曲</p>' + warn + groups;
+    if (hpSyncBusy) {
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = '反映中…';
+    } else {
+      confirmBtn.disabled = emptyNext && !v.ack;
+    }
+    const ackEl = document.getElementById('hpSyncEmptyAck');
+    if (ackEl) ackEl.disabled = hpSyncBusy;
+  } else if (v.kind === 'nochange') {
+    const notice = v.notice ? '<p class="hp-sync-warn">' + escapeHtml(v.notice) + '</p>' : '';
+    body.innerHTML = notice + target
+      + (v.neverPublished
+        ? '<p class="hp-sync-result">反映する曲がありません</p><p class="hint">曲を選んでから、もう一度お試しください。</p>'
+        : '<p class="hp-sync-result is-ok">前回の反映から変更はありません</p><p class="hint">HPはいまの曲リストと同じ内容です。</p>');
+    confirmBtn.hidden = true;
+    cancelBtn.textContent = '閉じる';
+    viewLink.hidden = !hpLink.hpUrl;
+    viewLink.textContent = 'HPを開く';
+  } else if (v.kind === 'success') {
+    const r = v.data;
+    body.innerHTML = '<p class="hp-sync-result is-ok">✓ HPに反映しました</p>' + target
+      + (r.unchanged
+        ? '<p>HPはすでにこの内容でした。</p>'
+        : '<p>全 <strong>' + r.songCount + '</strong> 曲を反映しました（追加 ' + r.added + '・変更 ' + r.changed + '・削除 ' + r.removed + '）。</p>')
+      + '<p class="hint">HPを開き直すと、新しい曲リストが表示されます。</p>';
+    confirmBtn.hidden = true;
+    cancelBtn.textContent = '閉じる';
+    viewLink.hidden = !hpLink.hpUrl;
+    viewLink.textContent = '反映後のHPを開く';
+  } else if (v.kind === 'error') {
+    body.innerHTML = '<p class="hp-sync-result is-err">反映できませんでした</p><p>' + escapeHtml(v.message) + '</p>'
+      + '<p class="hint">HPの曲リストは、前回反映した内容のままです。</p>';
+    confirmBtn.textContent = 'もう一度試す';
+    cancelBtn.textContent = '閉じる';
+  }
+}
+
+// 最新の「前回反映分」を読み直して、確認画面(差分)を出す。
+async function loadHpPlan(notice) {
+  setHpModalView({ kind: 'loading' });
+  const r = await refreshHpLink();
+  const modal = document.getElementById('hpSyncModal');
+  if (modal.hidden) return;
+  if (!r.ok) {
+    if (r.reason === 'stale' || r.reason === 'no-context') { closeHpSyncModal(); return; }
+    setHpModalView({
+      kind: 'error',
+      message: r.network
+        ? '通信に失敗しました。ネットワークを確認してください。'
+        : apiErrorMessage(r.status, r.data),
+    });
+    return;
+  }
+  if (hpLink.state !== 'linked') {
+    setHpModalView({ kind: 'error', message: 'このページのHP連携は解除されています。' });
+    return;
+  }
+  const info = hpPlanInfo();
+  if (info.count === 0) {
+    setHpModalView({ kind: 'nochange', neverPublished: info.neverPublished, notice });
+  } else {
+    setHpModalView({
+      kind: 'confirm',
+      info,
+      ack: false,
+      notice,
+      expectedRevision: hpLink.published ? hpLink.published.revision : 0,
+    });
+  }
+}
+
+async function openHpSyncModal() {
+  if (hpSyncBusy || hpLink.state !== 'linked') return;
+  hpModalOpener = document.activeElement;
+  document.getElementById('hpSyncModal').hidden = false;
+  await loadHpPlan();
+}
+
+function closeHpSyncModal() {
+  if (hpSyncBusy) return; // 反映中は閉じさせない(結果を必ず見せる)
+  const modal = document.getElementById('hpSyncModal');
+  if (!modal || modal.hidden) return;
+  modal.hidden = true;
+  hpModalView = null;
+  if (hpModalOpener && typeof hpModalOpener.focus === 'function') {
+    try { hpModalOpener.focus(); } catch (err) { /* ignore */ }
+  }
+  hpModalOpener = null;
+}
+
+// 「この内容で反映する」。確認画面に出した内容(曲リスト)と、その時点の前回反映版(revision)を送る。
+async function confirmHpPublish() {
+  const v = hpModalView;
+  if (hpSyncBusy || !v || v.kind !== 'confirm') return; // 連打・二重送信は、通信前に同期的に弾く
+  const info = v.info;
+  if (info.next.length === 0 && !v.ack) return;
+  const key = hpContextKey();
+  if (!key) {
+    setHpModalView({ kind: 'error', message: 'ログイン状態を確認できませんでした。もう一度ログイン(または編集キーで認証)してください。' });
+    return;
+  }
+  const sid = streamerIdInput.value.trim();
+  hpSyncBusy = true;
+  renderHpSyncModal();
+  renderHpSync();
+
+  let outcome;
+  try {
+    const { res, data } = await apiFetch('/api/streamer/' + encodeURIComponent(sid) + '/hp-publish', {
+      method: 'POST',
+      editKey: key.startsWith('edit-key:') ? getActiveEditKey() : undefined,
+      body: JSON.stringify({
+        expectedRevision: v.expectedRevision,
+        songs: info.next,
+        confirmEmpty: info.next.length === 0 && v.ack === true,
+      }),
+    });
+    if (res.ok && data && data.ok) {
+      outcome = { kind: 'success', data };
+    } else if (res.status === 409 && data && data.error === 'stale_revision') {
+      outcome = { kind: 'stale' };
+    } else {
+      outcome = { kind: 'error', message: apiErrorMessage(res.status, data) };
+    }
+  } catch (err) {
+    outcome = { kind: 'error', message: '通信に失敗しました。ネットワークを確認してください。' };
+  }
+  hpSyncBusy = false;
+
+  if (outcome.kind === 'success') {
+    const r = outcome.data;
+    hpLink.published = { revision: r.revision, publishedAt: r.publishedAt, songCount: r.songCount, songs: info.next };
+    setHpModalView({ kind: 'success', data: r });
+    showAuthMessage('HPに反映しました', 'success');
+    renderHpSync();
+    refreshHpLink(); // サーバー上の最新状態でもう一度揃える(失敗しても表示は崩さない)
+  } else if (outcome.kind === 'stale') {
+    renderHpSync();
+    await loadHpPlan('別の端末や画面で先にHPが更新されていたため、最新の状態を読み込み直しました。内容をもう一度確認してください。');
+  } else {
+    setHpModalView(outcome);
+    renderHpSync();
+  }
+}
+
+function onHpSyncConfirmClick() {
+  const v = hpModalView;
+  if (!v) return;
+  if (v.kind === 'confirm') confirmHpPublish();
+  else if (v.kind === 'error') loadHpPlan();
+}
+
 function applyPublicDataToBuilder(data, streamerId) {
   clearSongRemovalUndo();
   draftSaveSuppressed = true;
@@ -7187,6 +7677,24 @@ document.getElementById('loadPublicDataModal')?.addEventListener('click', (e) =>
   if (e.target === document.getElementById('loadPublicDataModal')) closeLoadPublicDataModal();
 });
 document.getElementById('publishBtn').addEventListener('click', publishOnline);
+document.getElementById('hpSyncOpenBtn').addEventListener('click', openHpSyncModal);
+document.getElementById('barHpChip').addEventListener('click', () => {
+  if (hpLink.state === 'linked' && hpPlanInfo().count > 0) openHpSyncModal();
+  else setEditTab('more');
+});
+document.getElementById('hpSyncConfirmBtn').addEventListener('click', onHpSyncConfirmClick);
+document.getElementById('hpSyncCancelBtn').addEventListener('click', closeHpSyncModal);
+document.getElementById('hpSyncModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeHpSyncModal();
+});
+document.getElementById('hpSyncModalBody').addEventListener('change', (e) => {
+  if (!e.target || e.target.id !== 'hpSyncEmptyAck' || !hpModalView || hpModalView.kind !== 'confirm') return;
+  hpModalView.ack = !!e.target.checked;
+  document.getElementById('hpSyncConfirmBtn').disabled = hpSyncBusy || !hpModalView.ack;
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !document.getElementById('hpSyncModal').hidden) closeHpSyncModal();
+});
 document.getElementById('deletePageBtn')?.addEventListener('click', openDeletePageModal);
 document.getElementById('deleteCancelBtn')?.addEventListener('click', closeDeletePageModal);
 document.getElementById('deleteConfirmBtn')?.addEventListener('click', deletePublishedPageAction);
