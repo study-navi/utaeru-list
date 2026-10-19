@@ -444,6 +444,9 @@
   }
   .clear-btn:hover { background: var(--surface-2); }
 
+  .search-input-outside {
+    margin-bottom: 8px;
+  }
   .gyo-filter {
     margin-top: 8px;
   }
@@ -898,6 +901,12 @@
   </header>
 
   <div class="search-bar" id="songSearchBar">
+    <div class="search-input-outside">
+      <div class="search-input-row">
+        <input type="search" id="searchInput" placeholder="アーティスト名を入力" aria-label="検索" autocomplete="off" />
+        <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
+      </div>
+    </div>
     <div class="song-search-panel is-collapsed" id="songSearchPanel">
       <button type="button" class="song-search-panel-header" id="songSearchPanelToggle" aria-expanded="false" aria-controls="songSearchPanelBody">
         <span class="song-search-panel-leading">
@@ -912,11 +921,6 @@
           <div class="search-mode-segment" role="tablist" aria-label="検索モード">
             <button type="button" class="search-mode-tab" id="searchTargetTitle" data-target="title" aria-selected="false">曲名から探す</button>
             <button type="button" class="search-mode-tab active" id="searchTargetArtist" data-target="artist" aria-selected="true">アーティストから探す</button>
-          </div>
-          <label class="search-label" for="searchInput">検索</label>
-          <div class="search-input-row">
-            <input type="search" id="searchInput" placeholder="アーティスト名を入力" autocomplete="off" />
-            <button class="clear-btn" id="clearBtn" aria-label="検索をクリア">✕</button>
           </div>
           <div class="sort-control-row">
             <label class="sort-control-label" for="sortSelect">並び替え</label>
