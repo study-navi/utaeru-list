@@ -36,6 +36,7 @@ wrangler d1 execute utaeru-db --local --file=schema.sql
 wrangler secret put SESSION_SECRET
 wrangler secret put DEV_WRITE_TOKEN
 wrangler secret put GOOGLE_CLIENT_ID
+wrangler secret put HP_ADMIN_TOKEN   # HP連携の紐づけ用(16文字以上のランダム値)。制作者だけが持つ
 ```
 
 | Secret | Purpose |
@@ -43,6 +44,7 @@ wrangler secret put GOOGLE_CLIENT_ID
 | `SESSION_SECRET` | HMAC key for signing session JWT cookies |
 | `DEV_WRITE_TOKEN` | Optional dev write bypass via `X-Utaeru-Dev-Token` header |
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID for ID token verification |
+| `HP_ADMIN_TOKEN` | HP連携(link/unlink)用の管理者トークン(`X-Utaeru-Admin-Token`)。未設定なら管理APIは常に拒否 |
 
 `ALLOWED_ORIGIN` is configured in `wrangler.toml` (not a secret).
 
@@ -63,6 +65,12 @@ wrangler deploy
 | `POST` | `/api/auth/logout` | None | Clear session cookie |
 | `GET` | `/api/auth/me` | Session cookie | Return `{ email, ownedStreamerIds }` |
 | `POST` | `/api/streamer/{streamerId}/claim` | Session cookie | Claim a streamer ID |
+| `GET` | `/api/hp/{linkId}/songs` | None (public, CORS `*`, no credentials) | HPが読む「最後に反映された曲リスト」。ETag/304対応 |
+| `GET` | `/api/streamer/{streamerId}/hp-link` | Owner (session or edit key) | 連携状況と前回反映データ |
+| `POST` | `/api/streamer/{streamerId}/hp-publish` | Owner (session or edit key) | 曲リストをHPに反映(`expectedRevision`による楽観ロック) |
+| `GET/PUT/DELETE` | `/api/admin/hp-links[/{linkId}]` | `HP_ADMIN_TOKEN` | 連携の一覧/作成/解除(制作者専用) |
+
+HP連携の詳細・初回設定手順は [`docs/hp-sync-setup.md`](../docs/hp-sync-setup.md)。D1 のマイグレーション: `migrations/003_hp_sync.sql`。
 
 ### Session cookie
 

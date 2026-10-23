@@ -60,7 +60,7 @@ index.html（設定・選択状態を復元）
 
 | 用途 | フィールド | 意味 |
 |---|---|---|
-| マスター（ビルダー内） | `id`, `k`, `y`, `a`, `t`, `genres?` | 内部 ID / 行頭かな / 読み / アーティスト / 曲名 / 標準ジャンル（`J-POP`・`アニソン`・`ボカロ` の配列、未分類は `[]`） |
+| マスター（ビルダー内） | `id`, `k`, `y`, `a`, `t`, `genres?` | 内部 ID / 行頭かな / 読み / アーティスト / 曲名 / 標準ジャンル（`J-POP`・`アニソン`・`ボカロ`・`アイドル曲`・`洋楽`・`演歌`・`その他` の配列、未分類は `[]`） |
 | 書き出し（公開ページ） | `k`, `y`, `a`, `t` | 上記のうち `id` を除いた形式 |
 
 `k`, `y`, `a`, `t` の**削除・リネームは不可**。追加フィールドは optional として後方互換で可能。
@@ -189,6 +189,7 @@ node scripts/test-api-phase4c.mjs
 | 2026-08-16 | 基準状態の記録、README、互換性検証スクリプト、builder-config スキーマを追加（アプリ本体の仕様・見た目は変更なし） |
 | 2026-08-16 | Phase 0/1: `configVersion` / `songMeta` / `tagPresets` を builder-config の追加フィールド（optional）として実装。既存6フィールド・曲データ `{ k, y, a, t }`・曲キー区切り文字は無変更。`index.html` の書き出し/インポート処理のみ変更、`hiro.html` は無変更（v1 形式のまま、旧HTML互換の検証対象）。状態・タグ・新着のUIはPhase 2以降で実装予定。verify-baseline.mjs に互換性チェックを追加 |
 | 2026-08-16 | Phase 4C-3/4C-4: ビルダーに Google ログイン・公開ページID取得（claim）・「公開する」API接続を追加。API: `https://utaeru-api.manabit.workers.dev`。公開ページ（viewer-template / `hiro.html`）は未変更 |
+| 2026-10-19 | 「HPに反映する」(HP連携)を追加。利用者が自分の好きなタイミングで、連携済みHPに曲リストを反映できる(差分確認→反映)。連携は制作者が1回だけ設定する任意機能で、未連携の利用者は従来どおり。HPが読む公開データは曲名・アーティスト・読み・ジャンルのみで、編集データとは別管理。Worker に D1 テーブル `hp_links` / `hp_published` と API を追加（`worker/migrations/003_hp_sync.sql`）。既存の公開API・builder-config・曲データ形式は無変更。手順: `docs/hp-sync-setup.md` |
 
 ## 機能追加時のガイドライン
 

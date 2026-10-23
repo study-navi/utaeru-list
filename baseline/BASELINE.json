@@ -1,30 +1,44 @@
 {
-  "label": "検索モード（曲名/アーティスト）+ 曲名読み ty/tk",
-  "establishedAt": "2026-08-19",
+  "label": "アイドル曲ジャンル追加（108曲）",
+  "establishedAt": "2026-10-10",
   "gitCommit": null,
   "gitCommitShort": null,
   "previousBaseline": {
-    "label": "第5段階 6ジャンル体系・自由タグ整理",
-    "establishedAt": "2026-08-18",
+    "label": "検索モード（曲名/アーティスト）+ 曲名読み ty/tk",
+    "establishedAt": "2026-08-19",
     "files": {
       "index.html": {
-        "bytes": 629762,
-        "sha256": "a639e197ecad514b0e16e51d8f544d214001453aa8a1658ba72a26293e1ed946"
+        "bytes": 1052713,
+        "sha256": "5857c04a267c76054d76b4b621fc8be4456f9bf21fbb3302214768bd6679b54a"
       },
       "hiro.html": {
-        "bytes": 134824,
-        "sha256": "b2cd4a107b0f6c64f6aaaf2979aa11f5fd0eca7fb9700bc9ea5d2d6c9916a779"
+        "bytes": 352050,
+        "sha256": "9d2289fd5b172ffdb397e43f59c751c8ea8ce9331b552cb59e85a94dd378b195"
+      }
+    },
+    "previousBaseline": {
+      "label": "第5段階 6ジャンル体系・自由タグ整理",
+      "establishedAt": "2026-08-18",
+      "files": {
+        "index.html": {
+          "bytes": 629762,
+          "sha256": "a639e197ecad514b0e16e51d8f544d214001453aa8a1658ba72a26293e1ed946"
+        },
+        "hiro.html": {
+          "bytes": 134824,
+          "sha256": "b2cd4a107b0f6c64f6aaaf2979aa11f5fd0eca7fb9700bc9ea5d2d6c9916a779"
+        }
       }
     }
   },
   "files": {
     "index.html": {
-      "bytes": 928381,
-      "sha256": "ffc03550908492046200ec6c0c27d47aacde90c8ede27bc6ba1de9be27145fca"
+      "bytes": 1077590,
+      "sha256": "99aa5726077c56f10e07246e290de5aaa747d0bab3acae77f6cbffe16b1bbddc"
     },
     "hiro.html": {
-      "bytes": 299830,
-      "sha256": "88f05752dc71d6c8aa5b77d07bdd93debba546fee75bcf4cd57275f3f8150916"
+      "bytes": 352050,
+      "sha256": "9d2289fd5b172ffdb397e43f59c751c8ea8ce9331b552cb59e85a94dd378b195"
     }
   },
   "catalog": {

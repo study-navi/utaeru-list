@@ -17,6 +17,7 @@ const API = 'https://utaeru-api.manabit.workers.dev';
 const MASTER = parseMasterSongsFromIndexHtml(fs.readFileSync(INDEX, 'utf8'));
 const pick = (pred) => MASTER.find(pred);
 const SAMPLES = {
+  idol: pick((s) => s.genres?.includes('アイドル曲')),
   jpop: pick((s) => s.genres?.length === 1 && s.genres[0] === 'J-POP'),
   anime: pick((s) => s.genres?.includes('アニソン')),
   vocalo: pick((s) => s.genres?.length === 1 && s.genres[0] === 'ボカロ'),
@@ -75,12 +76,15 @@ async function openViewer(browser, url) {
 }
 
 async function clickGenre(page, label) {
+  const toggle = page.locator('#songSearchPanelToggle[aria-expanded="false"]');
+  if (await toggle.count()) await toggle.click();
   await page.locator('#narrowFilterRow .chip', { hasText: label }).click();
   await page.waitForTimeout(80);
 }
 
 async function testViewer(browser) {
   const fixtureSongs = [
+    toPublicSong(SAMPLES.idol),
     toPublicSong(SAMPLES.jpop),
     toPublicSong(SAMPLES.anime),
     toPublicSong(SAMPLES.vocalo),
@@ -97,8 +101,8 @@ async function testViewer(browser) {
   const { page, errors } = await openViewer(browser, url);
 
   const genreChips = await page.locator('#narrowFilterRow .chip').count();
-  if (genreChips !== 8) fail('viewer: ジャンル8ボタン', String(genreChips));
-  else ok('viewer: 絞り込み8chip（すべて+新着+6ジャンル）');
+  if (genreChips !== 9) fail('viewer: ジャンル9ボタン', String(genreChips));
+  else ok('viewer: 絞り込み9chip（すべて+新着+7ジャンル）');
 
   const chipHeights = await page.evaluate(() =>
     [...document.querySelectorAll('#narrowFilterRow .chip')].map((c) => c.offsetHeight));
@@ -134,6 +138,11 @@ async function testViewer(browser) {
 
   await clickGenre(page, 'ボカロ');
   ok('viewer: ボカロ切替');
+
+  await clickGenre(page, 'アイドル曲');
+  const idolVisible = await page.evaluate(() => document.querySelectorAll('#results .song-list li, #results .flat-song-item').length);
+  if (idolVisible !== 1) fail('viewer: アイドル曲件数', String(idolVisible));
+  else ok('viewer: アイドル曲の照合・絞り込み');
 
   await clickGenre(page, '洋楽');
   ok('viewer: 洋楽切替');
@@ -207,8 +216,14 @@ async function testEditor(browser) {
   await page.waitForSelector('#panelSongs:not([hidden])');
 
   const chips = await page.locator('#narrowFilterRow .chip').count();
-  if (chips !== 8) fail('editor: ジャンル8ボタン', String(chips));
-  else ok('editor: 絞り込み8chip（すべて+新着+6ジャンル）');
+  if (chips !== 9) fail('editor: ジャンル9ボタン', String(chips));
+  else ok('editor: 絞り込み9chip（すべて+新着+7ジャンル）');
+
+  await clickGenre(page, 'アイドル曲');
+  const idolOnly = await page.evaluate(() => MASTER_SONGS.filter(songMatchesNarrowFilter).every(s => s.genres.includes('アイドル曲')) && MASTER_SONGS.filter(songMatchesNarrowFilter).length === 108);
+  if (!idolOnly) fail('editor: アイドル曲108曲');
+  else ok('editor: アイドル曲108曲');
+  await clickGenre(page, 'アイドル曲');
 
   // select J-POP songs while visible, switch genre, keys unchanged
   const before = await page.evaluate(({ jpopKey, animeKey }) => {
