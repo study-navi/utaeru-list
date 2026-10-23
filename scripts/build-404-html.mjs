@@ -125,7 +125,7 @@ ${css}
     <a class="contact-form-link" data-legal="contact.html" href="contact.html">お問い合わせ</a>
   </nav>
   <footer class="catalog-footer">
-    データ提供元：Mirrativ（ミラティブ）内カラオケアプリ「エモカラ」の楽曲一覧を個人配布しているGoogle Driveより取得（2026/9/25時点のカタログ）。配信者が歌える曲として選択したものを掲載しています。配信状況や仕様変更により、実際に歌える曲は変動する場合があります。
+    データ提供元：Mirrativ（ミラティブ）内カラオケアプリ「エモカラ」の楽曲一覧を個人配布しているGoogle Driveより取得（2026/10/23時点のカタログ）。配信者が歌える曲として選択したものを掲載しています。配信状況や仕様変更により、実際に歌える曲は変動する場合があります。
   </footer>
   ${operatorCreditHtml}
 </div>
@@ -143,7 +143,7 @@ function resolveSiteBase() {
 }
 const SITE_BASE = resolveSiteBase();
 const PUBLIC_PATH_PREFIX = '/u/';
-const CATALOG_UPDATED = '2026/9/25';
+const CATALOG_UPDATED = '2026/10/23';
 const STREAMER_ID_RE = /^[a-z0-9-]{3,32}$/;
 
 const PRESETS = [

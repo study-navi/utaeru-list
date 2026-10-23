@@ -56,6 +56,12 @@ export const ANIME_VERIFIED_PHASE4 = {
   466: { genres: ['J-POP', 'アニソン'], work: '呪術廻戦 懐玉・玉折', role: 'OP', confidence: 'A' },
   553: { genres: ['J-POP', 'アニソン'], work: 'ダンダダン', role: 'OP', confidence: 'A' },
   1668: { genres: ['J-POP', 'アニソン'], work: '鬼滅の刃 刀鍛冶の里編', role: 'OP', confidence: 'A' },
+  // --- batch-2026-emokara-04 ---
+  2132: { genres: ['J-POP', 'アニソン'], work: '機動戦士ガンダムSEED', role: 'OP', confidence: 'A' },
+  2133: { genres: ['J-POP', 'アニソン'], work: '機動戦士ガンダムSEED', role: 'OP', confidence: 'A' },
+  2139: { genres: ['J-POP', 'アニソン'], work: '灼眼のシャナ', role: 'OP', confidence: 'A' },
+  2144: { genres: ['J-POP', 'アニソン'], work: 'ウマ娘 プリティーダービー', role: '主題歌', confidence: 'A' },
+  2161: { genres: ['アニソン'], work: 'ラブライブ!サンシャイン!!', role: '挿入歌', confidence: 'A' },
 };
 
 /** ボカロ誤分類修正（Phase 4） */

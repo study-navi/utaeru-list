@@ -121,6 +121,7 @@ export const GENRE_VERIFIED_PHASE5 = {
   1649: { genres: ['その他'] },
   1824: { genres: ['その他'] }, // FF10 ゲーム
   1825: { genres: ['その他'] },
+  2142: { genres: ['その他'] }, // すとぷり（既存曲と同様）
 };
 
 /** 既存分類の誤り修正（Eve / syudou 本人歌唱） */

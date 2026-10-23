@@ -61,6 +61,7 @@ export const VOCALOID_ONLY_ARTISTS = new Set([
   'Last Note.',
   'れをる',
   'halyosy',
+  'ひとしずくP',
   'ナユタン星人',
   'いよわ',
   'Giga',

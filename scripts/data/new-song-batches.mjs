@@ -8,7 +8,7 @@
  */
 
 /** @type {string} 現在の新着バッチ ID */
-export const CURRENT_NEW_BATCH = 'batch-2026-emokara-03';
+export const CURRENT_NEW_BATCH = 'batch-2026-emokara-04';
 
 /**
  * @typedef {{ title: string, artist: string, titleNeedsReview?: boolean, note?: string }} BatchSongEntry
@@ -175,6 +175,50 @@ export const NEW_SONG_BATCHES = [
       { title: 'One day', artist: 'The ROOTLESS' },
       { title: 'ソプラノ', artist: 'HERO' },
       { title: 'ふたりずっと', artist: 'MACO' },
+    ],
+  },
+  {
+    id: 'batch-2026-emokara-04',
+    label: 'エモカラ新着（2026-10 提供分）',
+    source: 'emokara-screenshots-2026-10-3pages',
+    songs: [
+      { title: 'This Love', artist: 'アンジェラ・アキ' },
+      { title: '月のしずく', artist: 'RUI' },
+      { title: 'Believe', artist: '玉置成実' },
+      { title: 'Realize', artist: '玉置成実' },
+      { title: '虹', artist: 'AAA' },
+      { title: 'PLEDGE', artist: 'the GazettE' },
+      { title: 'soundless voice', artist: 'ひとしずくP' },
+      { title: 'アイのうた', artist: '福井舞' },
+      { title: 'Dear', artist: "19's Sound Factory" },
+      { title: 'Paradise Lost', artist: '茅原実里' },
+      { title: 'クズ', artist: 'GADORO' },
+      { title: '準透明少年', artist: 'ヨルシカ' },
+      { title: '大好きになればいいんじゃない？', artist: 'すとぷり' },
+      { title: 'CHEERS', artist: 'Mrs. GREEN APPLE' },
+      {
+        title: 'ユメヲカケル!',
+        artist: 'スピカ[スペシャルウィーク(CV.和氣あず未)、サイレンススズカ(CV.高野麻里佳)、トウカイテイオー(CV.Machico)、ウオッカ(CV.大橋彩香)、ダイワスカーレット(CV.木村千咲)、ゴールドシップ(CV.上田瞳)、メジロマックイーン(CV.大西沙織)]',
+      },
+      { title: '我儘姫', artist: 'ふじを' },
+      { title: 'おかえり', artist: 'Tani Yuuki' },
+      { title: '左右盲', artist: 'ヨルシカ' },
+      { title: 'ホワイトノイズ', artist: 'Official髭男dism' },
+      { title: '心得', artist: 'Uru' },
+      { title: '花一匁', artist: 'ずっと真夜中でいいのに。' },
+      { title: 'エール', artist: 'マルシィ' },
+      { title: '天ノ弱 -うぃんぐPiano Ver.-', artist: 'Akie秋絵' },
+      { title: '悪い人', artist: '戦慄かなの' },
+      { title: 'Same Blue', artist: 'Official髭男dism' },
+      { title: '美少女無罪・パイレーツ', artist: '宝鐘マリン' },
+      { title: '願いごと', artist: 'マルシィ' },
+      { title: '明日の私に幸あれ', artist: 'ナナヲアカリ' },
+      { title: 'ケセラバサラ', artist: '鈴華ゆう子' },
+      { title: '恋人', artist: 'マルシィ' },
+      { title: '劇薬中毒', artist: '=LOVE' },
+      { title: 'Angelic Angel', artist: "μ's" },
+      { title: 'セーラー服と機関銃', artist: '橋本環奈' },
+      { title: 'きっと大丈夫', artist: 'Little Glee Monster' },
     ],
   },
 ];
