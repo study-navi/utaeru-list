@@ -116,14 +116,16 @@ if (catalogFilterRow) {
   }`,
   );
 
-  html = html.replace(
-    'function badgesHtml(meta) {',
-    `function utaemoNewBadgeHtml(s) {
+  if (!html.includes('function utaemoNewBadgeHtml')) {
+    html = html.replace(
+      'function badgesHtml(meta) {',
+      `function utaemoNewBadgeHtml(s) {
   if (!isCurrentNewBatchSong(s)) return '';
   return '<span class="song-badge song-badge-utaemo-new" title="UTAEMO新着">NEW</span>';
 }
 function badgesHtml(meta) {`,
-  );
+    );
+  }
 
   html = html.replace(
     '  if (meta.addedAt) parts.push(`<span class="song-badge" title="追加日 ${escapeHtml(meta.addedAt)}">📅</span>`);',
